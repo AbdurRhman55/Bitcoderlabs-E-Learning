@@ -5,7 +5,14 @@ import { useNavigate, Link } from "react-router-dom";
 import Button from "../UI/Button";
 
 export default function Register() {
-  // const { register } = useAuth();
+  // If AuthLogic/provider isn't wired yet, provide a safe mock so UI works and lint passes
+  // Replace with: const { register } = useAuth(); when AuthLogic is available
+  const register = (data) => {
+    console.log("Mock register called", data);
+    // Basic client-side validation example
+    if (!data.email || !data.password) return false;
+    return true;
+  };
   const navigate = useNavigate();
 
   const [form, setForm] = useState({

@@ -11,7 +11,8 @@ import { categories } from "../../../Data/BlogcardsArray";
 import Button from "../UI/Button";
 import { Link } from "react-router-dom";
 // import BlogDetail from "../../Pages/BlogDetail";
-import blogDetail from "../../Pages/BlogDetail";
+// Blog detail import removed (unused) — navigation handled via router links
+// import blogDetail from "../../Pages/BlogDetail";
 
 export default function BlogCard({ filteredBlogs }) {
   return (

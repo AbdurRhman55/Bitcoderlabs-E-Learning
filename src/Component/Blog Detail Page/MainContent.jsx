@@ -58,7 +58,7 @@ const BlogDetailPage = () => {
 
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [progress, setProgress] = useState(65);
+  const [progress, _setProgress] = useState(65);
   const [activeTab, setActiveTab] = useState('content');
 
   const learningObjectives = [

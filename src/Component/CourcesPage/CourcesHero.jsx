@@ -1,5 +1,5 @@
 // components/CourseHero.jsx
-import React, { useState } from "react";
+import React from "react";
 import { FiUsers, FiAward, FiStar } from "react-icons/fi";
 import Input from "../UI/Input";
 

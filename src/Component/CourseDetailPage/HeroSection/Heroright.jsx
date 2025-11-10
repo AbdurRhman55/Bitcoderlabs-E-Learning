@@ -7,6 +7,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Heroright() {
   // const { user } = useAuth();
+  // Temporary mock user while auth is not wired. Replace when integrating auth provider.
+  const user = null;
   const navigate = useNavigate();
 
   const handleEnroll = () => {

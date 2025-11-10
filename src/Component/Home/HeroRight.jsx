@@ -1,6 +1,5 @@
 import React from "react";
 import { Right, recommendations } from "../../../Data/Array";
-import { div } from "framer-motion/client";
 import {Link} from "react-router-dom"
 
 export default function HeroRight({ Righttitle, secondtital, thirdtitle }) {

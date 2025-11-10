@@ -19,7 +19,7 @@ export default function CourseCard({
   onWishlist,
   onShare,
 }) {
-  const [isHovered, setIsHovered] = React.useState(false);
+  const [_isHovered, setIsHovered] = React.useState(false);
 
   return (
     <div

@@ -1,5 +1,6 @@
 import React from 'react';
 import InstructorCard from './InstructorCard';
+/* eslint-disable-next-line no-unused-vars */
 import { motion } from 'framer-motion';
 import { instructorsData } from '../../../Data/AboutArray';
 

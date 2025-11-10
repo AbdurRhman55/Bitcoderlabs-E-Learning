@@ -3,14 +3,6 @@ import ProgressStatus from "./ProgressStatus";
 import LessonItem from "./LessonItem";
 import Button from "../../UI/Button";
 
-const typeConfig = {
-  video: { color: "text-primary bg-primary-light border-blue-100" },
-  project: { color: "text-primary bg-primary-light border-blue-100" },
-  quiz: { color: "text-primary bg-primary-light border-blue-100" },
-  exercise: { color: "text-primary bg-primary-light border-blue-100" },
-  article: { color: "text-primary bg-primary-light border-blue-100" },
-};
-
 export default function ModuleCard({
   module,
   index,

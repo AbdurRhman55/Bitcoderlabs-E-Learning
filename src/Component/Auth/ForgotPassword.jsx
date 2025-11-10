@@ -13,12 +13,6 @@ export default function ForgotPassword() {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState("");
   const navigate = useNavigate();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    forgotPassword(email.trim());
-  };
-  
   const handleSendCode = (e) => {
     e.preventDefault();
 

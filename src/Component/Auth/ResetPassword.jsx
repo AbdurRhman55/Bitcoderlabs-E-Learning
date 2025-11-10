@@ -7,7 +7,13 @@ import Button from "../UI/Button";
 import { Link } from "react-router-dom";
 
 export default function ResetPassword() {
-  // const { resetPassword } = useAuth();
+  // If no auth implementation is wired, provide a lightweight mock to avoid runtime errors
+  // Replace with: const { resetPassword } = useAuth(); when AuthLogic is available
+  const resetPassword = ({ token, newPassword, confirmPassword }) => {
+    console.log("Mock resetPassword", { token, newPassword, confirmPassword });
+    if (!newPassword || newPassword !== confirmPassword) return false;
+    return true;
+  };
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ token: "", newPassword: "", confirmPassword: "" });

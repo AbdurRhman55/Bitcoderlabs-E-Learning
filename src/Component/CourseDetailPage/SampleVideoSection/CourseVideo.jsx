@@ -1,5 +1,5 @@
 import VideoRight from "./VideoRIght";
-import LeftVideo from "./leftVideo";
+import LeftVideo from "./LeftVideo";
 
 export default function CourseVideoPreview() {
   return (
