@@ -4,7 +4,7 @@ import AuthLayout from "./AuthLayout";
 // import { useAuth } from "./AuthLogic";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../UI/Button";
-import OtpModal from "./otpmodel";
+import OtpModal from "./otpModel";
 
 export default function ForgotPassword() {
   // const { forgotPassword } = useAuth();
