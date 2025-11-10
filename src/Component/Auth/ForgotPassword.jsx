@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Button from "../UI/Button";
 import OtpModal from "./OtpModel";
 
+
 export default function ForgotPassword() {
   // const { forgotPassword } = useAuth();
   const [email, setEmail] = useState("");
