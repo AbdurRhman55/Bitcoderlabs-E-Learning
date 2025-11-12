@@ -50,7 +50,6 @@ return (
   {!hideNavFooter && <Footer />}
 </>
 
-
 );
 }
 

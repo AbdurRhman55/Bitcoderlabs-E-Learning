@@ -391,7 +391,7 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`lg:hidden fixed top-0 left-0 right-0 bg-white shadow-xl z-40 transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed top-0 left-0 right-0 bg-white shadow-xl z-40 transition-transform duration-300 ease-in-out overflow-y-auto max-h-[calc(100vh-64px)] ${
           mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
         }`}
         style={{ marginTop: "64px" }}

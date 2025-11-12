@@ -25,35 +25,41 @@ const HeroSection = ({ title, SubTitle }) => {
         </p>
 
         {/* Search Input */}
-        <div className="flex justify-center lg:justify-center lg:mb-8 mb-4 w-full">
+        <div className="flex justify-center w-full mb-4 lg:mb-8 px-3">
           <Input
             type="text"
             placeholder="Enter text here"
-            className="w-full max-w-xl text-sm sm:text-base"
+            variant="default"
+            className="
+              w-full max-w-sm 
+              sm:max-w-md 
+              md:max-w-lg 
+              lg:max-w-xl
+              text-sm sm:text-base 
+              px-2 sm:px-4
+            "
           />
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex  lg:flex-row gap-4 justify-center  items-center mt-6">
+        <div className="flex lg:flex-row gap-4 justify-center items-center mt-6 flex-col lg:px-0 px-10 sm:flex-row">
           <Link to="/courses" className="w-full sm:w-auto">
             <Button
               text="Explore Courses"
               variant="primary"
-              size="md"
-              className="w-full sm:w-auto"
+              size="sm sm:md" // 👈 size prop responsive nahi hoti, so adjust via class below
+              className="w-full sm:w-auto text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
             />
           </Link>
           <Link to="/about#FreeDemo" className="w-full sm:w-auto">
             <Button
               text="Free Demo"
               variant="outline"
-              size="md"
-              className="w-full sm:w-auto"
+              size="sm sm:md"
+              className="w-full sm:w-auto text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3"
             />
           </Link>
         </div>
-
-        
       </div>
 
       {/* Right Section */}
@@ -61,7 +67,6 @@ const HeroSection = ({ title, SubTitle }) => {
         Righttitle="Courses For Every Level"
         secondtital="Biggner To Advance"
         thirdtitle="Learning in process"
-       
       />
     </section>
   );

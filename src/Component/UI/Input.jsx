@@ -12,8 +12,9 @@ export default function Input({
   className = "",
 }) {
   const variants = {
-    default:
-      "px-1 py-2 text-lg rounded-full border border-gray-300 shadow-lg focus:ring-4",
+   default:
+  "px-2 sm:px-1 py-1 sm:py-1 text-sm sm:text-lg rounded-full border border-gray-300 shadow-lg focus:ring-4",
+
     small:
       "px-1 py-2 text-sm rounded-full border border-gray-300 shadow-md focus:ring-2",
     xs:
