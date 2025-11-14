@@ -18,7 +18,6 @@ import {
 
 const BlogDetailPage = () => {
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [activeTab, setActiveTab] = useState("content");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
@@ -29,21 +28,21 @@ const BlogDetailPage = () => {
             {/* Header Section */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                <span className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl text-sm font-semibold">
+                <span className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl text-sm font-semibold">
                   React Mastery
                 </span>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <span className="flex items-center gap-1">
-                    <FaCircle className="w-2 h-2 text-green-500" />
+                    <FaCircle className="w-2 h-2 text-primary-dark" />
                     Published
                   </span>
                   <span className="flex items-center gap-1">
-                    <FaCalendar className="text-blue-500" />
+                    <FaCalendar className="text-primary-dark" />
                     March 15, 2024
                   </span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
-                    <FaClock className="text-blue-500" />8 min read
+                    <FaClock className="text-primary-dark" />8 min read
                   </span>
                 </div>
               </div>
@@ -58,7 +57,7 @@ const BlogDetailPage = () => {
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <button className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-semibold flex items-center gap-3">
+                <button className="px-8 py-4 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl font-semibold flex items-center gap-3">
                   <FaBook />
                   Save to Learning Path
                 </button>
@@ -66,7 +65,7 @@ const BlogDetailPage = () => {
                   onClick={() => setIsBookmarked(!isBookmarked)}
                   className={`px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 ${
                     isBookmarked
-                      ? "bg-blue-600 text-white"
+                      ? "bg-primary-dark text-white"
                       : "bg-white text-gray-700 border border-gray-200"
                   }`}
                 >
@@ -80,30 +79,12 @@ const BlogDetailPage = () => {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-2">
-              <div className="flex space-x-2">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-4 px-6 rounded-2xl font-semibold flex items-center justify-center gap-2 ${
-                      activeTab === tab.id
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <tab.icon />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Learning Objectives */}
             <div className="bg-blue-50 rounded-3xl border border-blue-200 p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <FaBullseye className="text-blue-500" />
+                <FaBullseye className="text-primary-dark" />
                 What You'll Learn
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
@@ -112,7 +93,7 @@ const BlogDetailPage = () => {
                     key={index}
                     className="flex items-start gap-3 p-4 bg-white rounded-2xl border border-gray-200"
                   >
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-6 h-6 bg-gradient-to-r from-primary to-primary-dark rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                       <FaCheck className="text-white text-xs" />
                     </div>
                     <span className="text-gray-700 font-medium">
@@ -178,7 +159,7 @@ const BlogDetailPage = () => {
               {/* Practical Exercise */}
               <div className="bg-green-50 rounded-3xl border border-green-200 p-8">
                 <div className="flex items-start gap-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl text-white flex-shrink-0">
+                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary-dark rounded-2xl flex items-center justify-center text-2xl text-white flex-shrink-0">
                     <FaHandsHelping />
                   </div>
                   <div className="flex-1">
@@ -189,7 +170,7 @@ const BlogDetailPage = () => {
                       Build a custom data table component using compound
                       components pattern.
                     </p>
-                    <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold">
+                    <button className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold">
                       Start Challenge
                     </button>
                   </div>
@@ -207,7 +188,7 @@ const BlogDetailPage = () => {
                       Join the conversation with other learners
                     </p>
                   </div>
-                  <div className="px-4 py-2 bg-blue-100 text-blue-600 rounded-2xl font-semibold">
+                  <div className="px-4 py-2 bg-primary text-white rounded-2xl font-semibold">
                     {comments.length} Comments
                   </div>
                 </div>
@@ -248,7 +229,7 @@ const BlogDetailPage = () => {
                                   Instructor
                                 </span>
                               ) : (
-                                <span className="px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full flex items-center gap-1">
+                                <span className="px-2 py-1 bg-primary text-white text-xs font-medium rounded-full flex items-center gap-1">
                                   <FaUserGraduate />
                                   Student
                                 </span>

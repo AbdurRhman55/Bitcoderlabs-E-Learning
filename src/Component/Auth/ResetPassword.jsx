@@ -33,8 +33,8 @@ export default function ResetPassword() {
   return (
     <AuthLayout title="Reset password" subtitle="Enter the reset token and your new password">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="newPassword" value={form.newPassword} onChange={handleChange} type="password" placeholder="New password" className="w-full border p-3 rounded-lg" required />
-        <input name="confirmPassword" value={form.confirmPassword} onChange={handleChange} type="password" placeholder="Confirm new password" className="w-full border p-3 rounded-lg" required />
+        <input name="newpassword" value={form.newPassword} onChange={handleChange} type="password" placeholder="New password" className="w-full border p-3 rounded-lg" required />
+        <input name="confirmpassword" value={form.confirmPassword} onChange={handleChange} type="password" placeholder="Confirm new password" className="w-full border p-3 rounded-lg" required />
         <Link to="/login" ><Button type="submit" text="Reset password" className="w-full bg-primary text-white" /></Link>
       </form>
     </AuthLayout>

@@ -28,7 +28,7 @@ export default function OtpModal({ isOpen, onClose, onVerify }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="text"
+            type="number"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             placeholder="Enter 6-digit code"

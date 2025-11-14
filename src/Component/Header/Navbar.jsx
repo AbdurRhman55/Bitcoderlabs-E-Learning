@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { Play, ArrowRight, Menu, X } from "lucide-react";
 import Button from "../UI/Button";
+import { blogs } from "../../../Data/BlogcardsArray";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -416,7 +417,7 @@ const Navbar = () => {
               <MobileCoursesDropdown />
             </div>
 
-            {["about", "prices", "contact"].map((item) => (
+            {["about", "Blog", "prices", "contact"].map((item) => (
               <NavLink
                 key={item}
                 to={`/${item}`}
