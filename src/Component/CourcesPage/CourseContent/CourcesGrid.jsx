@@ -11,10 +11,10 @@ export default function CourseGrid() {
   const [showFilter, setShowFilter] = useState(false); // for mobile slide filter
 
   return (
-    <section className="bg-gray-50 py-10 relative overflow-hidden">
+    <section className="bg-gray-50 py-10  relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative">
         {/* ===== Header ===== */}
-        <div className="flex justify-between items-center mb-8 lg:mr-9">
+        <div className="flex justify-between items-center mb-8 lg:mx-7 mx-1 ">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <FaGraduationCap className="text-primary text-4xl" />
             Available Courses
@@ -55,7 +55,7 @@ export default function CourseGrid() {
 
         {/* ===== Main Section ===== */}
         
-          <div className="flex gap-8 items-start transition-all duration-500 ease-in-out">
+          <div className="flex gap-8 lg:ml-5 items-start transition-all duration-500 ease-in-out">
             {/* Left: Courses */}
             <Link to="/course/:id">
             <div className="flex-1 transition-all duration-500">

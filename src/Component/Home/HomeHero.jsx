@@ -25,21 +25,15 @@ const HeroSection = ({ title, SubTitle }) => {
         </p>
 
         {/* Search Input */}
-        <div className="flex justify-center w-full mb-4 lg:mb-8 px-3">
-          <Input
+         <div className="max-w-xl mx-auto mb-8">
+            <Input
             type="text"
-            placeholder="Enter text here"
-            variant="default"
-            className="
-              w-full max-w-sm 
-              sm:max-w-md 
-              md:max-w-lg 
-              lg:max-w-xl
-              text-sm sm:text-base 
-              px-2 sm:px-4
-            "
+            placeholder="Search programming, career advice, study tips..."
+            showButton={true}
+            variant="small"
+            onClick={() => {}}
           />
-        </div>
+          </div>
 
         {/* CTA Buttons */}
         <div className="flex lg:flex-row gap-4 justify-center items-center mt-6 flex-col lg:px-0 px-10 sm:flex-row">

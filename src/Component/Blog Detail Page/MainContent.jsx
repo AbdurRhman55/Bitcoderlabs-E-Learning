@@ -22,7 +22,7 @@ const BlogDetailPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex justify-center gap-12  flex-col lg:flex-row ">
           {/* Main Content */}
           <div className="lg:w-2/3 space-y-8">
             {/* Header Section */}

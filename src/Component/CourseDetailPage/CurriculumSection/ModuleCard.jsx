@@ -24,12 +24,12 @@ export default function ModuleCard({
           className={` lg:px-4 px-2 lg:py-3 py-1 p-5 cursor-pointer transition-all duration-300 bg-gradient-to-r from-white to-blue-50 hover:from-blue-50 hover:to-blue-100`}
           onClick={() => toggleModule(module.id)}
         >
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-0">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-0 p-3">
             {/* Left Section */}
-            <div className="flex items-start lg:items-center gap-6 w-full lg:w-auto">
+            <div className="flex items-start lg:items-center lg:gap-6 gap-2 w-full lg:w-auto">
               <div className="relative flex-shrink-0">
                 <div
-                  className={`lg:w-8 lg:h-8 w-6 h-6 rounded-lg flex items-center justify-center font-bold text-white text-xl shadow-lg bg-gradient-to-br from-primary to-primary-dark`}
+                  className={`w-8 h-8  rounded-lg flex items-center justify-center font-bold text-white text-xl shadow-lg bg-gradient-to-br from-primary to-primary-dark`}
                 >
                   {module.id}
                 </div>
@@ -42,8 +42,8 @@ export default function ModuleCard({
                 <p className="text-gray-600 lg:text-md text-sm mb-1 leading-snug">
                   {module.description}
                 </p>
-                <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm text-gray-500">
-                  <span className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full whitespace-nowrap">
+                <div className="flex flex-wrap   items-center gap-3 sm:gap-6 text-sm text-gray-500">
+                  <span className="flex justify-start items-center gap-2 bg-gray-50 px-3 py-1 rounded-full whitespace-nowrap">
                     <FaBookOpen className="text-primary" />
                     {module.lessons} lessons
                   </span>

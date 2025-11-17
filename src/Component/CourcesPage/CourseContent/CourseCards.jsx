@@ -23,9 +23,9 @@ export default function CourseCard({
 
   return (
     <div
-      className={`group bg-white rounded-2xl shadow-sm hover:shadow-2xl border border-gray-100 hover:border-primary/20 overflow-hidden transition-all duration-500 ${
+      className={`group bg-white rounded-2xl  shadow-sm hover:shadow-2xl border border-gray-100 hover:border-primary/20 overflow-hidden transition-all duration-500 ${
         layout === "list"
-          ? "flex flex-col md:flex-row items-stretch max-h-[270px] h-full" // 👈 fixed height 270px
+          ? "flex flex-col md:flex-row items-stretch max-h-[270px] h-full" // 
           : "flex flex-col h-full"
       }`}
       onMouseEnter={() => setIsHovered(true)}

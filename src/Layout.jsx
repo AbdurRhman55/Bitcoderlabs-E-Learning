@@ -16,12 +16,14 @@ import ScrollToTop from "./Component/ScrollToTop";
 import ForgotPassword from "./Component/Auth/ForgotPassword";
 import ResetPassword from "./Component/Auth/ResetPassword";
 import BlogDetail from "./Pages/BlogDetail";
+import Dashboard from "./Pages/Dashboard";
+// import AllCourses from "./Dashboard/AllCourses";
 
 function Layout() {
 const location = useLocation();
 
 // Hide Navbar and Footer on specific pages
-const hideNavFooter = ["/login", "/register", "/forgotpassword", "/resetpassword"].includes(location.pathname);
+const hideNavFooter = ["/login", "/register", "/forgotpassword", "/resetpassword","/dashboard" ].includes(location.pathname);
 
 return (
 <> <ScrollToTop />
@@ -44,6 +46,9 @@ return (
     <Route path="/forgotpassword" element={<ForgotPassword />} />
     <Route path="/resetpassword" element={<ResetPassword />} />
     <Route path="/register" element={<Register />} />
+    <Route path="/dashboard" element={<Dashboard/>}/>
+    {/* <Route path="/AllCourses" element={<AllCourses/>}/> */}
+
   </Routes>
 
   {/* Footer visible only when not on hidden pages */}
