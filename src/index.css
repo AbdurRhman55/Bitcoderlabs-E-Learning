@@ -5,3 +5,15 @@
   --color-primary-light: #e8f7ff;
   --color-primary-dark: #2a9fd8;
 }
+
+/* Chrome, Safari, Edge ke liye */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox ke liye */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+

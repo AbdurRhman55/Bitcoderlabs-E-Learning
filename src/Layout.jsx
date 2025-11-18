@@ -23,7 +23,7 @@ function Layout() {
 const location = useLocation();
 
 // Hide Navbar and Footer on specific pages
-const hideNavFooter = ["/login", "/register", "/forgotpassword", "/resetpassword","/dashboard" ].includes(location.pathname);
+const hideNavFooter = ["/login", "/register", "/forgotpassword", "/resetpassword","/Dashboard" ].includes(location.pathname);
 
 return (
 <> <ScrollToTop />

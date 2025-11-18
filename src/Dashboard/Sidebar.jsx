@@ -27,12 +27,12 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
     <aside
       className={`${
         open ? "w-64" : "w-20"
-      } fixed sm:static top-0 left-0 h-screen z-50
+      } fixed sm:static top-0 left-0 h-100% z-50
       bg-gradient-to-b from-gray-900 to-gray-800 text-white p-5 transition-all duration-500 ease-in-out`}
     >
       {/* Toggle */}
       <button
-        className="absolute left-4 top-4 bg-blue-600 p-2 rounded-full"
+        className={`absolute top-4 cursor-pointer p-2 rounded-full ${open ? "left-54" : "left-6"}`}
         onClick={() => setOpen(!open)}
       >
         {open ? <X size={18} /> : <Menu size={18} />}
@@ -40,7 +40,7 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
 
       {/* Logo */}
       <div className="flex items-center gap-3 mb-10 mt-10">
-        <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg">
+        <div className="bg-primary-dark text-white w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg">
           B
         </div>
         {open && (
