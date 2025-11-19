@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import AddCourseForm from "./AddCourseFrom";
 import Button from "../Component/UI/Button";
+import { Edit2, Trash2 } from "lucide-react";
+
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([
@@ -68,24 +70,24 @@ export default function CoursesPage() {
       id: courses.length + 1,
       students: 0,
       reviews: 0,
-      isWishlisted: false
+      isWishlisted: false,
     };
-    
-    setCourses(prev => [...prev, courseToAdd]);
+
+    setCourses((prev) => [...prev, courseToAdd]);
     setOpenForm(false);
   };
 
   const handleDeleteCourse = (courseId) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      setCourses(prev => prev.filter(course => course.id !== courseId));
+    if (window.confirm("Are you sure you want to delete this course?")) {
+      setCourses((prev) => prev.filter((course) => course.id !== courseId));
       // Here you would also call your API to delete from database
     }
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(price);
   };
 
@@ -102,8 +104,12 @@ export default function CoursesPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Courses Management</h1>
-          <p className="text-gray-600 mt-2">Manage and organize your course offerings</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Courses Management
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Manage and organize your course offerings
+          </p>
         </div>
         <Button
           variant="primary"
@@ -117,8 +123,8 @@ export default function CoursesPage() {
       {openForm && (
         <div className="fixed inset-0 bg-black/70  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-scroll no-scrollbar">
-            <AddCourseForm 
-              onClose={() => setOpenForm(false)} 
+            <AddCourseForm
+              onClose={() => setOpenForm(false)}
               onSubmit={handleAddCourse}
             />
           </div>
@@ -128,9 +134,11 @@ export default function CoursesPage() {
       {/* Courses Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">All Courses ({courses.length})</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            All Courses ({courses.length})
+          </h2>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -157,17 +165,12 @@ export default function CoursesPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {courses.map((course) => (
-                <tr 
-                  key={course.id} 
+                <tr
+                  key={course.id}
                   className="hover:bg-gray-50 transition-colors duration-150"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      {/* <img 
-                        src={course.image} 
-                        alt={course.title}
-                        className="w-12 h-12 rounded-lg object-cover mr-4"
-                      /> */}
                       <div>
                         <h3 className="font-semibold text-gray-900 text-sm">
                           {course.title}
@@ -179,13 +182,15 @@ export default function CoursesPage() {
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
                             {course.category}
                           </span>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            course.level === 'beginner' 
-                              ? 'bg-green-100 text-green-800'
-                              : course.level === 'intermediate'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              course.level === "beginner"
+                                ? "bg-green-100 text-green-800"
+                                : course.level === "intermediate"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
                             {course.level}
                           </span>
                         </div>
@@ -193,10 +198,14 @@ export default function CoursesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">{course.instructor}</span>
+                    <span className="text-sm text-gray-900">
+                      {course.instructor}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-600">{course.duration}</span>
+                    <span className="text-sm text-gray-600">
+                      {course.duration}
+                    </span>
                     <div className="text-xs text-gray-500 mt-1">
                       {course.lessons} lessons
                     </div>
@@ -218,17 +227,24 @@ export default function CoursesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      <button 
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium transition-colors duration-200"
-                        onClick={() => {/* Edit functionality */}}
+                      {/* Edit Icon */}
+                      <button
+                        className="text-blue-600 hover:text-blue-800 transition"
+                        onClick={() => {
+                          /* Edit functionality */
+                        }}
+                        title="Edit Course"
                       >
-                        Edit
+                        <Edit2 size={18} />
                       </button>
-                      <button 
-                        className="text-red-600 hover:text-red-900 text-sm font-medium transition-colors duration-200"
+
+                      {/* Delete Icon */}
+                      <button
+                        className="text-red-600 hover:text-red-800 transition"
                         onClick={() => handleDeleteCourse(course.id)}
+                        title="Delete Course"
                       >
-                        Delete
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
@@ -242,12 +258,26 @@ export default function CoursesPage() {
         {courses.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
-            <p className="text-gray-500 mb-4">Get started by creating your first course.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No courses found
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Get started by creating your first course.
+            </p>
             <Button
               variant="primary"
               text="Create Course"

@@ -2,6 +2,7 @@ import React, { act, useState } from "react";
 import Sidebar from "./Sidebar";
 import Button from "../Component/UI/Button";
 import UsersTable from "../Dashboard/UsersTable";
+import PendingApprovals from "../Dashboard/PendingApprovals";
 
 import {
   X,
@@ -20,30 +21,6 @@ import {
 } from "lucide-react";
 import AllCourses from "../Dashboard/AllCourses";
 
-// ----------------------
-// Reusable Components
-// ----------------------
-// const Button = ({ children, className = "", variant = "primary", size = "md", ...props }) => {
-//   const baseClasses = "rounded-xl font-medium transition-all duration-300 flex items-center gap-2 shadow-sm";
-
-//   const sizes = {
-//     sm: "px-3 py-2 text-sm",
-//     md: "px-4 py-2",
-//     lg: "px-6 py-3 text-lg",
-//   };
-
-//   const variants = {
-//     primary: "bg-blue-600 text-white hover:bg-blue-700",
-//     secondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
-//     danger: "bg-red-500 text-white hover:bg-red-600",
-//   };
-
-//   return (
-//     <button {...props} className={`${baseClasses} ${sizes[size]} ${variants[variant]} ${className}`}>
-//       {children}
-//     </button>
-//   );
-// };
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -255,6 +232,8 @@ export default function Dashboard() {
         {active === "Dashboard" && <DashboardCards />}
         {active === "Courses" && <AllCourses />}
         {active === "Users" && <UsersTable />}
+        {active === "Pending Approvals" && <PendingApprovals />}
+
 
       </main>
     </div>

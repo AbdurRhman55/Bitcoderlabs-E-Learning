@@ -5,10 +5,9 @@ export default function UsersTable() {
   const [users, setUsers] = useState([
     {
       id: 1,
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
+      firstName: "Mia",
+      lastName: "Dawood",
+      email: "MiaDawood@123gmail.com",
       role: "student",
       status: "active",
       joinDate: "2024-01-15",
@@ -19,10 +18,9 @@ export default function UsersTable() {
     },
     {
       id: 2,
-      firstName: "Jane",
-      lastName: "Smith",
-      email: "jane.smith@example.com",
-      phone: "+1 (555) 987-6543",
+      firstName: "Mia",
+      lastName: "Aizaz",
+      email: "MiaAizaz@example.com",
       role: "instructor",
       status: "active",
       joinDate: "2023-11-08",
@@ -33,10 +31,9 @@ export default function UsersTable() {
     },
     {
       id: 3,
-      firstName: "Mike",
-      lastName: "Johnson",
-      email: "mike.johnson@example.com",
-      phone: "+44 20 7946 0958",
+      firstName: "Abdur",
+      lastName: "Rahman",
+      email: "Abdur@example.com",
       role: "student",
       status: "inactive",
       joinDate: "2024-02-22",
@@ -164,7 +161,6 @@ export default function UsersTable() {
                 "Status",
                 "Join Date",
                 "Last Login",
-                "Courses",
                 "Actions",
               ].map((h) => (
                 <th
@@ -195,7 +191,6 @@ export default function UsersTable() {
 
                 <td className="px-3 py-4 whitespace-nowrap text-gray-700 text-sm">
                   {user.email}
-                  <div className="text-xs text-gray-500">{user.phone}</div>
                 </td>
 
                 <td className="px-3 py-4 whitespace-nowrap">
@@ -233,9 +228,7 @@ export default function UsersTable() {
                   {formatDate(user.lastLogin)}
                 </td>
 
-                <td className="px-3 py-4 whitespace-nowrap text-gray-700 text-sm">
-                  {user.coursesEnrolled}
-                </td>
+                
 
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <div className="flex items-center space-x-4">

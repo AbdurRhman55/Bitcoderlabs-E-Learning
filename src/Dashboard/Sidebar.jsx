@@ -10,18 +10,20 @@ import {
   Settings,
   ChevronRight,
   LayoutDashboard,
+  UserCheck
 } from "lucide-react";
 
 export default function Sidebar({ open, setOpen, active, setActive }) {
   const menuItems = [
-    { icon: <LayoutDashboard size={20} />, label: "Dashboard" },
-    { icon: <BookOpen size={20} />, label: "Courses" },
-    { icon: <Users size={20} />, label: "Users" },
-    { icon: <Phone size={20} />, label: "Contacts" },
-    { icon: <ShoppingBag size={20} />, label: "Orders" },
-    { icon: <BarChart3 size={20} />, label: "Analytics" },
-    { icon: <Settings size={20} />, label: "Settings" },
-  ];
+  { icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+  { icon: <BookOpen size={20} />, label: "Courses" },
+  { icon: <Users size={20} />, label: "Users" },
+  { icon: <UserCheck size={20} />, label: "Pending Approvals" }, 
+  { icon: <Phone size={20} />, label: "Contacts" },
+  { icon: <ShoppingBag size={20} />, label: "Orders" },
+  { icon: <BarChart3 size={20} />, label: "Analytics" },
+  { icon: <Settings size={20} />, label: "Settings" },
+];
 
   return (
     <aside
