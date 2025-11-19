@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { act, useState } from "react";
 import Sidebar from "./Sidebar";
 import Button from "../Component/UI/Button";
+import UsersTable from "../Dashboard/UsersTable";
+
 import {
   X,
   Menu,
@@ -252,6 +254,8 @@ export default function Dashboard() {
         {/* Pages */}
         {active === "Dashboard" && <DashboardCards />}
         {active === "Courses" && <AllCourses />}
+        {active === "Users" && <UsersTable />}
+
       </main>
     </div>
   );
