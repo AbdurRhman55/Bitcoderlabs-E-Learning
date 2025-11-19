@@ -17,45 +17,49 @@ import ForgotPassword from "./Component/Auth/ForgotPassword";
 import ResetPassword from "./Component/Auth/ResetPassword";
 import BlogDetail from "./Pages/BlogDetail";
 import Dashboard from "./Pages/Dashboard";
-// import AllCourses from "./Dashboard/AllCourses";
 
 function Layout() {
-const location = useLocation();
+  const location = useLocation();
 
-// Hide Navbar and Footer on specific pages
-const hideNavFooter = ["/login", "/register", "/forgotpassword", "/resetpassword","/Dashboard" ].includes(location.pathname);
+  // Always convert route to lowercase
+  const path = location.pathname.toLowerCase();
 
-return (
-<> <ScrollToTop />
+  const pagesWithoutLayout = [
+    "/login",
+    "/register",
+    "/forgotpassword",
+    "/resetpassword",
+    "/dashboard"
+  ];
 
-  {/* Navbar visible only when not on hidden pages */}
-  {!hideNavFooter && <Navbar />}
+  const hideNavFooter = pagesWithoutLayout.includes(path);
 
-  {/* All application routes */}
-  <Routes>
-    <Route path="/" element={<Home />} />
-    <Route path="/courses" element={<Courses />} />
-    <Route path="/about" element={<About />} />
-    <Route path="/blog" element={<Blog />} />
-    <Route path="/blog/:id" element={<BlogDetail />} />
-    <Route path="/prices" element={<Prices />} />
-    <Route path="/contact" element={<Contact />} />
-    <Route path="/course/:id" element={<CourseDetailPage />} />
-    <Route path="/enroll/:id" element={<Enroll />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/forgotpassword" element={<ForgotPassword />} />
-    <Route path="/resetpassword" element={<ResetPassword />} />
-    <Route path="/register" element={<Register />} />
-    <Route path="/dashboard" element={<Dashboard/>}/>
-    {/* <Route path="/AllCourses" element={<AllCourses/>}/> */}
+  return (
+    <>
+      <ScrollToTop />
 
-  </Routes>
+      {!hideNavFooter && <Navbar />}
 
-  {/* Footer visible only when not on hidden pages */}
-  {!hideNavFooter && <Footer />}
-</>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<BlogDetail />} />
+        <Route path="/prices" element={<Prices />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/course/:id" element={<CourseDetailPage />} />
+        <Route path="/enroll/:id" element={<Enroll />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgotpassword" element={<ForgotPassword />} />
+        <Route path="/resetpassword" element={<ResetPassword />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
 
-);
+      {!hideNavFooter && <Footer />}
+    </>
+  );
 }
 
 export default Layout;

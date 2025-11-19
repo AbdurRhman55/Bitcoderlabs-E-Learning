@@ -92,7 +92,7 @@ export default function CoursesPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-dark"></div>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function CoursesPage() {
           variant="primary"
           text="+ Add New Course"
           onClick={() => setOpenForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+          className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
         />
       </div>
 
