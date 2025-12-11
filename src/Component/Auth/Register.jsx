@@ -1,43 +1,46 @@
 import React, { useState } from "react";
 import AuthLayout from "./AuthLayout";
-// import { useAuth } from "./AuthLogic";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../UI/Button";
-import { FaGraduationCap, FaChalkboardTeacher, FaCog, FaShieldAlt } from "react-icons/fa";
+import { FaGraduationCap, FaChalkboardTeacher, FaShieldAlt } from "react-icons/fa";
 
 
 export default function Register() {
-  const register = (data) => {
-    console.log("Mock register called", data);
-    // Basic client-side validation example
-    if (!data.email || !data.password) return false;
-    return true;
-  };
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    role: "student", // Default role
+    password_confirmation: "",
+    role: "",
   });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  async function registerUser() {
+    const response = await fetch("http://127.0.0.1:8000/api/v1/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+    const data = await response.json();
+    console.log(data);
+    return data.success;
+  }
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const success = register({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password,
-      confirmPassword: form.confirmPassword,
-      role: form.role,
-    });
+    const success = await registerUser();
+
+    console.log(success);
 
     setLoading(false);
     if (success) {
@@ -46,26 +49,26 @@ export default function Register() {
     }
   };
 
- const roles = [
-  {
-    value: "student",
-    label: "Student",
-    description: "Learn and enroll in courses",
-    icon: <FaGraduationCap size={18} className="text-blue-600" />,
-  },
-  {
-    value: "instructor",
-    label: "Instructor",
-    description: "Create and teach courses",
-    icon: <FaChalkboardTeacher size={18} className="text-purple-600" />,
-  },
-  {
-    value: "moderator",
-    label: "Moderator",
-    description: "Moderate content and users",
-    icon: <FaShieldAlt size={18} className="text-orange-600" />,
-  },
-];
+  const roles = [
+    {
+      value: "student",
+      label: "Student",
+      description: "Learn and enroll in courses",
+      icon: <FaGraduationCap size={18} className="text-blue-600" />,
+    },
+    {
+      value: "instructor",
+      label: "Instructor",
+      description: "Create and teach courses",
+      icon: <FaChalkboardTeacher size={18} className="text-purple-600" />,
+    },
+    {
+      value: "moderator",
+      label: "Moderator",
+      description: "Moderate content and users",
+      icon: <FaShieldAlt size={18} className="text-orange-600" />,
+    },
+  ];
 
 
   return (
@@ -93,7 +96,6 @@ export default function Register() {
           required
         />
 
-        {/* Role Selection */}
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">
             Select Your Role *
@@ -102,11 +104,10 @@ export default function Register() {
             {roles.map((role) => (
               <div
                 key={role.value}
-                className={`relative border-2 rounded-lg px-2 py-1 cursor-pointer transition-all duration-200 ${
-                  form.role === role.value
+                className={`relative border-2 rounded-lg px-2 py-1 cursor-pointer transition-all duration-200 ${form.role === role.value
                     ? "border-primary bg-primary/5"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }`}
+                  }`}
                 onClick={() => setForm({ ...form, role: role.value })}
               >
                 <input
@@ -128,11 +129,10 @@ export default function Register() {
                     </div>
                   </div>
                   <div
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      form.role === role.value
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.role === role.value
                         ? "border-primary bg-primary"
                         : "border-gray-300"
-                    }`}
+                      }`}
                   >
                     {form.role === role.value && (
                       <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -149,13 +149,13 @@ export default function Register() {
           value={form.password}
           onChange={handleChange}
           type="password"
-          placeholder="Password (min 6 chars)"
+          placeholder="Password (min 8 chars)"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
         />
         <input
-          name="confirmPassword"
-          value={form.confirmPassword}
+          name="password_confirmation"
+          value={form.password_confirmation}
           onChange={handleChange}
           type="password"
           placeholder="Confirm password"

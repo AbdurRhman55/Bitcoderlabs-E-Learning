@@ -1,22 +1,27 @@
 import React, { useState } from "react";
 import image from "../../assets/login image.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {login} from "../../../slices/AuthSlice"
+import { useSelector, useDispatch} from 'react-redux'
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user, error } = useSelector(state => state.auth);  
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login:", formData);
+
+    dispatch(login(formData))
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Section */}
       <div
         className="hidden lg:flex lg:flex-1 relative items-center justify-center bg-gradient-to-br from-[#3baee9] to-[#2a9fd8] overflow-hidden"
         style={{
@@ -55,10 +60,8 @@ const LoginPage = () => {
         </div>{" "}
       </div>
 
-      {/* Right Section */}
       <div className="flex-1 flex items-center justify-center bg-gray-50 p-6">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {/* Header */}
           <div className="bg-white p-6 text-center">
             <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
             <p className="text-gray-500 mt-1">
@@ -66,7 +69,6 @@ const LoginPage = () => {
             </p>
           </div>
 
-          {/* Login Form */}
           <div className="p-8 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -135,7 +137,7 @@ const LoginPage = () => {
               </Link>
             </div>
 
-            {/* Social Login */}
+
             <div className="grid grid-cols-2 gap-3 mt-4">
               <button className="flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">

@@ -1,7 +1,7 @@
 // src/components/courses/CoursesPage.jsx
 import React, { useState, useEffect } from "react";
 import AddCourseForm from "./AddCourseFrom";
-import Button from "../Component/UI/Button";
+import Button from "../../Component/UI/Button";
 import { Edit2, Trash2 } from "lucide-react";
 
 

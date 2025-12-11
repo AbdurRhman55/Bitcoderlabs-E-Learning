@@ -1,0 +1,270 @@
+// components/Settings.jsx
+import React, { useState } from 'react';
+
+const Settings = ({ userData }) => {
+  const [activeTab, setActiveTab] = useState('profile');
+  const [formData, setFormData] = useState({
+    name: userData.name,
+    email: userData.email,
+    title: userData.title,
+    bio: userData.bio,
+    notifications: true,
+    newsletter: true,
+    darkMode: false
+  });
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const tabs = [
+    { id: 'profile', label: 'Profile' },
+    { id: 'preferences', label: 'Preferences' },
+    { id: 'security', label: 'Security' },
+    { id: 'billing', label: 'Billing' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-1">Manage your account preferences</p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex overflow-x-auto ">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  flex-1 px-6 py-4 text-sm font-medium cursor-pointer border-b-2 whitespace-nowrap transition-colors duration-200
+                  ${activeTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === 'profile' && (
+            <div className="space-y-6 max-w-2xl">
+              <div className="flex items-center space-x-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold text-xl">
+                  {userData.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div>
+                  <button className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                    Change Avatar
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2">JPG, GIF or PNG. Max size 5MB.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Job Title
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Member Since
+                  </label>
+                  <input
+                    type="text"
+                    value={userData.joinDate}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bio
+                </label>
+                <textarea
+                  rows={4}
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                />
+              </div>
+
+              <div className="flex space-x-4">
+                <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
+                  Save Changes
+                </button>
+                <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'preferences' && (
+            <div className="space-y-6 max-w-2xl">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div>
+                    <div className="font-medium text-gray-900">Course Notifications</div>
+                    <div className="text-sm text-gray-600">Get notified about course updates and deadlines</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.notifications}
+                      onChange={(e) => handleInputChange('notifications', e.target.checked)}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div>
+                    <div className="font-medium text-gray-900">Newsletter</div>
+                    <div className="text-sm text-gray-600">Receive weekly learning tips and new course recommendations</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.newsletter}
+                      onChange={(e) => handleInputChange('newsletter', e.target.checked)}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Appearance</h3>
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div>
+                    <div className="font-medium text-gray-900">Dark Mode</div>
+                    <div className="text-sm text-gray-600">Switch to dark theme</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.darkMode}
+                      onChange={(e) => handleInputChange('darkMode', e.target.checked)}
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-6 max-w-2xl">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Change Password</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                    />
+                  </div>
+                </div>
+                <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
+                  Update Password
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'billing' && (
+            <div className="space-y-6 max-w-2xl">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Subscription</h3>
+                <div className="p-6 border border-primary rounded-lg bg-primary-light">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900">Pro Plan</div>
+                      <div className="text-sm text-gray-600">Active until March 15, 2024</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-900">$29.99/month</div>
+                      <div className="text-sm text-gray-600">Next billing: Mar 15</div>
+                    </div>
+                  </div>
+                </div>
+                <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
+                  Manage Subscription
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Settings;

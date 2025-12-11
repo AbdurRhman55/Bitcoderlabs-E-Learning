@@ -3,13 +3,42 @@ import { NavLink, Link, useLocation } from "react-router-dom";
 import { Play, ArrowRight, Menu, X } from "lucide-react";
 import Button from "../UI/Button";
 import { blogs } from "../../../Data/BlogcardsArray";
+import { useSelector,useDispatch } from "react-redux";
+import { logout } from "../../../slices/AuthSlice";
 
 const Navbar = () => {
+  const [Users, setUsers] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeLevel, setActiveLevel] = useState("beginner");
   const [activeCourse, setActiveCourse] = useState(null);
   const coursesDropdownRef = useRef(null);
   const location = useLocation();
+  const token = localStorage.getItem("token");
+
+  const Logout = useDispatch()
+
+  const submitLogout=()=>{
+     Logout(logout())
+
+  }
+
+
+  async function getUser() {
+    const res = await fetch("http://127.0.0.1:8000/api/v1/me", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      bearerToken: localStorage.getItem("token"),
+    })
+    const data = await res.json();
+    setUsers(data.user);
+  }
+
+  useEffect(() => {
+    getUser();
+  }, [])
+
+  console.log(Users);
+
 
   const courseToSubcourses = {
     "html-basics": "html-basics-subcourses",
@@ -123,11 +152,10 @@ const Navbar = () => {
             {["beginner", "intermediate", "advanced"].map((level) => (
               <button
                 key={level}
-                className={`p-3 rounded-lg transition-all duration-200 border text-sm font-medium capitalize ${
-                  mobileActiveLevel === level
-                    ? "bg-primary-dark text-white border-primary-dark"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-primary-dark hover:text-primary-dark"
-                }`}
+                className={`p-3 rounded-lg transition-all duration-200 border text-sm font-medium capitalize ${mobileActiveLevel === level
+                  ? "bg-primary-dark text-white border-primary-dark"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-primary-dark hover:text-primary-dark"
+                  }`}
                 onClick={() => {
                   setMobileActiveLevel(level);
                   setMobileActiveCourse(null);
@@ -147,11 +175,10 @@ const Navbar = () => {
             {courseLevels[mobileActiveLevel]?.map((course) => (
               <button
                 key={course.id}
-                className={`w-full text-left p-3 rounded-lg border transition-all duration-200 text-sm font-medium ${
-                  mobileActiveCourse === course.id
-                    ? "bg-primary-dark text-white border-primary-dark"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-primary-dark hover:text-primary-dark"
-                }`}
+                className={`w-full text-left p-3 rounded-lg border transition-all duration-200 text-sm font-medium ${mobileActiveCourse === course.id
+                  ? "bg-primary-dark text-white border-primary-dark"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-primary-dark hover:text-primary-dark"
+                  }`}
                 onClick={() =>
                   setMobileActiveCourse(
                     mobileActiveCourse === course.id ? null : course.id
@@ -212,20 +239,18 @@ const Navbar = () => {
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `font-medium transition-all duration-300 relative py-2 px-1 ${
-                  isActive
-                    ? "text-primary-dark"
-                    : "text-gray-700 hover:text-primary-dark"
+                `font-medium transition-all duration-300 relative py-2 px-1 ${isActive
+                  ? "text-primary-dark"
+                  : "text-gray-700 hover:text-primary-dark"
                 }`
               }
             >
               Home
               <span
-                className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary-dark transition-all duration-300 ${
-                  location.pathname === "/"
-                    ? "scale-x-100"
-                    : "scale-x-0 group-hover:scale-x-100"
-                }`}
+                className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary-dark transition-all duration-300 ${location.pathname === "/"
+                  ? "scale-x-100"
+                  : "scale-x-0 group-hover:scale-x-100"
+                  }`}
               ></span>
             </NavLink>
           </div>
@@ -237,10 +262,9 @@ const Navbar = () => {
             <NavLink
               to="/courses"
               className={({ isActive }) =>
-                `font-medium transition-all duration-300 relative py-2 px-1 flex items-center gap-1 ${
-                  isActive
-                    ? "text-primary-dark"
-                    : "text-gray-700 hover:text-primary-dark"
+                `font-medium transition-all duration-300 relative py-2 px-1 flex items-center gap-1 ${isActive
+                  ? "text-primary-dark"
+                  : "text-gray-700 hover:text-primary-dark"
                 }`
               }
             >
@@ -271,11 +295,10 @@ const Navbar = () => {
                     {["beginner", "intermediate", "advanced"].map((level) => (
                       <li key={level} className="level-item group/level">
                         <button
-                          className={`w-full text-left p-3 rounded-lg transition-all duration-200 flex items-center justify-between border ${
-                            activeLevel === level
-                              ? "bg-primary-dark text-white shadow-md"
-                              : "text-gray-700 border-transparent hover:bg-white hover:border-blue-200 hover:text-blue-600 hover:shadow-sm"
-                          }`}
+                          className={`w-full text-left p-3 rounded-lg transition-all duration-200 flex items-center justify-between border ${activeLevel === level
+                            ? "bg-primary-dark text-white shadow-md"
+                            : "text-gray-700 border-transparent hover:bg-white hover:border-blue-200 hover:text-blue-600 hover:shadow-sm"
+                            }`}
                           onMouseEnter={() => handleLevelHover(level)}
                         >
                           <span className="capitalize font-medium text-sm">
@@ -346,20 +369,18 @@ const Navbar = () => {
               <NavLink
                 to={`/${item}`}
                 className={({ isActive }) =>
-                  `font-medium transition-all duration-300 relative py-2 px-1 ${
-                    isActive
-                      ? "text-primary-dark"
-                      : "text-gray-700 hover:text-primary-dark"
+                  `font-medium transition-all duration-300 relative py-2 px-1 ${isActive
+                    ? "text-primary-dark"
+                    : "text-gray-700 hover:text-primary-dark"
                   }`
                 }
               >
                 {item.charAt(0).toUpperCase() + item.slice(1)}
                 <span
-                  className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary-dark transition-all duration-300 ${
-                    location.pathname === `/${item}`
-                      ? "scale-x-100"
-                      : "scale-x-0 group-hover:scale-x-100"
-                  }`}
+                  className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary-dark transition-all duration-300 ${location.pathname === `/${item}`
+                    ? "scale-x-100"
+                    : "scale-x-0 group-hover:scale-x-100"
+                    }`}
                 ></span>
               </NavLink>
             </div>
@@ -367,12 +388,40 @@ const Navbar = () => {
         </nav>
         {/* Desktop Auth Buttons (static) */}
         <div className="hidden lg:flex items-center gap-3">
-          <Link to="/register">
-            <Button text="Sign In" variant="outline" size="sm" />
-          </Link>
-          <Link to="/login">
-            <Button text="Log In" size="sm" />
-          </Link>
+          {token ? (
+            <>
+              <Link onClick={submitLogout}>
+                <Button
+                  text="Logout"
+                  variant="squarefull"
+                  className="w-full justify-center"
+                  size="sm"
+                />
+              </Link>
+              <Link to="/StudentDashboard" onClick={handleNavLinkClick} className="relative">
+                <h2 className=" rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center items-center">
+                  B
+                </h2>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/register" className="block" onClick={handleNavLinkClick}>
+                <Button
+                  text="Sign In"
+                  variant="squarefull"
+                  className="w-full justify-center"
+                />
+              </Link>
+              <Link to="/login" className="block" onClick={handleNavLinkClick}>
+                <Button
+                  text="Log In"
+                  variant="squarefull"
+                  className="w-full justify-center"
+                />
+              </Link>
+            </>
+          )}
         </div>
         {/* Mobile Menu Button */}
         <div className="lg:hidden">
@@ -392,9 +441,8 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className={`lg:hidden fixed top-0 left-0 right-0 bg-white shadow-xl z-40 transition-transform duration-300 ease-in-out overflow-y-auto max-h-[calc(100vh-64px)] ${
-          mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
-        }`}
+        className={`lg:hidden fixed top-0 left-0 right-0 bg-white shadow-xl z-40 transition-transform duration-300 ease-in-out overflow-y-auto max-h-[calc(100vh-64px)] ${mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
+          }`}
         style={{ marginTop: "64px" }}
       >
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -402,10 +450,9 @@ const Navbar = () => {
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `block py-3 px-4 rounded-lg font-medium transition-all duration-200 border ${
-                  isActive
-                    ? "bg-primary-dark text-white border-primary-dark"
-                    : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-primary-dark"
+                `block py-3 px-4 rounded-lg font-medium transition-all duration-200 border ${isActive
+                  ? "bg-primary-dark text-white border-primary-dark"
+                  : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-primary-dark"
                 }`
               }
               onClick={handleNavLinkClick}
@@ -422,10 +469,9 @@ const Navbar = () => {
                 key={item}
                 to={`/${item}`}
                 className={({ isActive }) =>
-                  `block py-3 px-4 rounded-lg font-medium transition-all duration-200 border ${
-                    isActive
-                      ? "bg-primary-dark text-white border-primary-dark"
-                      : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-primary-dark"
+                  `block py-3 px-4 rounded-lg font-medium transition-all duration-200 border ${isActive
+                    ? "bg-primary-dark text-white border-primary-dark"
+                    : "text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-primary-dark"
                   }`
                 }
                 onClick={handleNavLinkClick}
@@ -435,22 +481,33 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="space-y-3 pt-4 border-t border-gray-200">
-            <Link to="/register" className="block" onClick={handleNavLinkClick}>
-              <Button
-                text="Sign In"
-                variant="squarefull"
-                className="w-full justify-center"
-              />
-            </Link>
-            <Link to="/login" className="block" onClick={handleNavLinkClick}>
-              <Button
-                text="Log In"
-                variant="squarefull"
-                className="w-full justify-center"
-              />
-            </Link>
+          <div className="space-y-3 pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
+            {Users ? (
+              <Link to="/StudentDashboard" onClick={handleNavLinkClick} className="relative">
+                <h2 className=" rounded-full w-8 h-8 bg-primary text-white">
+                  B
+                </h2>
+              </Link>
+            ) : (
+              <>
+                <Link to="/register" className="block" onClick={handleNavLinkClick}>
+                  <Button
+                    text="Sign In"
+                    variant="squarefull"
+                    className="w-full justify-center"
+                  />
+                </Link>
+                <Link to="/login" className="block" onClick={handleNavLinkClick}>
+                  <Button
+                    text="Log In"
+                    variant="squarefull"
+                    className="w-full justify-center"
+                  />
+                </Link>
+              </>
+            )}
           </div>
+
         </div>
       </div>
       {mobileMenuOpen && (

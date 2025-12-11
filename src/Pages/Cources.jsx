@@ -10,6 +10,7 @@ export default function Cources() {
       <CourseGrid />
       <CTASection />
       {/* <Footer /> */}
+
     </div>
   )
 }

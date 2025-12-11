@@ -2,8 +2,9 @@ import { BrowserRouter as Router } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
-// import { AuthProvider } from "./Component/Auth/AuthLogic"; // ✅ correct path
+import store from '../store'
 import Layout from "./Layout";
+import { Provider } from "react-redux";
 
 function App() {
   useEffect(() => {
@@ -12,10 +13,9 @@ function App() {
 
   return (
     <Router>
-      {/* ✅ wrap the entire app in AuthProvider */}
-      {/* <AuthProvider> */}
+      <Provider store={store}>
         <Layout />
-      {/* </AuthProvider> */}
+      </Provider>
     </Router>
   );
 }

@@ -1,5 +1,5 @@
 // import React from 'react'
-import DashboardView from '../Dashboard/DashboardView'
+import DashboardView from '../Dashboards/AdminDashboard/DashboardView'
 export default function Dashboard() {
   return (
     <div>

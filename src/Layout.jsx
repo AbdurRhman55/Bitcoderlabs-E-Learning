@@ -16,7 +16,13 @@ import ScrollToTop from "./Component/ScrollToTop";
 import ForgotPassword from "./Component/Auth/ForgotPassword";
 import ResetPassword from "./Component/Auth/ResetPassword";
 import BlogDetail from "./Pages/BlogDetail";
-import Dashboard from "./Pages/Dashboard";
+import AdminDashboard from "./Pages/AdminDashboard";
+// import UserProfile from "./UserProfile/UserProfile";
+import StudentDashoard from "./Pages/StudentDashboard";
+import TeacherProfile from "./Dashboards/TeacherDashbaord/TeacherProfile"
+import SuperAdminLogin from "./Pages/SuperAdminLogin";
+
+
 
 function Layout() {
   const location = useLocation();
@@ -25,11 +31,14 @@ function Layout() {
   const path = location.pathname.toLowerCase();
 
   const pagesWithoutLayout = [
+    "/studentdashboard",
     "/login",
     "/register",
     "/forgotpassword",
     "/resetpassword",
-    "/dashboard"
+    "/admindashboard",
+    "/superadminlogin",
+    "/teacherprofile"
   ];
 
   const hideNavFooter = pagesWithoutLayout.includes(path);
@@ -54,7 +63,11 @@ function Layout() {
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/resetpassword" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admindashboard" element={<AdminDashboard />} />
+        {/* <Route path="/UserProfile" element={<UserProfile/>}/> */}
+        <Route path="/studentdashboard" element={<StudentDashoard />} />
+        <Route path="/teacherprofile" element={<TeacherProfile />} />
+        <Route path="superadminlogin" element={<SuperAdminLogin />} />
       </Routes>
 
       {!hideNavFooter && <Footer />}

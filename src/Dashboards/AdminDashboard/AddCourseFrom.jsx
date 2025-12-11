@@ -1,6 +1,6 @@
 // src/components/dashboard/AddCourseForm.jsx
 import React, { useState } from "react";
-import Button from "../Component/UI/Button";
+import Button from "../../Component/UI/Button";
 import { FiX } from "react-icons/fi";
 
 export default function AddCourseForm({ onSubmit, onClose }) {

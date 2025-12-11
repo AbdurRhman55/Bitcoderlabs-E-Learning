@@ -1,43 +1,40 @@
-// src/components/users/PendingRequests.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 export default function PendingApprovals() {
-  // Sample pending users
-  const [pendingUsers, setPendingUsers] = useState([
-    {
-      id: 1,
-      firstName: "Alice",
-      lastName: "Brown",
-      email: "alice.brown@example.com",
-      requestedRole: "instructor",
-      country: "USA",
-      avatar: "https://via.placeholder.com/40",
-    },
-    {
-      id: 2,
-      firstName: "Bob",
-      lastName: "Smith",
-      email: "bob.smith@example.com",
-      requestedRole: "moderator",
-      country: "UK",
-      avatar: "https://via.placeholder.com/40",
-    },
-  ]);
+  const [pendingUsers, setPendingUsers] = useState([]);
 
-  // Approve user
+  // Fetch users from API
+  const fetchUsers = async () => {
+    const resp = await fetch("http://127.0.0.1:8000/api/v1/users");
+    const result = await resp.json();
+
+    console.log("API RESPONSE:", result);
+
+    // real users are inside result.data
+    const usersArray = result.data || [];
+
+    // Filter only inactive users
+    const pending = usersArray.filter((u) => u.is_active === false);
+
+    setPendingUsers(pending);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Approve User
   const handleApprove = (userId) => {
     if (window.confirm("Are you sure you want to approve this user?")) {
-      setPendingUsers((prev) => prev.filter((user) => user.id !== userId));
-      // TODO: send approval request to backend to activate the user
+      setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
     }
   };
 
-  // Reject user
+  // Reject User
   const handleReject = (userId) => {
     if (window.confirm("Are you sure you want to reject this user?")) {
-      setPendingUsers((prev) => prev.filter((user) => user.id !== userId));
-      // TODO: send rejection request to backend to delete/deny the user
+      setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
     }
   };
 
@@ -65,10 +62,10 @@ export default function PendingApprovals() {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                User
+                Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Contact
+                Email
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Requested Role
@@ -78,6 +75,7 @@ export default function PendingApprovals() {
               </th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-gray-200">
             {pendingUsers.map((user) => (
               <tr
@@ -86,14 +84,10 @@ export default function PendingApprovals() {
               >
                 {/* User Info */}
                 <td className="px-6 py-4 flex items-center gap-3">
-                  <img
-                    src={user.avatar}
-                    alt={`${user.firstName} ${user.lastName}`}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+
                   <div>
                     <div className="font-semibold text-gray-900">
-                      {user.firstName} {user.lastName}
+                      {user.name}
                     </div>
                     <div className="text-xs text-gray-500">{user.country}</div>
                   </div>
@@ -118,7 +112,7 @@ export default function PendingApprovals() {
                 {/* Actions */}
                 <td className="px-6 py-4 text-sm">
                   <div className="flex items-center space-x-3">
-                    {/* Approve Icon */}
+                    {/* Approve */}
                     <button
                       className="text-green-600 hover:text-green-800 transition"
                       onClick={() => handleApprove(user.id)}
@@ -127,7 +121,7 @@ export default function PendingApprovals() {
                       <CheckCircle2 size={20} />
                     </button>
 
-                    {/* Reject Icon */}
+                    {/* Reject */}
                     <button
                       className="text-red-600 hover:text-red-800 transition"
                       onClick={() => handleReject(user.id)}
