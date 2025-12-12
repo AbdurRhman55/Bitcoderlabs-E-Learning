@@ -19,8 +19,9 @@ import BlogDetail from "./Pages/BlogDetail";
 import AdminDashboard from "./Pages/AdminDashboard";
 // import UserProfile from "./UserProfile/UserProfile";
 import StudentDashoard from "./Pages/StudentDashboard";
-import TeacherProfile from "./Dashboards/TeacherDashbaord/TeacherProfile"
+import TeacherProfile from "./Dashboards/TeacherProfile/TeacherProfile"
 import SuperAdminLogin from "./Pages/SuperAdminLogin";
+import TeacherMainDashboard from "./Dashboards/TeacherDashboard/TeacherMainDashboard";
 
 
 
@@ -38,7 +39,8 @@ function Layout() {
     "/resetpassword",
     "/admindashboard",
     "/superadminlogin",
-    "/teacherprofile"
+    "/teacherprofile",
+    "/teachermaindashboard"
   ];
 
   const hideNavFooter = pagesWithoutLayout.includes(path);
@@ -64,9 +66,9 @@ function Layout() {
         <Route path="/resetpassword" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admindashboard" element={<AdminDashboard />} />
-        {/* <Route path="/UserProfile" element={<UserProfile/>}/> */}
         <Route path="/studentdashboard" element={<StudentDashoard />} />
         <Route path="/teacherprofile" element={<TeacherProfile />} />
+        <Route path="/teachermaindashboard" element={<TeacherMainDashboard />} />
         <Route path="superadminlogin" element={<SuperAdminLogin />} />
       </Routes>
 
