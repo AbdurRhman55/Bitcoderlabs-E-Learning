@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import Button from "../../Component/UI/Button";
-import UsersTable from "./UsersTable";
+import StudentTable from "./StudentsTable";
 import PendingApprovals from "./PendingApprovals";
 
 import {
@@ -25,6 +25,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import AllCourses from "./AllCourses";
+import StudentsTable from "./StudentsTable";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -51,9 +52,8 @@ function NotificationSidebar({ isOpen, onClose, pendingRequests, onApprove, onRe
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-xl z-50 transform transition-all duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-xl z-50 transform transition-all duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-5">
@@ -150,7 +150,7 @@ function NotificationSidebar({ isOpen, onClose, pendingRequests, onApprove, onRe
                             {request.time}
                           </span>
                         </div>
-                        
+
                         {/* Additional Info */}
                         <div className="flex gap-2 mt-2">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -512,7 +512,7 @@ export default function Dashboard() {
         <div className="space-y-6">
           {active === "Dashboard" && <DashboardCards />}
           {active === "Courses" && <AllCourses />}
-          {active === "Users" && <UsersTable />}
+          {active === "Students" && <StudentTable />}
           {active === "Pending Approvals" && <PendingApprovals />}
         </div>
       </main>

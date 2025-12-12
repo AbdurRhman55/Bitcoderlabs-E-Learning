@@ -39,10 +39,6 @@ export const calculateCompletion = (profile, educationList, experienceList, work
         totalScore += Math.min(experienceScore, 15);
     }
 
-    // Work Photos (10 points - bonus)
-    if (workPics.length > 0) {
-        totalScore += Math.min(workPics.length * 2, 10);
-    }
 
     return Math.min(Math.round(totalScore), maxScore);
 };

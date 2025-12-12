@@ -11,10 +11,8 @@ export default function PendingApprovals() {
 
     console.log("API RESPONSE:", result);
 
-    // real users are inside result.data
     const usersArray = result.data || [];
 
-    // Filter only inactive users
     const pending = usersArray.filter((u) => u.is_active === false);
 
     setPendingUsers(pending);

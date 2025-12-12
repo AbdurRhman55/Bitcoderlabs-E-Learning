@@ -2,8 +2,8 @@
 import React from 'react';
 import PersonalInfoTab from './PersonalInfo';
 import EducationTab from './EducationTab';
-import ExperienceTab from './EducationTab';
-import WorkPhotosTab from './WorkPhotosTab';
+import ExperienceTab from './Experiencetab';
+// import WorkPhotosTab from './WorkPhotosTab';
 import PreviewTab from './PreviewTab';
 
 const TabContent = ({
@@ -14,10 +14,14 @@ const TabContent = ({
     setEducationList,
     experienceList,
     setExperienceList,
-    workPics,
-    setWorkPics,
+    project,
+    setProjectList,
+    Certification,
+    setCertificationList,
+    // setWorkPics,
     showNotification
 }) => {
+    console.log(project);
 
     const tabs = {
         personal: (
@@ -39,21 +43,19 @@ const TabContent = ({
                 experienceList={experienceList}
                 setExperienceList={setExperienceList}
                 showNotification={showNotification}
+                projectsList={project}
+                setProjectsList={setProjectList}
+                Certification={Certification}
+                setCertificationsList={setCertificationList}
             />
         ),
-        workPics: (
-            <WorkPhotosTab
-                workPics={workPics}
-                setWorkPics={setWorkPics}
-                showNotification={showNotification}
-            />
-        ),
+
         preview: (
             <PreviewTab
                 profile={profile}
                 educationList={educationList}
                 experienceList={experienceList}
-                workPics={workPics}
+            // workPics={workPics}
             />
         ),
     };

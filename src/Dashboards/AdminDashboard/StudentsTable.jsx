@@ -1,65 +1,36 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Edit2, Trash2 } from "lucide-react";
 
-export default function UsersTable() {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      firstName: "Mia",
-      lastName: "Dawood",
-      email: "MiaDawood@123gmail.com",
-      role: "student",
-      status: "active",
-      joinDate: "2024-01-15",
-      lastLogin: "2024-03-20",
-      coursesEnrolled: 5,
-      country: "United States",
-      avatar: "https://via.placeholder.com/40",
-    },
-    {
-      id: 2,
-      firstName: "Mia",
-      lastName: "Aizaz",
-      email: "MiaAizaz@example.com",
-      role: "instructor",
-      status: "active",
-      joinDate: "2023-11-08",
-      lastLogin: "2024-03-19",
-      coursesEnrolled: 12,
-      country: "Canada",
-      avatar: "https://via.placeholder.com/40",
-    },
-    {
-      id: 3,
-      firstName: "Abdur",
-      lastName: "Rahman",
-      email: "Abdur@example.com",
-      role: "student",
-      status: "inactive",
-      joinDate: "2024-02-22",
-      lastLogin: "2024-03-10",
-      coursesEnrolled: 2,
-      country: "United Kingdom",
-      avatar: "https://via.placeholder.com/40",
-    },
-  ]);
+export default function StudentsTable() {
+
+  const [pending, SetPending] = useState([])
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+
+    const resp = await fetch("http://127.0.0.1:8000/api/v1/users");
+    const result = await resp.json();
+
+    console.log("API RESPONSE:", result);
+
+    const usersArray = result.data || [];
+
+    const pending = usersArray.filter((u) => u.is_active === true && u.role === "student");
+
+    SetPending(pending);
+    console.log(pending)
+  };
+  useEffect(() => { fetchUsers() }, [])
+
+
+
+  const [users, setUsers] = useState();
+  useEffect(() => { setUsers(pending) })
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" || user.status === statusFilter;
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-
-    return matchesSearch && matchesStatus && matchesRole;
-  });
 
   const handleDeleteUser = (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
@@ -111,7 +82,7 @@ export default function UsersTable() {
           Users Management
         </h2>
         <p className="text-sm text-gray-500">
-          {filteredUsers.length} of {users.length} users found
+          {/* {users.length} of {users.length} users foSund */}
         </p>
 
         <div className="mt-3 flex gap-3 items-center">
@@ -174,7 +145,7 @@ export default function UsersTable() {
           </thead>
 
           <tbody className="divide-y divide-gray-100">
-            {filteredUsers.map((user) => (
+            {users?.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-3 py-4 whitespace-nowrap flex items-center gap-3">
                   <img
@@ -228,7 +199,7 @@ export default function UsersTable() {
                   {formatDate(user.lastLogin)}
                 </td>
 
-                
+
 
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                   <div className="flex items-center space-x-4">
@@ -257,7 +228,7 @@ export default function UsersTable() {
       </div>
 
       {/* Empty State */}
-      {filteredUsers.length === 0 && (
+      {users?.length === 0 && (
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No users found

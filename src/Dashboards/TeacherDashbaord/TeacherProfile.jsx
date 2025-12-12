@@ -5,7 +5,6 @@ import ProgressSidebar from './ProgressSidebar';
 import TabContent from './TabContent';
 import Notification from './Notification';
 import { calculateCompletion } from './UpdateCalculateCompletion';
-import { loadMockData } from './MockData';
 
 const TeacherDashboard = () => {
     const [activeTab, setActiveTab] = useState('personal');
@@ -22,17 +21,12 @@ const TeacherDashboard = () => {
 
     const [educationList, setEducationList] = useState([]);
     const [experienceList, setExperienceList] = useState([]);
-    const [workPics, setWorkPics] = useState([]);
+    const [ProjectList, setProjectList] = useState([]);
+    const [CertificationList, setCertificationList] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-    useEffect(() => {
-        const data = loadMockData();
-        setProfile(data.profile);
-        setEducationList(data.educationList);
-        setExperienceList(data.experienceList);
-        setWorkPics(data.workPics);
-    }, []);
+
 
     const showNotification = (message, type) => {
         setNotification({ show: true, message, type });
@@ -57,7 +51,7 @@ const TeacherDashboard = () => {
         }, 1500);
     };
 
-    const completionPercentage = calculateCompletion(profile, educationList, experienceList, workPics);
+    const completionPercentage = calculateCompletion(profile, educationList, experienceList,);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -90,8 +84,10 @@ const TeacherDashboard = () => {
                             setEducationList={setEducationList}
                             experienceList={experienceList}
                             setExperienceList={setExperienceList}
-                            workPics={workPics}
-                            setWorkPics={setWorkPics}
+                            project={ProjectList}
+                            setProjectList={setProjectList}
+                            Certification={CertificationList}
+                            setCertificationList={setCertificationList}
                             showNotification={showNotification}
                         />
                     </div>

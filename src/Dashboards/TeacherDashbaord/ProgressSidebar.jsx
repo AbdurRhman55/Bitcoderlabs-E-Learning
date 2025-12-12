@@ -14,7 +14,6 @@ const ProgressSidebar = ({
         { id: 'personal', label: 'Personal Info', icon: <FaUser /> },
         { id: 'education', label: 'Education', icon: <FaGraduationCap /> },
         { id: 'experience', label: 'Work Experience', icon: <FaBriefcase /> },
-        { id: 'workPics', label: 'Work Photos', icon: <FaImage /> },
         { id: 'preview', label: 'Profile Preview', icon: <FaFileAlt /> },
     ];
 
