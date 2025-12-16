@@ -17,16 +17,61 @@ export default function PendingApprovals() {
 
     setPendingUsers(pending);
   };
-
+  console.log(pendingUsers)
   useEffect(() => {
     fetchUsers();
   }, []);
 
+
+
+
+  const [update, setupdateUsers] = useState({ name: "", email: "", password: "", is_active: true, password_confirmation: "" });
+
+  // Fetch users from API
+  const updateUsers = async (user) => {
+    const resp = await fetch(`http://127.0.0.1:8000/api/v1/users/${user}`, {
+      method: "PUT",
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify(update)
+    });
+    const result = await resp.json();
+
+    console.log("API RESPONSE:", result);
+
+    // const usersArray = result.data || [];
+
+    // const pending = usersArray.filter((u) => u.is_active === false);
+
+    // setupdateUsers(pending);
+  };
+  console.log(update)
+  useEffect(() => {
+    updateUsers(83);
+  }, []);
+
+
+
+
+  const token = localStorage.getItem("token")
+  const ApproveStudent = async (User) => {
+    const resp = await fetch(`http://127.0.0.1:8000/api/v1/users/${User}/approve`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json"
+      },
+      body: User
+    })
+    const result = await resp.json();
+    console.log(result);
+  }
+
+
   // Approve User
-  const handleApprove = (userId) => {
-    if (window.confirm("Are you sure you want to approve this user?")) {
-      setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
-    }
+  const handleApprove = () => {
+    pendingUsers.map((items => {
+      ApproveStudent(items.id)
+    }))
   };
 
   // Reject User
@@ -100,10 +145,10 @@ export default function PendingApprovals() {
                 <td className="px-6 py-4">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadge(
-                      user.requestedRole
+                      user.role
                     )}`}
                   >
-                    {user.requestedRole}
+                    {user.role}
                   </span>
                 </td>
 
@@ -112,6 +157,7 @@ export default function PendingApprovals() {
                   <div className="flex items-center space-x-3">
                     {/* Approve */}
                     <button
+
                       className="text-green-600 hover:text-green-800 transition"
                       onClick={() => handleApprove(user.id)}
                       title="Approve"

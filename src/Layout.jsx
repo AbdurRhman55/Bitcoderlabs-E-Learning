@@ -20,7 +20,6 @@ import AdminDashboard from "./Pages/AdminDashboard";
 // import UserProfile from "./UserProfile/UserProfile";
 import StudentDashoard from "./Pages/StudentDashboard";
 import TeacherProfile from "./Dashboards/TeacherProfile/TeacherProfile"
-import SuperAdminLogin from "./Pages/SuperAdminLogin";
 import TeacherMainDashboard from "./Dashboards/TeacherDashboard/TeacherMainDashboard";
 
 
@@ -38,7 +37,6 @@ function Layout() {
     "/forgotpassword",
     "/resetpassword",
     "/admindashboard",
-    "/superadminlogin",
     "/teacherprofile",
     "/teachermaindashboard"
   ];
@@ -69,7 +67,6 @@ function Layout() {
         <Route path="/studentdashboard" element={<StudentDashoard />} />
         <Route path="/teacherprofile" element={<TeacherProfile />} />
         <Route path="/teachermaindashboard" element={<TeacherMainDashboard />} />
-        <Route path="superadminlogin" element={<SuperAdminLogin />} />
       </Routes>
 
       {!hideNavFooter && <Footer />}

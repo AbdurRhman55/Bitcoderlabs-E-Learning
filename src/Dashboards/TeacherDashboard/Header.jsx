@@ -1,9 +1,21 @@
 // src/components/DashboardHeader.jsx
 import React, { useState } from 'react';
 import { FaBell, FaUserCircle, FaSearch, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../../slices/AuthSlice'; // adjust path if needed
+import { useNavigate } from 'react-router-dom';
 
 const DashboardHeader = ({ profile, notifications }) => {
     const [showDropdown, setShowDropdown] = useState(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate('/login'); // redirect to login page
+    }
+
+
 
     return (
         <header className="bg-white shadow-sm border-b border-gray-200">
@@ -79,13 +91,15 @@ const DashboardHeader = ({ profile, notifications }) => {
                                             Settings
                                         </a>
                                         <div className="border-t border-gray-200"></div>
-                                        <a
-                                            href="#"
-                                            className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                        >
-                                            <FaSignOutAlt className="mr-3" />
-                                            Logout
-                                        </a>
+                                        <button onClick={handleLogout} >
+                                            <a
+                                                href="#"
+                                                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                            >
+                                                <FaSignOutAlt className="mr-3" />
+                                                Logout
+                                            </a>
+                                        </button>
                                     </div>
                                 </div>
                             )}

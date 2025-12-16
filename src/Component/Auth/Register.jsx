@@ -20,6 +20,7 @@ export default function Register() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  console.log(form)
   async function registerUser() {
     const response = await fetch("http://127.0.0.1:8000/api/v1/register", {
       method: "POST",
@@ -62,13 +63,8 @@ export default function Register() {
       description: "Create and teach courses",
       icon: <FaChalkboardTeacher size={18} className="text-purple-600" />,
     },
-    {
-      value: "moderator",
-      label: "Moderator",
-      description: "Moderate content and users",
-      icon: <FaShieldAlt size={18} className="text-orange-600" />,
-    },
   ];
+
 
 
   return (
@@ -105,8 +101,8 @@ export default function Register() {
               <div
                 key={role.value}
                 className={`relative border-2 rounded-lg px-2 py-1 cursor-pointer transition-all duration-200 ${form.role === role.value
-                    ? "border-primary bg-primary/5"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  ? "border-primary bg-primary/5"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 onClick={() => setForm({ ...form, role: role.value })}
               >
@@ -130,8 +126,8 @@ export default function Register() {
                   </div>
                   <div
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.role === role.value
-                        ? "border-primary bg-primary"
-                        : "border-gray-300"
+                      ? "border-primary bg-primary"
+                      : "border-gray-300"
                       }`}
                   >
                     {form.role === role.value && (
