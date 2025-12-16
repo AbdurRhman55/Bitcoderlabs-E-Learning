@@ -37,7 +37,6 @@ export default function CoursesPage() {
       setLoading(true);
       console.log('Submitting course data:', courseData);
 
-      // Prepare data for API - convert arrays to JSON strings as expected by backend
       const preparedData = {
         ...courseData,
         // Handle optional text fields - convert empty strings to null
@@ -125,9 +124,9 @@ export default function CoursesPage() {
 
       // Show more specific error message
       const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          'Failed to save course. Please try again.';
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to save course. Please try again.';
       alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -252,39 +251,38 @@ export default function CoursesPage() {
                   key={course.id}
                   className="hover:bg-gray-50 transition-colors duration-150"
                 >
-                   <td className="px-6 py-4">
-                     <div className="flex items-center">
-                       <div>
-                         <h3 className="font-semibold text-gray-900 text-sm">
-                           {course.title}
-                         </h3>
-                         <p className="text-gray-500 text-xs mt-1 line-clamp-2 max-w-xs">
-                           {course.description}
-                         </p>
-                         <div className="flex items-center mt-1">
-                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                             {course.category?.name || course.category}
-                           </span>
-                           <span
-                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                               course.level === "beginner"
-                                 ? "bg-green-100 text-green-800"
-                                 : course.level === "intermediate"
-                                 ? "bg-yellow-100 text-yellow-800"
-                                 : "bg-red-100 text-red-800"
-                             }`}
-                           >
-                             {course.level}
-                           </span>
-                         </div>
-                       </div>
-                     </div>
-                   </td>
-                   <td className="px-6 py-4">
-                     <span className="text-sm text-gray-900">
-                       {course.instructor?.user?.name || course.instructor?.name || course.instructor}
-                     </span>
-                   </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-sm">
+                          {course.title}
+                        </h3>
+                        <p className="text-gray-500 text-xs mt-1 line-clamp-2 max-w-xs">
+                          {course.description}
+                        </p>
+                        <div className="flex items-center mt-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                            {course.category?.name || course.category}
+                          </span>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.level === "beginner"
+                                ? "bg-green-100 text-green-800"
+                                : course.level === "intermediate"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                          >
+                            {course.level}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-900">
+                      {course.instructor?.user?.name || course.instructor?.name || course.instructor}
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-600">
                       {course.duration}
@@ -293,11 +291,11 @@ export default function CoursesPage() {
                       {course.lessons} lessons
                     </div>
                   </td>
-                   <td className="px-6 py-4">
-                     <span className="font-semibold text-gray-900">
-                       {formatPrice(course.price || 0)}
-                     </span>
-                   </td>
+                  <td className="px-6 py-4">
+                    <span className="font-semibold text-gray-900">
+                      {formatPrice(course.price || 0)}
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col space-y-1">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit">
@@ -311,13 +309,13 @@ export default function CoursesPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
                       {/* Edit Icon */}
-                       <button
-                         className="text-blue-600 hover:text-blue-800 transition"
-                         onClick={() => handleEditCourse(course)}
-                         title="Edit Course"
-                       >
-                         <Edit2 size={18} />
-                       </button>
+                      <button
+                        className="text-blue-600 hover:text-blue-800 transition"
+                        onClick={() => handleEditCourse(course)}
+                        title="Edit Course"
+                      >
+                        <Edit2 size={18} />
+                      </button>
 
                       {/* Delete Icon */}
                       <button

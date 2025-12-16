@@ -30,6 +30,7 @@ import {
 import { useDispatch } from 'react-redux';
 import { logoutAsync } from '../../../slices/AuthSlice';
 import AllCourses from "./AllCourses";
+import TeachersTable from "./TeacherTable.jsx";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -406,7 +407,9 @@ export default function DashboardView() {
           {active === "Dashboard" && <DashboardCards />}
           {active === "Courses" && <AllCourses />}
           {active === "Students" && <StudentTable />}
+          {active === "Teachers" && <TeachersTable />}
           {active === "Pending Approvals" && <PendingApprovals />}
+
         </div>
       </main>
 

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { FaUser, FaCheck, FaSignOutAlt, FaCog } from "react-icons/fa";
 import { useDispatch } from "react-redux";
-import { logout } from "../../../slices/AuthSlice"; // path adjust if needed
+import { logoutAsync } from "../../../slices/AuthSlice"; // path adjust if needed
 import { useNavigate } from "react-router-dom";
 
 const DashboardHeader = ({ profile }) => {
@@ -11,7 +11,7 @@ const DashboardHeader = ({ profile }) => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        dispatch(logout());     // clear redux + localStorage
+        dispatch(logoutAsync());     // clear redux + localStorage
         navigate("/login");     // redirect
     };
 

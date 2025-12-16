@@ -9,6 +9,9 @@ const LoginPage = () => {
   const { isAuthenticated, user, error, loading } = useSelector(state => state.auth);
   const dispatch = useDispatch();
 
+
+  const [formData, setFormData] = useState({ email: "", password: "" })
+
   useEffect(() => {
     if (isAuthenticated && user) {
       // Redirect based on role

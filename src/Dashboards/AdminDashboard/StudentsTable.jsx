@@ -166,13 +166,9 @@ export default function StudentsTable() {
             {filteredUsers?.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-3 py-4 whitespace-nowrap flex items-center gap-3">
-                  <img
-                    src={user.avatar}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
                   <div>
                     <div className="font-medium text-gray-900 text-sm">
-                      {user.firstName} {user.lastName}
+                      {user.name}
                     </div>
                     <div className="text-xs text-gray-500">{user.country}</div>
                   </div>
