@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Edit2, Trash2 } from "lucide-react";
+import { apiClient } from '../../../src/api/index.js';
 
 export default function StudentsTable() {
 
@@ -7,34 +8,51 @@ export default function StudentsTable() {
 
   // Fetch users from API
   const fetchUsers = async () => {
-
-    const resp = await fetch("http://127.0.0.1:8000/api/v1/users");
-    const result = await resp.json();
-
-    console.log("API RESPONSE:", result);
-
-    const usersArray = result.data || [];
-
-    const pending = usersArray.filter((u) => u.is_active === true && u.role === "student");
-
-    SetPending(pending);
-    console.log(pending)
+    try {
+      const response = await apiClient.getUsers();
+      const usersArray = response.data || [];
+      // Get all active users, not just students
+      const activeUsers = usersArray.filter((u) => u.is_active === true);
+      SetPending(activeUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
   useEffect(() => { fetchUsers() }, [])
 
 
 
-  const [users, setUsers] = useState();
-  useEffect(() => { setUsers(pending) })
-
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
+  useEffect(() => {
+    setUsers(pending);
+  }, [pending]);
 
-  const handleDeleteUser = (userId) => {
+  // Filtered users based on search and filters
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = searchTerm === "" ||
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+
+  const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers((prev) => prev.filter((user) => user.id !== userId));
+      try {
+        await apiClient.deleteUser(userId);
+        setUsers((prev) => prev.filter((user) => user.id !== userId));
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Failed to delete user. Please try again.');
+      }
     }
   };
 
@@ -82,7 +100,7 @@ export default function StudentsTable() {
           Users Management
         </h2>
         <p className="text-sm text-gray-500">
-          {/* {users.length} of {users.length} users foSund */}
+          {filteredUsers.length} of {users.length} users found
         </p>
 
         <div className="mt-3 flex gap-3 items-center">
@@ -145,7 +163,7 @@ export default function StudentsTable() {
           </thead>
 
           <tbody className="divide-y divide-gray-100">
-            {users?.map((user) => (
+            {filteredUsers?.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-3 py-4 whitespace-nowrap flex items-center gap-3">
                   <img
@@ -228,7 +246,7 @@ export default function StudentsTable() {
       </div>
 
       {/* Empty State */}
-      {users?.length === 0 && (
+      {filteredUsers?.length === 0 && (
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No users found

@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthLayout from "./AuthLayout";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../UI/Button";
 import { FaGraduationCap, FaChalkboardTeacher, FaShieldAlt } from "react-icons/fa";
-
+import { useDispatch, useSelector } from 'react-redux';
+import { register, clearError } from "../../../slices/AuthSlice";
 
 export default function Register() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated, loading, error, user } = useSelector(state => state.auth);
 
   const [form, setForm] = useState({
     name: "",
@@ -15,38 +18,38 @@ export default function Register() {
     password_confirmation: "",
     role: "",
   });
-  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect based on role
+      const roleRoutes = {
+        admin: '/admindashboard',
+        instructor: '/teachermaindashboard',
+        moderator: '/admindashboard', // Moderators use admin dashboard for now
+        student: '/studentdashboard'
+      };
+      const redirectPath = roleRoutes[user.role] || '/';
+      navigate(redirectPath);
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    // Clear errors when component mounts
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  async function registerUser() {
-    const response = await fetch("http://127.0.0.1:8000/api/v1/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
-    const data = await response.json();
-    console.log(data);
-    return data.success;
-  }
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
-    const success = await registerUser();
-
-    console.log(success);
-
-    setLoading(false);
-    if (success) {
-      alert("Account created successfully!");
-      navigate("/login");
+    if (form.password !== form.password_confirmation) {
+      alert("Passwords don't match!");
+      return;
     }
+
+    dispatch(register(form));
   };
 
   const roles = [
@@ -76,7 +79,13 @@ export default function Register() {
       title="Create account"
       subtitle="Sign up to get access to the platform"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 ">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <input
           name="name"
           value={form.name}
@@ -85,6 +94,7 @@ export default function Register() {
           placeholder="Full name"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
+          disabled={loading}
         />
         <input
           name="email"
@@ -94,6 +104,7 @@ export default function Register() {
           placeholder="Email address"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
+          disabled={loading}
         />
 
         <div className="space-y-3">
@@ -104,11 +115,12 @@ export default function Register() {
             {roles.map((role) => (
               <div
                 key={role.value}
-                className={`relative border-2 rounded-lg px-2 py-1 cursor-pointer transition-all duration-200 ${form.role === role.value
+                className={`relative border-2 rounded-lg px-2 py-1 cursor-pointer transition-all duration-200 ${
+                  form.role === role.value
                     ? "border-primary bg-primary/5"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                onClick={() => setForm({ ...form, role: role.value })}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => !loading && setForm({ ...form, role: role.value })}
               >
                 <input
                   type="radio"
@@ -117,6 +129,7 @@ export default function Register() {
                   checked={form.role === role.value}
                   onChange={handleChange}
                   className="sr-only"
+                  disabled={loading}
                 />
                 <div className="flex items-start space-x-3">
                   <span className="text-2xl">{role.icon}</span>
@@ -129,10 +142,11 @@ export default function Register() {
                     </div>
                   </div>
                   <div
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.role === role.value
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      form.role === role.value
                         ? "border-primary bg-primary"
                         : "border-gray-300"
-                      }`}
+                    }`}
                   >
                     {form.role === role.value && (
                       <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -152,6 +166,8 @@ export default function Register() {
           placeholder="Password (min 8 chars)"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
+          disabled={loading}
+          minLength={8}
         />
         <input
           name="password_confirmation"
@@ -161,6 +177,7 @@ export default function Register() {
           placeholder="Confirm password"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
+          disabled={loading}
         />
 
         <Button

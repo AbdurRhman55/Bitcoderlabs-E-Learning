@@ -1,14 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import image from "../../assets/login image.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import {login} from "../../../slices/AuthSlice"
-import { useSelector, useDispatch} from 'react-redux'
+import { login, clearError } from "../../../slices/AuthSlice";
+import { useSelector, useDispatch } from 'react-redux';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, error } = useSelector(state => state.auth);  
+  const { isAuthenticated, user, error, loading } = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({ email: "", password: "" });
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect based on role
+      const roleRoutes = {
+        admin: '/admindashboard',
+        instructor: '/teachermaindashboard',
+        moderator: '/admindashboard', // Moderators use admin dashboard for now
+        student: '/studentdashboard'
+      };
+      const redirectPath = roleRoutes[user.role] || '/';
+      navigate(redirectPath);
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    // Clear errors when component mounts
+    dispatch(clearError());
+  }, [dispatch]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,8 +35,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    dispatch(login(formData))
+    dispatch(login(formData));
   };
 
   return (
@@ -60,61 +78,70 @@ const LoginPage = () => {
         </div>{" "}
       </div>
 
-      <div className="flex-1 flex items-center justify-center bg-gray-50 p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
-          <div className="bg-white p-6 text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-            <p className="text-gray-500 mt-1">
-              Sign in to continue your coding journey
-            </p>
-          </div>
+       <div className="flex-1 flex items-center justify-center bg-gray-50 p-6">
+         <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+           <div className="bg-white p-6 text-center">
+             <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
+             <p className="text-gray-500 mt-1">
+               Sign in to continue your coding journey
+             </p>
+           </div>
 
-          <div className="p-8 space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all duration-200 hover:bg-gray-50"
-                  required
-                />
-              </div>
+           <div className="p-8 space-y-6">
+             {error && (
+               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                 {error}
+               </div>
+             )}
 
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all duration-200 hover:bg-gray-50"
-                  required
-                />
-              </div>
+             <form onSubmit={handleSubmit} className="space-y-4">
+               <div>
+                 <label
+                   htmlFor="email"
+                   className="block text-sm font-medium text-gray-700 mb-1"
+                 >
+                   Email Address
+                 </label>
+                 <input
+                   type="email"
+                   name="email"
+                   id="email"
+                   value={formData.email}
+                   onChange={handleChange}
+                   placeholder="Enter your email"
+                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all duration-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                   required
+                   disabled={loading}
+                 />
+               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-[#3baee9] hover:bg-[#2a9fd8] text-white font-semibold py-3 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:ring-opacity-50"
-              >
-                Log In
-              </button>
+               <div>
+                 <label
+                   htmlFor="password"
+                   className="block text-sm font-medium text-gray-700 mb-1"
+                 >
+                   Password
+                 </label>
+                 <input
+                   type="password"
+                   name="password"
+                   id="password"
+                   value={formData.password}
+                   onChange={handleChange}
+                   placeholder="Enter your password"
+                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all duration-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                   required
+                   disabled={loading}
+                 />
+               </div>
+
+               <button
+                 type="submit"
+                 disabled={loading}
+                 className="w-full bg-[#3baee9] hover:bg-[#2a9fd8] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:ring-opacity-50"
+               >
+                 {loading ? 'Signing In...' : 'Log In'}
+               </button>
             </form>
 
             <div className="mt-6 flex items-center justify-between text-sm">

@@ -1,61 +1,140 @@
 // src/components/dashboard/AddCourseForm.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "../../Component/UI/Button";
 import { FiX } from "react-icons/fi";
+import { apiClient } from '../../../src/api/index.js';
 
-export default function AddCourseForm({ onSubmit, onClose }) {
+export default function AddCourseForm({ onSubmit, onClose, initialData = null }) {
   const [course, setCourse] = useState({
     title: "",
-    category: "",
+    slug: "",
+    category_id: "",
     level: "beginner",
-    instructor: "",
+    instructor_id: "",
     description: "",
+    short_description: "",
     image: "",
+    video_url: "",
     duration: "",
-    students: 0,
-    lessons: 0,
-    rating: 0,
-    reviews: 0,
-    progress: 0,
     price: 0,
-    originalPrice: 0,
-    isWishlisted: false,
+    original_price: 0,
+    language: "English",
+    rating: 0,
+    reviews_count: 0,
+    students_count: 0,
+    is_featured: false,
+    is_active: true,
+    features: [],
+    tags: [],
   });
+
+  const [instructors, setInstructors] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // If editing, populate form with initial data
+  useEffect(() => {
+    if (initialData) {
+      setCourse({
+        ...initialData,
+        category_id: initialData.category_id || initialData.category?.id || "",
+        instructor_id: initialData.instructor_id || initialData.instructor?.id || "",
+        // Parse JSON strings back to arrays for form editing
+        features: initialData.features ? (typeof initialData.features === 'string' ? JSON.parse(initialData.features) : initialData.features) : [],
+        tags: initialData.tags ? (typeof initialData.tags === 'string' ? JSON.parse(initialData.tags) : initialData.tags) : [],
+      });
+    }
+  }, [initialData]);
+
+  // Fetch instructors and categories
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [instructorsRes, categoriesRes] = await Promise.all([
+          apiClient.getInstructors(),
+          apiClient.getCategories()
+        ]);
+        setInstructors(instructorsRes.data || []);
+        setCategories(categoriesRes.data || []);
+        setDataLoaded(true);
+      } catch (error) {
+        console.error('Error fetching instructors/categories:', error);
+        setDataLoaded(true); // Still set to true to allow form submission with error
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCourse((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : type === "number"
-          ? Number(value)
-          : value,
-    }));
+    const newValue = type === "checkbox"
+      ? checked
+      : type === "number"
+      ? Number(value)
+      : value;
+
+    setCourse((prev) => {
+      const updated = {
+        ...prev,
+        [name]: newValue,
+      };
+
+      // Auto-generate slug from title
+      if (name === 'title') {
+        updated.slug = value
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+          .replace(/\s+/g, '-') // Replace spaces with hyphens
+          .replace(/-+/g, '-') // Replace multiple hyphens with single
+          .trim();
+      }
+
+      return updated;
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit?.(course);
-    // Reset form
-    setCourse({
-      title: "",
-      category: "",
-      level: "beginner",
-      instructor: "",
-      description: "",
-      image: "",
-      duration: "",
-      students: 0,
-      lessons: 0,
-      rating: 0,
-      reviews: 0,
-      progress: 0,
-      price: 0,
-      originalPrice: 0,
-      isWishlisted: false,
-    });
+
+    // Check if required data is loaded
+    if (!dataLoaded) {
+      alert('Please wait for instructors and categories to load.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit?.(course);
+      // Reset form only if not editing
+      if (!initialData) {
+        setCourse({
+          title: "",
+          slug: "",
+          category_id: "",
+          level: "beginner",
+          instructor_id: "",
+          description: "",
+          image: "",
+          video_url: "",
+          duration: "",
+          price: 0,
+          original_price: 0,
+          language: "English",
+          rating: 0,
+          reviews_count: 0,
+          students_count: 0,
+          is_featured: false,
+          is_active: true,
+          features: [],
+          tags: [],
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting course:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,7 +144,9 @@ export default function AddCourseForm({ onSubmit, onClose }) {
     >
       {/* Header */}
       <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-        <h2 className="text-2xl font-bold text-primary">Create New Course</h2>
+        <h2 className="text-2xl font-bold text-primary">
+          {initialData ? 'Edit Course' : 'Create New Course'}
+        </h2>
         {onClose && (
           <button
             type="button"
@@ -95,20 +176,41 @@ export default function AddCourseForm({ onSubmit, onClose }) {
           />
         </div>
 
+        {/* Slug */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Slug *
+          </label>
+          <input
+            type="text"
+            name="slug"
+            value={course.slug}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+            placeholder="course-slug-url"
+            required
+          />
+        </div>
+
         {/* Category */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Category *
           </label>
-          <input
-            type="text"
-            name="category"
-            value={course.category}
+          <select
+            name="category_id"
+            value={course.category_id}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            placeholder="e.g., Web Development"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
             required
-          />
+          >
+            <option value="">Select a category</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Level */}
@@ -129,26 +231,54 @@ export default function AddCourseForm({ onSubmit, onClose }) {
           </select>
         </div>
 
+         {/* Language */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Language *
+          </label>
+          <select
+            name="language"
+            value={course.language}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+            required
+          >
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Hindi">Hindi</option>
+          </select>
+        </div>
+
         {/* Instructor */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Instructor *
           </label>
-          <input
-            type="text"
-            name="instructor"
-            value={course.instructor}
+          <select
+            name="instructor_id"
+            value={course.instructor_id}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            placeholder="Instructor name"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
             required
-          />
+          >
+            <option value="">Select an instructor</option>
+            {instructors.map(instructor => (
+              <option key={instructor.id} value={instructor.id}>
+                {instructor.user?.name || instructor.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Duration */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Duration *
+            Duration
           </label>
           <input
             type="text"
@@ -206,28 +336,15 @@ export default function AddCourseForm({ onSubmit, onClose }) {
             </label>
             <input
               type="number"
-              name="students"
-              value={course.students}
+              name="students_count"
+              value={course.students_count}
               onChange={handleChange}
               min="0"
               className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
             />
           </div>
 
-          {/* Lessons */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lessons
-            </label>
-            <input
-              type="number"
-              name="lessons"
-              value={course.lessons}
-              onChange={handleChange}
-              min="0"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            />
-          </div>
+
 
           {/* Rating */}
           <div>
@@ -253,8 +370,8 @@ export default function AddCourseForm({ onSubmit, onClose }) {
             </label>
             <input
               type="number"
-              name="reviews"
-              value={course.reviews}
+              name="reviews_count"
+              value={course.reviews_count}
               onChange={handleChange}
               min="0"
               className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
@@ -263,43 +380,77 @@ export default function AddCourseForm({ onSubmit, onClose }) {
         </div>
       </div>
 
-      {/* Progress Section */}
+      {/* Pricing Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Progress */}
+        {/* Current Price */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Progress (%)
+            Current Price ($)
           </label>
           <input
             type="number"
-            name="progress"
-            value={course.progress}
+            step="0.01"
+            name="price"
+            value={course.price}
             onChange={handleChange}
             min="0"
-            max="100"
-            className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+            required
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
           />
         </div>
+        {/* Original Price */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Original Price
+          </label>
+            <input
+              type="number"
+              step="0.01"
+              name="original_price"
+              value={course.original_price}
+              onChange={handleChange}
+              min="0"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+            />
+        </div>
 
-        {/* Wishlist Toggle */}
+        {/* Featured Toggle */}
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
             <input
               type="checkbox"
-              name="isWishlisted"
-              checked={course.isWishlisted}
+              name="is_featured"
+              checked={course.is_featured}
               onChange={handleChange}
-              id="wishlist"
+              id="featured"
               className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label
-              htmlFor="wishlist"
+              htmlFor="featured"
               className="text-sm font-medium text-gray-700"
             >
-              Add to Wishlist
+              Featured Course
             </label>
           </div>
         </div>
+      </div>
+
+      {/* Course Status */}
+      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+        <input
+          type="checkbox"
+          name="is_active"
+          checked={course.is_active}
+          onChange={handleChange}
+          id="active"
+          className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label
+          htmlFor="active"
+          className="text-sm font-medium text-gray-700"
+        >
+          Course is Active
+        </label>
       </div>
 
       {/* Pricing Section */}
@@ -309,7 +460,7 @@ export default function AddCourseForm({ onSubmit, onClose }) {
           {/* Current Price */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Price ($)
+              Current Price ($) *
             </label>
             <input
               type="number"
@@ -355,8 +506,9 @@ export default function AddCourseForm({ onSubmit, onClose }) {
         <Button
           type="submit"
           variant="primary"
-          text="Create Course"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 font-semibold"
+          text={loading ? "Creating..." : (initialData ? "Update Course" : "Create Course")}
+          disabled={loading || !dataLoaded}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
     </form>

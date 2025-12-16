@@ -1,9 +1,31 @@
 // src/components/DashboardHeader.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaBell, FaUserCircle, FaSearch, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { logoutAsync } from '../../../slices/AuthSlice';
 
 const DashboardHeader = ({ profile, notifications }) => {
     const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef(null);
+    const dispatch = useDispatch();
+
+    const handleLogout = () => {
+        dispatch(logoutAsync());
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     return (
         <header className="bg-white shadow-sm border-b border-gray-200">
@@ -45,7 +67,7 @@ const DashboardHeader = ({ profile, notifications }) => {
                         </button>
 
                         {/* Profile Dropdown */}
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setShowDropdown(!showDropdown)}
                                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -79,13 +101,16 @@ const DashboardHeader = ({ profile, notifications }) => {
                                             Settings
                                         </a>
                                         <div className="border-t border-gray-200"></div>
-                                        <a
-                                            href="#"
-                                            className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                        >
-                                            <FaSignOutAlt className="mr-3" />
-                                            Logout
-                                        </a>
+                                         <button
+                                             onClick={() => {
+                                                 handleLogout();
+                                                 setShowDropdown(false);
+                                             }}
+                                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                         >
+                                             <FaSignOutAlt className="mr-3" />
+                                             Logout
+                                         </button>
                                     </div>
                                 </div>
                             )}
