@@ -1,86 +1,165 @@
 // src/components/courses/CoursesPage.jsx
 import React, { useState, useEffect } from "react";
+import { useSelector } from 'react-redux';
 import AddCourseForm from "./AddCourseFrom";
 import Button from "../../Component/UI/Button";
 import { Edit2, Trash2 } from "lucide-react";
+import { apiClient } from '../../../src/api/index.js';
 
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      title: "React for Beginners",
-      category: "Web Development",
-      level: "beginner",
-      instructor: "John Doe",
-      description: "Learn React step by step with hands-on projects",
-      image: "https://via.placeholder.com/300",
-      duration: "5h 30m",
-      students: 120,
-      lessons: 10,
-      rating: 4.5,
-      reviews: 20,
-      price: 49,
-      isWishlisted: false,
-    },
-    {
-      id: 2,
-      title: "Advanced JavaScript",
-      category: "Programming",
-      level: "advanced",
-      instructor: "Jane Smith",
-      description: "Master advanced JavaScript concepts and patterns",
-      image: "https://via.placeholder.com/300",
-      duration: "8h 15m",
-      students: 85,
-      lessons: 15,
-      rating: 4.8,
-      reviews: 35,
-      price: 79,
-      isWishlisted: false,
-    },
-    // Add more sample courses as needed
-  ]);
-
+  const [courses, setCourses] = useState([]);
   const [openForm, setOpenForm] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Simulate fetching courses from database
+  const { user, isAuthenticated } = useSelector(state => state.auth);
+
+  // Fetch courses from API
   useEffect(() => {
-    // Here you would fetch courses from your API
-    // const fetchCourses = async () => {
-    //   setLoading(true);
-    //   try {
-    //     const response = await fetch('/api/courses');
-    //     const data = await response.json();
-    //     setCourses(data);
-    //   } catch (error) {
-    //     console.error('Error fetching courses:', error);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // fetchCourses();
+    const fetchCourses = async () => {
+      setLoading(true);
+      try {
+        const response = await apiClient.getCourses();
+        setCourses(response.data || []);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+        // Keep mock data as fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
   }, []);
 
-  const handleAddCourse = (newCourse) => {
-    // In real app, you would send this to your backend API
-    const courseToAdd = {
-      ...newCourse,
-      id: courses.length + 1,
-      students: 0,
-      reviews: 0,
-      isWishlisted: false,
-    };
+  const handleSubmitCourse = async (courseData) => {
+    try {
+      setLoading(true);
+      console.log('Submitting course data:', courseData);
 
-    setCourses((prev) => [...prev, courseToAdd]);
-    setOpenForm(false);
+      // Prepare data for API - convert arrays to JSON strings as expected by backend
+      const preparedData = {
+        ...courseData,
+        // Handle optional text fields - convert empty strings to null
+        short_description: courseData.short_description || null,
+        image: courseData.image || null,
+        video_url: courseData.video_url || null,
+        duration: courseData.duration || null,
+        original_price: courseData.original_price ? parseFloat(courseData.original_price) : null,
+        features: courseData.features ? JSON.stringify(courseData.features) : "[]",
+        tags: courseData.tags ? JSON.stringify(courseData.tags) : "[]",
+        // Convert numeric fields
+        price: parseFloat(courseData.price) || 0,
+        rating: courseData.rating ? parseFloat(courseData.rating) : 0,
+        reviews_count: courseData.reviews_count ? parseInt(courseData.reviews_count) : 0,
+        students_count: courseData.students_count ? parseInt(courseData.students_count) : 0,
+        // Convert IDs to integers (ensure they're not null for required fields)
+        instructor_id: courseData.instructor_id ? parseInt(courseData.instructor_id) : undefined,
+        category_id: courseData.category_id ? parseInt(courseData.category_id) : undefined,
+        // Boolean fields
+        is_featured: Boolean(courseData.is_featured),
+        is_active: Boolean(courseData.is_active),
+      };
+
+      console.log('Prepared data for API:', preparedData);
+
+      let response;
+      if (editingCourse) {
+        // Update existing course
+        console.log('Updating course:', editingCourse.id);
+        response = await apiClient.updateCourse(editingCourse.id, preparedData);
+
+        // Update the course in local state immediately for instant UI feedback
+        setCourses(prevCourses =>
+          prevCourses.map(course =>
+            course.id === editingCourse.id
+              ? { ...course, ...courseData } // Merge updated data
+              : course
+          )
+        );
+      } else {
+        // Check if user is authenticated and is admin
+        if (!isAuthenticated) {
+          throw new Error('You must be logged in to create courses.');
+        }
+        if (user?.role !== 'admin') {
+          throw new Error('Only administrators can create courses.');
+        }
+
+        // Validate required fields before creating
+        const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
+        const missingFields = requiredFields.filter(field => !preparedData[field] || preparedData[field] === '' || preparedData[field] === null || preparedData[field] === undefined);
+
+        if (missingFields.length > 0) {
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please fill all required fields.`);
+        }
+
+        // Check if instructor_id and category_id are valid numbers
+        if (isNaN(preparedData.instructor_id) || isNaN(preparedData.category_id)) {
+          throw new Error('Please select a valid instructor and category.');
+        }
+
+        console.log('Creating new course with data:', preparedData);
+        response = await apiClient.createCourse(preparedData);
+        console.log('Create response:', response);
+
+        // Add new course to the beginning of the list
+        if (response.data) {
+          console.log('Adding new course to state:', response.data);
+          setCourses(prevCourses => [response.data, ...prevCourses]);
+          console.log('Updated courses state with new course');
+        }
+      }
+
+      console.log('API response:', response);
+      // Don't refresh immediately - the instant update should be sufficient
+      // The cache is cleared on the server, so future fetches will include the new course
+      setOpenForm(false);
+      setEditingCourse(null);
+    } catch (error) {
+      console.error('Error saving course:', error);
+      console.error('Error details:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+
+      // Show more specific error message
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          'Failed to save course. Please try again.';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteCourse = (courseId) => {
+  const handleEditCourse = (course) => {
+    setEditingCourse(course);
+    setOpenForm(true);
+  };
+
+  const handleDeleteCourse = async (courseId) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
-      setCourses((prev) => prev.filter((course) => course.id !== courseId));
-      // Here you would also call your API to delete from database
+      try {
+        await apiClient.deleteCourse(courseId);
+        setCourses((prev) => prev.filter((course) => course.id !== courseId));
+      } catch (error) {
+        console.error('Error deleting course:', error);
+        alert('Failed to delete course. Please try again.');
+      }
+    }
+  };
+
+  const refreshCourses = async () => {
+    try {
+      console.log('Refreshing courses from API...');
+      const response = await apiClient.getCourses();
+      console.log('Refresh response:', response);
+      setCourses(response.data || []);
+      console.log('Courses state updated from refresh');
+    } catch (error) {
+      console.error('Error refreshing courses:', error);
     }
   };
 
@@ -124,8 +203,12 @@ export default function CoursesPage() {
         <div className="fixed inset-0 bg-black/70  flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-scroll no-scrollbar">
             <AddCourseForm
-              onClose={() => setOpenForm(false)}
-              onSubmit={handleAddCourse}
+              onClose={() => {
+                setOpenForm(false);
+                setEditingCourse(null);
+              }}
+              onSubmit={handleSubmitCourse}
+              initialData={editingCourse}
             />
           </div>
         </div>
@@ -169,39 +252,39 @@ export default function CoursesPage() {
                   key={course.id}
                   className="hover:bg-gray-50 transition-colors duration-150"
                 >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm">
-                          {course.title}
-                        </h3>
-                        <p className="text-gray-500 text-xs mt-1 line-clamp-2 max-w-xs">
-                          {course.description}
-                        </p>
-                        <div className="flex items-center mt-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                            {course.category}
-                          </span>
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              course.level === "beginner"
-                                ? "bg-green-100 text-green-800"
-                                : course.level === "intermediate"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {course.level}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
-                      {course.instructor}
-                    </span>
-                  </td>
+                   <td className="px-6 py-4">
+                     <div className="flex items-center">
+                       <div>
+                         <h3 className="font-semibold text-gray-900 text-sm">
+                           {course.title}
+                         </h3>
+                         <p className="text-gray-500 text-xs mt-1 line-clamp-2 max-w-xs">
+                           {course.description}
+                         </p>
+                         <div className="flex items-center mt-1">
+                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                             {course.category?.name || course.category}
+                           </span>
+                           <span
+                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                               course.level === "beginner"
+                                 ? "bg-green-100 text-green-800"
+                                 : course.level === "intermediate"
+                                 ? "bg-yellow-100 text-yellow-800"
+                                 : "bg-red-100 text-red-800"
+                             }`}
+                           >
+                             {course.level}
+                           </span>
+                         </div>
+                       </div>
+                     </div>
+                   </td>
+                   <td className="px-6 py-4">
+                     <span className="text-sm text-gray-900">
+                       {course.instructor?.user?.name || course.instructor?.name || course.instructor}
+                     </span>
+                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-600">
                       {course.duration}
@@ -210,11 +293,11 @@ export default function CoursesPage() {
                       {course.lessons} lessons
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-semibold text-gray-900">
-                      {formatPrice(course.price)}
-                    </span>
-                  </td>
+                   <td className="px-6 py-4">
+                     <span className="font-semibold text-gray-900">
+                       {formatPrice(course.price || 0)}
+                     </span>
+                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col space-y-1">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit">
@@ -228,15 +311,13 @@ export default function CoursesPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
                       {/* Edit Icon */}
-                      <button
-                        className="text-blue-600 hover:text-blue-800 transition"
-                        onClick={() => {
-                          /* Edit functionality */
-                        }}
-                        title="Edit Course"
-                      >
-                        <Edit2 size={18} />
-                      </button>
+                       <button
+                         className="text-blue-600 hover:text-blue-800 transition"
+                         onClick={() => handleEditCourse(course)}
+                         title="Edit Course"
+                       >
+                         <Edit2 size={18} />
+                       </button>
 
                       {/* Delete Icon */}
                       <button
@@ -281,7 +362,17 @@ export default function CoursesPage() {
             <Button
               variant="primary"
               text="Create Course"
-              onClick={() => setOpenForm(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  alert('Please log in to create courses.');
+                  return;
+                }
+                if (user?.role !== 'admin') {
+                  alert('Only administrators can create courses.');
+                  return;
+                }
+                setOpenForm(true);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             />
           </div>

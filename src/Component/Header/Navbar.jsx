@@ -3,41 +3,37 @@ import { NavLink, Link, useLocation } from "react-router-dom";
 import { Play, ArrowRight, Menu, X } from "lucide-react";
 import Button from "../UI/Button";
 import { blogs } from "../../../Data/BlogcardsArray";
-import { useSelector,useDispatch } from "react-redux";
-import { logout } from "../../../slices/AuthSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutAsync } from "../../../slices/AuthSlice";
 
 const Navbar = () => {
-  const [Users, setUsers] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeLevel, setActiveLevel] = useState("beginner");
   const [activeCourse, setActiveCourse] = useState(null);
   const coursesDropdownRef = useRef(null);
   const location = useLocation();
-  const token = localStorage.getItem("token");
 
-  const Logout = useDispatch()
+  const { isAuthenticated, user } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
 
-  const submitLogout=()=>{
-     Logout(logout())
+  const handleLogout = () => {
+    dispatch(logoutAsync());
+  };
 
-  }
-
-
-  async function getUser() {
-    const res = await fetch("http://127.0.0.1:8000/api/v1/me", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      bearerToken: localStorage.getItem("token"),
-    })
-    const data = await res.json();
-    setUsers(data.user);
-  }
+  // Role-based dashboard routes
+  const getDashboardRoute = (role) => {
+    const routes = {
+      admin: '/admindashboard',
+      instructor: '/teachermaindashboard',
+      moderator: '/admindashboard',
+      student: '/studentdashboard'
+    };
+    return routes[role] || '/studentdashboard';
+  };
 
   useEffect(() => {
-    getUser();
-  }, [])
-
-  console.log(Users);
+    // Any navbar-specific initialization if needed
+  }, []);
 
 
   const courseToSubcourses = {
@@ -386,22 +382,22 @@ const Navbar = () => {
             </div>
           ))}
         </nav>
-        {/* Desktop Auth Buttons (static) */}
+        {/* Desktop Auth Buttons */}
         <div className="hidden lg:flex items-center gap-3">
-          {token ? (
+          {isAuthenticated ? (
             <>
-              <Link onClick={submitLogout}>
+              <button onClick={handleLogout}>
                 <Button
                   text="Logout"
                   variant="squarefull"
                   className="w-full justify-center"
                   size="sm"
                 />
-              </Link>
-              <Link to="/StudentDashboard" onClick={handleNavLinkClick} className="relative">
-                <h2 className=" rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center items-center">
-                  B
-                </h2>
+              </button>
+              <Link to={getDashboardRoute(user?.role)} onClick={handleNavLinkClick} className="relative">
+                <div className="rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center items-center font-semibold">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
               </Link>
             </>
           ) : (
@@ -481,31 +477,36 @@ const Navbar = () => {
             ))}
           </nav>
 
-          <div className="space-y-3 pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
-            {Users ? (
-              <Link to="/StudentDashboard" onClick={handleNavLinkClick} className="relative">
-                <h2 className=" rounded-full w-8 h-8 bg-primary text-white">
-                  B
-                </h2>
-              </Link>
-            ) : (
-              <>
-                <Link to="/register" className="block" onClick={handleNavLinkClick}>
-                  <Button
-                    text="Sign In"
-                    variant="squarefull"
-                    className="w-full justify-center"
-                  />
-                </Link>
-                <Link to="/login" className="block" onClick={handleNavLinkClick}>
-                  <Button
-                    text="Log In"
-                    variant="squarefull"
-                    className="w-full justify-center"
-                  />
-                </Link>
-              </>
-            )}
+           <div className="space-y-3 pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
+             {isAuthenticated ? (
+               <div className="flex items-center gap-3">
+                 <Link to={getDashboardRoute(user?.role)} onClick={handleNavLinkClick} className="relative">
+                   <div className="rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center items-center font-semibold">
+                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                   </div>
+                 </Link>
+                 <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-800">
+                   Logout
+                 </button>
+               </div>
+             ) : (
+               <>
+                 <Link to="/register" className="block" onClick={handleNavLinkClick}>
+                   <Button
+                     text="Sign In"
+                     variant="squarefull"
+                     className="w-full justify-center"
+                   />
+                 </Link>
+                 <Link to="/login" className="block" onClick={handleNavLinkClick}>
+                   <Button
+                     text="Log In"
+                     variant="squarefull"
+                     className="w-full justify-center"
+                   />
+                 </Link>
+               </>
+             )}
           </div>
 
         </div>

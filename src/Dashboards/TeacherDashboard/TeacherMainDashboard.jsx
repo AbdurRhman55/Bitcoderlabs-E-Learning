@@ -1,5 +1,7 @@
 // src/components/TeacherDashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import DashboardSidebar from './SIdebar';
 import DashboardHeader from './Header';
 import ProfileOverview from './ProfileOverview';
@@ -31,6 +33,15 @@ const TeacherMainDashboard = () => {
     });
 
     const [showNotification, setShowNotification] = useState({ show: false, message: '', type: '' });
+    const navigate = useNavigate();
+    const { isAuthenticated, loading } = useSelector(state => state.auth);
+
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!isAuthenticated && !loading) {
+            navigate('/login');
+        }
+    }, [isAuthenticated, loading, navigate]);
 
     // Load mock data
     useEffect(() => {

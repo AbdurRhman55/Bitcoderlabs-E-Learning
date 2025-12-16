@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import StudentTable from "./StudentsTable";
 import PendingApprovals from "./PendingApprovals";
-import { useDispatch } from "react-redux";
-import { logout } from "../../../slices/AuthSlice"; // adjust path
-import { useNavigate } from "react-router-dom";
-import { FaUserCircle, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { apiClient } from '../../../src/api/index.js';
 
 import {
   X,
@@ -26,7 +25,10 @@ import {
   AlertCircle,
   CheckCircle,
   MoreVertical,
+  LogOut,
 } from "lucide-react";
+import { useDispatch } from 'react-redux';
+import { logoutAsync } from '../../../slices/AuthSlice';
 import AllCourses from "./AllCourses";
 
 const Card = ({ children, className = "", hover = false }) => (
@@ -87,19 +89,114 @@ function NotificationSidebar({ isOpen, onClose, pendingRequests, onApprove, onRe
 }
 
 function DashboardCards() {
-  const recentActivities = [
-    { user: "John Doe", action: "purchased", course: "Web Dev Bootcamp", time: "2 min ago" },
-    { user: "Sarah Smith", action: "completed", course: "React Mastery", time: "1 hour ago" },
-    { user: "Mike Johnson", action: "enrolled in", course: "JS Advanced", time: "3 hours ago" },
-    { user: "Emily Davis", action: "rated", course: "React Mastery", time: "5 hours ago" },
-  ];
+  const [stats, setStats] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const stats = [
-    { title: "Total Courses", value: "82", change: "+12%", icon: <BookOpen /> },
-    { title: "Active Students", value: "1,240", change: "+8%", icon: <Users /> },
-    { title: "Total Orders", value: "350", change: "+23%", icon: <ShoppingBag /> },
-    { title: "Course Rating", value: "4.8/5", change: "+0.2", icon: <TrendingUp /> },
-  ];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.getAdminStats();
+
+        // Transform stats data for display
+        const transformedStats = [
+          {
+            title: "Total Courses",
+            value: response.total_courses?.toString() || "0",
+            change: "+12%", // This would need historical data to calculate
+            icon: <BookOpen />
+          },
+          {
+            title: "Active Students",
+            value: response.total_students?.toString() || "0",
+            change: "+8%",
+            icon: <Users />
+          },
+          {
+            title: "Total Enrollments",
+            value: response.total_enrollments?.toString() || "0",
+            change: "+23%",
+            icon: <ShoppingBag />
+          },
+          {
+            title: "Pending Instructors",
+            value: response.pending_instructors_count?.toString() || "0",
+            change: "0",
+            icon: <UserPlus />
+          }
+        ];
+
+        // Transform recent activities
+        const transformedActivities = response.recent_activities?.map(activity => ({
+          user: activity.user.name || "Unknown User",
+          action: "enrolled in",
+          course: activity.course.title || "Unknown Course",
+          time: activity.created_at ? new Date(activity.created_at).toLocaleString() : "Recently"
+        })) || [];
+
+        setStats(transformedStats);
+        setRecentActivities(transformedActivities);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        console.error('Error details:', err.message);
+        setError(`Failed to load dashboard data: ${err.message}`);
+        // Fallback to mock data if API fails
+        setStats([
+          { title: "Total Courses", value: "82", change: "+12%", icon: <BookOpen /> },
+          { title: "Active Students", value: "1,240", change: "+8%", icon: <Users /> },
+          { title: "Total Orders", value: "350", change: "+23%", icon: <ShoppingBag /> },
+          { title: "Course Rating", value: "4.8/5", change: "+0.2", icon: <TrendingUp /> }
+        ]);
+        setRecentActivities([
+          { user: "John Doe", action: "purchased", course: "Web Dev Bootcamp", time: "2 min ago" },
+          { user: "Sarah Smith", action: "completed", course: "React Mastery", time: "1 hour ago" },
+          { user: "Mike Johnson", action: "enrolled in", course: "JS Advanced", time: "3 hours ago" },
+          { user: "Emily Davis", action: "rated", course: "React Mastery", time: "5 hours ago" }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, index) => (
+            <Card key={index}>
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-8">
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -140,20 +237,27 @@ function DashboardCards() {
         <Card>
           <h3 className="font-bold text-lg text-gray-900 mb-4">Recent Activities</h3>
           <div className="space-y-4">
-            {recentActivities.map((act, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
-                  <UserPlus size={18} />
+            {recentActivities.length > 0 ? (
+              recentActivities.map((act, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                    <UserPlus size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-800">
+                      <span className="font-medium">{act.user}</span> {act.action}{" "}
+                      <span className="font-semibold text-gray-900">{act.course}</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{act.time}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-gray-800">
-                    <span className="font-medium">{act.user}</span> {act.action}{" "}
-                    <span className="font-semibold text-gray-900">{act.course}</span>
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">{act.time}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">No recent activities</p>
+            )}
           </div>
         </Card>
       </div>
@@ -165,15 +269,36 @@ export default function DashboardView() {
   const [open, setOpen] = useState(true);
   const [active, setActive] = useState("Dashboard");
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false); // ✅ Dropdown hook
-
-  const dispatch = useDispatch(); // ✅ Redux hook
-  const navigate = useNavigate(); // ✅ Router hook
+  const [profileDropdown, setProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isAuthenticated, loading } = useSelector(state => state.auth);
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
+    dispatch(logoutAsync());
   };
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const [pendingRequests, setPendingRequests] = useState([
     { id: 1, name: "Dr. Sarah Johnson", email: "sarah.j@example.com", time: "10 min ago", subject: "Computer Science", experience: "5 years" },
@@ -228,16 +353,19 @@ export default function DashboardView() {
               </span>
             </button>
 
-            {/* User Profile Dropdown */}
-            <div className="relative">
-              <button onClick={() => setShowDropdown(!showDropdown)} className="flex items-center gap-2 pl-1">
+            {/* User Profile */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setProfileDropdown(!profileDropdown)}
+                className="flex items-center gap-3 pl-1 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center gap-2">
                   <img
                     src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff"
                     className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
                     alt="Admin"
                   />
-                  <div className="hidden md:block">
+                  <div className="hidden md:block text-left">
                     <p className="text-sm font-medium text-gray-900">Admin</p>
                     <p className="text-xs text-gray-500">Super Admin</p>
                   </div>
@@ -245,21 +373,18 @@ export default function DashboardView() {
                 <ChevronDown size={16} className="text-gray-500" />
               </button>
 
-              {showDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+              {profileDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                   <div className="py-2">
-                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <FaUserCircle className="mr-3 text-gray-400" /> My Profile
-                    </a>
-                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      <FaCog className="mr-3 text-gray-400" /> Settings
-                    </a>
-                    <div className="border-t border-gray-200"></div>
                     <button
-                      className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      onClick={handleLogout}
+                      onClick={() => {
+                        handleLogout();
+                        setProfileDropdown(false);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
-                      <FaSignOutAlt className="mr-3" /> Logout
+                      <LogOut className="mr-3" size={16} />
+                      Logout
                     </button>
                   </div>
                 </div>

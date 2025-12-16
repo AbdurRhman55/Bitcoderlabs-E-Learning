@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { apiClient } from '../../../src/api/index.js';
 
 export default function PendingApprovals() {
   const [pendingUsers, setPendingUsers] = useState([]);
 
   // Fetch users from API
   const fetchUsers = async () => {
-    const resp = await fetch("http://127.0.0.1:8000/api/v1/users");
-    const result = await resp.json();
-
-    console.log("API RESPONSE:", result);
-
-    const usersArray = result.data || [];
-
-    const pending = usersArray.filter((u) => u.is_active === false);
-
-    setPendingUsers(pending);
+    try {
+      const response = await apiClient.getUsers();
+      const usersArray = response.data || [];
+      const pending = usersArray.filter((u) => u.is_active === false);
+      setPendingUsers(pending);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
   console.log(pendingUsers)
   useEffect(() => {
@@ -68,16 +67,30 @@ export default function PendingApprovals() {
 
 
   // Approve User
-  const handleApprove = () => {
-    pendingUsers.map((items => {
-      ApproveStudent(items.id)
-    }))
+  const handleApprove = async (userId) => {
+    if (window.confirm("Are you sure you want to approve this user?")) {
+      try {
+        await apiClient.approveUser(userId);
+        // Refresh the list after approval
+        fetchUsers();
+      } catch (error) {
+        console.error('Error approving user:', error);
+        alert('Failed to approve user. Please try again.');
+      }
+    }
   };
 
   // Reject User
-  const handleReject = (userId) => {
-    if (window.confirm("Are you sure you want to reject this user?")) {
-      setPendingUsers((prev) => prev.filter((u) => u.id !== userId));
+  const handleReject = async (userId) => {
+    if (window.confirm("Are you sure you want to reject this user? This will delete the user account.")) {
+      try {
+        await apiClient.deleteUser(userId);
+        // Refresh the list after deletion
+        fetchUsers();
+      } catch (error) {
+        console.error('Error rejecting user:', error);
+        alert('Failed to reject user. Please try again.');
+      }
     }
   };
 
