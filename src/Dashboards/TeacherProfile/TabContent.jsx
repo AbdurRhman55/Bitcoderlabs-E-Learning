@@ -55,6 +55,8 @@ const TabContent = ({
                 profile={profile}
                 educationList={educationList}
                 experienceList={experienceList}
+                projectsList={project}
+                certificationsList={Certification}
             // workPics={workPics}
             />
         ),
