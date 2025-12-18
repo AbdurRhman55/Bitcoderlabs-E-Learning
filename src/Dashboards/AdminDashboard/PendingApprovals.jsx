@@ -5,46 +5,71 @@ import { apiClient } from '../../../src/api/index.js';
 export default function PendingApprovals() {
   const [pendingUsers, setPendingUsers] = useState([]);
 
-  // Fetch users from API
-  const fetchUsers = async () => {
+  // Fetch pending approvals
+  const fetchPendingApprovals = async () => {
     try {
-      const response = await apiClient.getUsers();
-      const usersArray = response.data || [];
-      const pending = usersArray.filter((u) => u.is_active === false);
-      setPendingUsers(pending);
+      // Fetch pending users
+      const usersResponse = await apiClient.getUsers();
+      const usersArray = usersResponse.data || [];
+      const pendingUsers = usersArray.filter((u) => u.is_active === false).map(u => ({ ...u, type: 'user' }));
+
+      // Fetch pending instructors
+      const instructorsResponse = await apiClient.getInstructors({ approval_status: 'submitted' });
+      const instructorsArray = instructorsResponse.data || [];
+      const pendingInstructors = instructorsArray.map(i => ({ ...i, type: 'instructor' }));
+
+      // Combine and sort by created_at or id desc
+      const allPending = [...pendingUsers, ...pendingInstructors].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      setPendingUsers(allPending);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching pending approvals:', error);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchPendingApprovals();
   }, []);
 
-  // Approve User
-  const handleApprove = async (userId) => {
-    if (window.confirm("Are you sure you want to approve this user?")) {
+  // Handle Approve
+  const handleApprove = async (item) => {
+    const confirmMessage = item.type === 'user'
+      ? "Are you sure you want to approve this user?"
+      : "Are you sure you want to approve this instructor?";
+
+    if (window.confirm(confirmMessage)) {
       try {
-        await apiClient.approveUser(userId);
+        if (item.type === 'user') {
+          await apiClient.approveUser(item.id);
+        } else {
+          await apiClient.approveInstructor(item.id);
+        }
         // Refresh the list after approval
-        fetchUsers();
+        fetchPendingApprovals();
       } catch (error) {
-        console.error('Error approving user:', error);
-        alert('Failed to approve user. Please try again.');
+        console.error('Error approving:', error);
+        alert('Failed to approve. Please try again.');
       }
     }
   };
 
-  // Reject User
-  const handleReject = async (userId) => {
-    if (window.confirm("Are you sure you want to reject this user? This will delete the user account.")) {
+  // Handle Reject
+  const handleReject = async (item) => {
+    const confirmMessage = item.type === 'user'
+      ? "Are you sure you want to reject this user? This will delete the user account."
+      : "Are you sure you want to reject this instructor? This will deactivate the instructor profile.";
+
+    if (window.confirm(confirmMessage)) {
       try {
-        await apiClient.deleteUser(userId);
-        // Refresh the list after deletion
-        fetchUsers();
+        if (item.type === 'user') {
+          await apiClient.deleteUser(item.id);
+        } else {
+          await apiClient.rejectInstructor(item.id);
+        }
+        // Refresh the list after rejection
+        fetchPendingApprovals();
       } catch (error) {
-        console.error('Error rejecting user:', error);
-        alert('Failed to reject user. Please try again.');
+        console.error('Error rejecting:', error);
+        alert('Failed to reject. Please try again.');
       }
     }
   };
@@ -78,9 +103,9 @@ export default function PendingApprovals() {
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Requested Role
-              </th>
+               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                 Type
+               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
@@ -93,55 +118,53 @@ export default function PendingApprovals() {
                 key={user.id}
                 className="hover:bg-gray-50 transition-colors duration-150"
               >
-                {/* User Info */}
-                <td className="px-6 py-4 flex items-center gap-3">
+                 {/* User Info */}
+                 <td className="px-6 py-4 flex items-center gap-3">
 
-                  <div>
-                    <div className="font-semibold text-gray-900">
-                      {user.name}
-                    </div>
-                    <div className="text-xs text-gray-500">{user.country}</div>
-                  </div>
-                </td>
+                   <div>
+                     <div className="font-semibold text-gray-900">
+                       {user.name}
+                     </div>
+                     <div className="text-xs text-gray-500">{user.country || user.bio}</div>
+                   </div>
+                 </td>
 
-                {/* Contact */}
-                <td className="px-6 py-4 text-sm text-gray-700">
-                  {user.email}
-                </td>
+                 {/* Contact */}
+                 <td className="px-6 py-4 text-sm text-gray-700">
+                   {user.email}
+                 </td>
 
-                {/* Requested Role */}
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadge(
-                      user.requestedRole
-                    )}`}
-                  >
-                    {user.requestedRole}
-                  </span>
-                </td>
+                 {/* Type */}
+                 <td className="px-6 py-4">
+                   <span
+                     className={`px-2 py-1 rounded-full text-xs font-medium ${user.type === 'user' ? getRoleBadge(user.role) : 'bg-purple-100 text-purple-800'}`}
+                   >
+                     {user.type === 'user' ? user.role : 'Instructor'}
+                   </span>
+                 </td>
 
-                {/* Actions */}
-                <td className="px-6 py-4 text-sm">
-                  <div className="flex items-center space-x-3">
-                    {/* Approve */}
-                    <button
-                      className="text-green-600 hover:text-green-800 transition"
-                      onClick={() => handleApprove(user.id)}
-                      title="Approve"
-                    >
-                      <CheckCircle2 size={20} />
-                    </button>
+                 {/* Actions */}
+                 <td className="px-6 py-4 text-sm">
+                   <div className="flex items-center space-x-3">
+                     {/* Approve */}
+                     <button
+                       className="text-green-600 hover:text-green-800 transition"
+                       onClick={() => handleApprove(user)}
+                       title="Approve"
+                     >
+                       <CheckCircle2 size={20} />
+                     </button>
 
-                    {/* Reject */}
-                    <button
-                      className="text-red-600 hover:text-red-800 transition"
-                      onClick={() => handleReject(user.id)}
-                      title="Reject"
-                    >
-                      <XCircle size={20} />
-                    </button>
-                  </div>
-                </td>
+                     {/* Reject */}
+                     <button
+                       className="text-red-600 hover:text-red-800 transition"
+                       onClick={() => handleReject(user)}
+                       title="Reject"
+                     >
+                       <XCircle size={20} />
+                     </button>
+                   </div>
+                 </td>
               </tr>
             ))}
           </tbody>

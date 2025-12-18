@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from 'react-redux';
 import AddCourseForm from "./AddCourseFrom";
 import Button from "../../Component/UI/Button";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, RefreshCw } from "lucide-react";
 import { apiClient } from '../../../src/api/index.js';
 
 
@@ -12,29 +12,50 @@ export default function CoursesPage() {
   const [openForm, setOpenForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
 
   const { user, isAuthenticated } = useSelector(state => state.auth);
 
   // Fetch courses from API
+  const fetchCourses = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    try {
+      const response = await apiClient.getCourses();
+      setCourses(response.data || []);
+      setLastUpdate(Date.now());
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      // Keep existing data on error to avoid UI flicker
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCourses = async () => {
-      setLoading(true);
-      try {
-        const response = await apiClient.getCourses();
-        setCourses(response.data || []);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-        // Keep mock data as fallback
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchCourses();
   }, []);
+
+  // Real-time polling for updates every 5 seconds (paused during operations)
+  useEffect(() => {
+    if (isOperationInProgress) return;
+
+    const interval = setInterval(() => {
+      fetchCourses(false); // Don't show loading spinner for background updates
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isOperationInProgress, lastUpdate]);
+
+  // Force refresh function for manual updates
+  const forceRefresh = () => {
+    fetchCourses(true);
+  };
 
   const handleSubmitCourse = async (courseData) => {
     try {
       setLoading(true);
+      setIsOperationInProgress(true);
       console.log('Submitting course data:', courseData);
 
       // Prepare data for API - convert arrays to JSON strings as expected by backend
@@ -63,21 +84,21 @@ export default function CoursesPage() {
 
       console.log('Prepared data for API:', preparedData);
 
-      let response;
-      if (editingCourse) {
-        // Update existing course
-        console.log('Updating course:', editingCourse.id);
-        response = await apiClient.updateCourse(editingCourse.id, preparedData);
+       let response;
+       if (editingCourse) {
+         // Update existing course
+         console.log('Updating course:', editingCourse.id);
+         response = await apiClient.updateCourse(editingCourse.id, preparedData);
 
-        // Update the course in local state immediately for instant UI feedback
-        setCourses(prevCourses =>
-          prevCourses.map(course =>
-            course.id === editingCourse.id
-              ? { ...course, ...courseData } // Merge updated data
-              : course
-          )
-        );
-      } else {
+         // Update the course in local state with server response for accurate data
+         setCourses(prevCourses =>
+           prevCourses.map(course =>
+             course.id === editingCourse.id
+               ? response.data // Use server response which has correct structure
+               : course
+           )
+         );
+       } else {
         // Check if user is authenticated and is admin
         if (!isAuthenticated) {
           throw new Error('You must be logged in to create courses.');
@@ -112,8 +133,8 @@ export default function CoursesPage() {
       }
 
       console.log('API response:', response);
-      // Don't refresh immediately - the instant update should be sufficient
-      // The cache is cleared on the server, so future fetches will include the new course
+      // Do a final refresh to ensure consistency
+      setTimeout(() => fetchCourses(false), 1000);
       setOpenForm(false);
       setEditingCourse(null);
     } catch (error) {
@@ -131,6 +152,7 @@ export default function CoursesPage() {
       alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
+      setIsOperationInProgress(false);
     }
   };
 
@@ -142,11 +164,16 @@ export default function CoursesPage() {
   const handleDeleteCourse = async (courseId) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
       try {
+        setIsOperationInProgress(true);
         await apiClient.deleteCourse(courseId);
         setCourses((prev) => prev.filter((course) => course.id !== courseId));
+        // Do a final refresh to ensure consistency
+        setTimeout(() => fetchCourses(false), 1000);
       } catch (error) {
         console.error('Error deleting course:', error);
         alert('Failed to delete course. Please try again.');
+      } finally {
+        setIsOperationInProgress(false);
       }
     }
   };
@@ -181,22 +208,33 @@ export default function CoursesPage() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Courses Management
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Manage and organize your course offerings
-          </p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Courses Management
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Manage and organize your course offerings
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={forceRefresh}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh courses"
+            >
+              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+            <Button
+              variant="primary"
+              text="+ Add New Course"
+              onClick={() => setOpenForm(true)}
+              className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+            />
+          </div>
         </div>
-        <Button
-          variant="primary"
-          text="+ Add New Course"
-          onClick={() => setOpenForm(true)}
-          className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
-        />
-      </div>
 
       {/* Add Course Form Modal */}
       {openForm && (

@@ -24,7 +24,7 @@ export default function Register() {
       // Redirect based on role
       const roleRoutes = {
         admin: '/admindashboard',
-        instructor: '/teachermaindashboard',
+        instructor: '/teacherprofile',
         moderator: '/admindashboard', // Moderators use admin dashboard for now
         student: '/studentdashboard'
       };

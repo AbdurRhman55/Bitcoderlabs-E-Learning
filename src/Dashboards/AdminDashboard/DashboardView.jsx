@@ -302,9 +302,9 @@ function DashboardCards() {
 
         // Transform recent activities
         const transformedActivities = response.recent_activities?.map(activity => ({
-          user: activity.user.name || "Unknown User",
+          user: activity.user?.name || "Unknown User",
           action: "enrolled in",
-          course: activity.course.title || "Unknown Course",
+          course: activity.course?.title || "Unknown Course",
           time: activity.created_at ? new Date(activity.created_at).toLocaleString() : "Recently"
         })) || [];
 
@@ -463,6 +463,29 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, loading, navigate]);
 
+  // Fetch pending instructor requests
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      try {
+        const response = await apiClient.getInstructors({ approval_status: 'submitted' });
+        const instructors = response.data || [];
+        const formattedRequests = instructors.map(instructor => ({
+          id: instructor.id,
+          name: instructor.name,
+          email: instructor.email || 'N/A', // Assuming email is included
+          time: instructor.created_at ? new Date(instructor.created_at).toLocaleString() : 'Recently',
+          subject: instructor.specialization ? instructor.specialization.join(', ') : 'General',
+          experience: instructor.experience ? `${instructor.experience.length} items` : 'N/A',
+        }));
+        setPendingRequests(formattedRequests);
+      } catch (error) {
+        console.error('Error fetching pending requests:', error);
+      }
+    };
+
+    fetchPendingRequests();
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -477,54 +500,31 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Mock data for pending teacher registration requests
-  const [pendingRequests, setPendingRequests] = useState([
-    {
-      id: 1,
-      name: "Dr. Sarah Johnson",
-      email: "sarah.j@example.com",
-      time: "10 min ago",
-      subject: "Computer Science",
-      experience: "5 years",
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      email: "michael.c@example.com",
-      time: "25 min ago",
-      subject: "Mathematics",
-      experience: "3 years",
-    },
-    {
-      id: 3,
-      name: "Alexandra Williams",
-      email: "alex.w@example.com",
-      time: "1 hour ago",
-      subject: "Physics",
-      experience: "7 years",
-    },
-    {
-      id: 4,
-      name: "Robert Kim",
-      email: "robert.k@example.com",
-      time: "2 hours ago",
-      subject: "Chemistry",
-      experience: "4 years",
-    },
-  ]);
+  // State for pending instructor requests
+  const [pendingRequests, setPendingRequests] = useState([]);
 
-  const handleApprove = (id) => {
-    setPendingRequests((prev) =>
-      prev.filter((request) => request.id !== id)
-    );
-    // In real app, you would make an API call here
+  const handleApprove = async (id) => {
+    try {
+      await apiClient.approveInstructor(id);
+      setPendingRequests((prev) =>
+        prev.filter((request) => request.id !== id)
+      );
+    } catch (error) {
+      console.error('Error approving instructor:', error);
+      alert('Failed to approve instructor.');
+    }
   };
 
-  const handleReject = (id) => {
-    setPendingRequests((prev) =>
-      prev.filter((request) => request.id !== id)
-    );
-    // In real app, you would make an API call here
+  const handleReject = async (id) => {
+    try {
+      await apiClient.rejectInstructor(id);
+      setPendingRequests((prev) =>
+        prev.filter((request) => request.id !== id)
+      );
+    } catch (error) {
+      console.error('Error rejecting instructor:', error);
+      alert('Failed to reject instructor.');
+    }
   };
 
   return (

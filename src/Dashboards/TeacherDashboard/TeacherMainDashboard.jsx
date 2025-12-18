@@ -34,7 +34,7 @@ const TeacherMainDashboard = () => {
 
     const [showNotification, setShowNotification] = useState({ show: false, message: '', type: '' });
     const navigate = useNavigate();
-    const { isAuthenticated, loading } = useSelector(state => state.auth);
+    const { isAuthenticated, loading, user } = useSelector(state => state.auth);
 
     // Redirect to login if not authenticated
     useEffect(() => {
@@ -42,6 +42,13 @@ const TeacherMainDashboard = () => {
             navigate('/login');
         }
     }, [isAuthenticated, loading, navigate]);
+
+    // Redirect instructors who are not approved to profile page
+    useEffect(() => {
+        if (isAuthenticated && user && user.role === 'instructor' && !user.instructor_approved) {
+            navigate('/teacherprofile');
+        }
+    }, [isAuthenticated, user, navigate]);
 
     // Load mock data
     useEffect(() => {
