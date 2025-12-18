@@ -1,14 +1,16 @@
 // components/ProgressSidebar.jsx
 import React from 'react';
-import { FaUser, FaGraduationCap, FaBriefcase, FaImage, FaFileAlt, FaPaperPlane, FaHistory, FaCheck, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaGraduationCap, FaBriefcase, FaImage, FaFileAlt, FaPaperPlane, FaHistory, FaCheck, FaSpinner, FaSave } from 'react-icons/fa';
 
 const ProgressSidebar = ({
     activeTab,
     setActiveTab,
     profile,
     isSubmitting,
+    isSaving,
     completionPercentage,
-    handleSubmitForApproval
+    handleSubmitForApproval,
+    onSave
 }) => {
     const tabs = [
         { id: 'personal', label: 'Personal Info', icon: <FaUser /> },
@@ -51,13 +53,16 @@ const ProgressSidebar = ({
     };
 
     const getProgressHint = () => {
+        if (completionPercentage < 25) {
+            return 'Start building your profile to attract students';
+        }
         if (completionPercentage < 50) {
-            return 'Complete more sections to submit your profile';
+            return 'Good start! Add more details about yourself';
         }
-        if (completionPercentage < 80) {
-            return 'Good progress! Add more details for a complete profile';
+        if (completionPercentage < 75) {
+            return 'Great progress! Consider adding your experience';
         }
-        return 'Almost ready! Review and submit for approval';
+        return 'Excellent! Your profile is looking comprehensive';
     };
 
     return (
@@ -101,10 +106,30 @@ const ProgressSidebar = ({
                     ))}
                 </nav>
 
+                {/* Save Button */}
+                <button
+                    onClick={onSave}
+                    disabled={isSaving}
+                    className="w-full mt-4 p-3 rounded-xl font-medium text-primary border-2 border-primary hover:bg-primary hover:text-white transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isSaving ? (
+                        <>
+                            <FaSpinner className="animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            <FaSave className="text-sm" />
+                            Save as Draft
+                        </>
+                    )}
+                </button>
+
+                {/* Submit for Approval Button */}
                 <button
                     onClick={handleSubmitForApproval}
-                    disabled={isSubmitting || profile.status === 'submitted' || profile.status === 'approved' || completionPercentage < 80}
-                    className={`w-full mt-6 p-4 rounded-xl font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 ${profile.status === 'submitted' || profile.status === 'approved' || completionPercentage < 80
+                    disabled={isSubmitting || profile.status === 'submitted' || profile.status === 'approved'}
+                    className={`w-full mt-3 p-4 rounded-xl font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 ${profile.status === 'submitted' || profile.status === 'approved'
                         ? 'bg-gray-300 cursor-not-allowed'
                         : 'bg-primary hover:bg-primary-dark hover:shadow-md'
                         }`}
@@ -112,11 +137,7 @@ const ProgressSidebar = ({
                     {getSubmitButtonContent()}
                 </button>
 
-                {profile.status === 'draft' && completionPercentage < 80 && (
-                    <p className="text-sm text-gray-600 mt-3 text-center">
-                        Complete {80 - completionPercentage}% more to submit
-                    </p>
-                )}
+
             </div>
         </div>
     );

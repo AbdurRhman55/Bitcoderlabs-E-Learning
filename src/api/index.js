@@ -165,6 +165,23 @@ class ApiClient {
     });
   }
 
+  async getInstructor(id) {
+    return this.request(`/instructors/${id}`);
+  }
+
+  async updateInstructor(id, instructorData) {
+    return this.request(`/instructors/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(instructorData),
+    });
+  }
+
+  async submitInstructorForApproval(instructorId) {
+    return this.request(`/instructors/${instructorId}/submit-for-approval`, {
+      method: "POST",
+    });
+  }
+
   // Categories
   async getCategories(params = {}) {
     const queryString = new URLSearchParams(params).toString();
