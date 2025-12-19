@@ -78,10 +78,10 @@ export default function TeachersTable() {
                                 <div className="flex items-center gap-3">
                                     <img
                                         src={t.image || "/avatar.png"}
-                                        className="w-12 h-12 rounded-full border border-[#3baee9]"
+                                        className="w-6 h-6 rounded-full border border-[#3baee9]"
                                     />
                                     <div>
-                                        <p className="text-sm font-semibold">{t.name}</p>
+                                        <p className="text-lg font-semibold">{t.name}</p>
                                         <p className="text-xs text-gray-500 line-clamp-3">{t.bio || t.email}</p>
                                     </div>
                                 </div>
