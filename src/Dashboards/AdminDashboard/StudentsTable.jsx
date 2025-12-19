@@ -1,257 +1,157 @@
 import React, { useEffect, useState } from "react";
-import { Edit2, Trash2 } from "lucide-react";
-import { apiClient } from '../../../src/api/index.js';
+import { Edit2, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { apiClient } from "../../../src/api/index.js";
 
 export default function StudentsTable() {
-
-  const [pending, SetPending] = useState([])
-
-  // Fetch users from API
-  const fetchUsers = async () => {
-    try {
-      const response = await apiClient.getUsers();
-      const usersArray = response.data || [];
-      // Get all active users, not just students
-      const activeUsers = usersArray.filter((u) => u.is_active === true);
-      SetPending(activeUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-  useEffect(() => { fetchUsers() }, [])
-
-
-
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [roleFilter, setRoleFilter] = useState("all");
 
-  useEffect(() => {
-    setUsers(pending);
-  }, [pending]);
+  // ================= FETCH STUDENTS =================
+  const fetchUsers = async () => {
+    try {
+      const res = await apiClient.getUsers();
+      const allUsers = res.data || [];
 
-  // Filtered users based on search and filters
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch = searchTerm === "" ||
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      // STUDENTS ONLY (ACTIVE + PENDING)
+      const students = allUsers.filter(
+        (u) => u.role === "student"
+      );
 
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-
-    return matchesSearch && matchesStatus && matchesRole;
-  });
-
-
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await apiClient.deleteUser(userId);
-        setUsers((prev) => prev.filter((user) => user.id !== userId));
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('Failed to delete user. Please try again.');
-      }
+      setUsers(students);
+    } catch (err) {
+      console.error("Error fetching students:", err);
     }
   };
 
-  const handleStatusChange = (userId, newStatus) => {
-    setUsers((prev) =>
-      prev.map((user) =>
-        user.id === userId ? { ...user, status: newStatus } : user
-      )
-    );
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // ================= APPROVE =================
+  const handleApprove = async (userId) => {
+    if (!window.confirm("Approve this student?")) return;
+
+    try {
+      await apiClient.approveUser(userId);
+      fetchUsers();
+    } catch (err) {
+      alert("Approval failed");
+    }
   };
 
-  const getStatusBadge = (status) => {
-    const statusStyles = {
-      active: "bg-primary text-white",
-      inactive: "bg-primary text-white",
-      pending: "bg-primary text-white",
-      suspended: "bg-red-500 text-white",
-    };
-    return statusStyles[status] || "bg-gray-100 text-gray-700";
+  // ================= REJECT =================
+  const handleReject = async (userId) => {
+    if (!window.confirm("Reject this student? This will delete account.")) return;
+
+    try {
+      await apiClient.deleteUser(userId);
+      fetchUsers();
+    } catch (err) {
+      alert("Rejection failed");
+    }
   };
 
-  const getRoleBadge = (role) => {
-    const roleStyles = {
-      student: "bg-primary text-white",
-      instructor: "bg-red-500 text-white",
-      admin: "bg-Red-500 text-white",
-      moderator: "bg-primary text-white",
-    };
-    return roleStyles[role] || "bg-gray-100 text-gray-700";
+  // ================= DELETE =================
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Delete this student?")) return;
+
+    try {
+      await apiClient.deleteUser(userId);
+      fetchUsers();
+    } catch (err) {
+      alert("Delete failed");
+    }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  // ================= FILTER =================
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 flex flex-col gap-1">
-        <h2 className="text-3xl font-bold text-gray-900">
-          Users Management
-        </h2>
-        <p className="text-sm text-gray-500">
-          {filteredUsers.length} of {users.length} users found
-        </p>
-
-        <div className="mt-3 flex gap-3 items-center">
-          <input
-            type="text"
-            placeholder="Search users..."
-            className="border border-gray-300 px-3 py-2 rounded-md w-60 text-sm focus:ring-1 focus:ring-primary-dark outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-
-          <select
-            className="border border-gray-300 focus:ring-1 focus:ring-primary-dark outline-none px-3 py-2 rounded-md text-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all" className="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
-            <option value="suspended">Suspended</option>
-          </select>
-
-          <select
-            className="border border-gray-300 focus:ring-1 focus:ring-primary-dark outline-none px-3 py-2 rounded-md text-sm"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            <option value="all">All Roles</option>
-            <option value="student" >Student</option>
-            <option value="instructor">Instructor</option>
-            <option value="admin">Admin</option>
-            <option value="moderator">Moderator</option>
-          </select>
-        </div>
+    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      {/* HEADER */}
+      <div className="px-6 py-5 border-b bg-gray-50">
+        <h2 className="text-3xl font-bold">Students Management</h2>
+        <input
+          className="mt-3 border px-3 py-2 rounded-md text-sm w-64"
+          placeholder="Search student..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto bg-white">
+      {/* TABLE */}
+      <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              {[
-                "User",
-                "Contact",
-                "Role",
-                "Status",
-                "Join Date",
-                "Last Login",
-                "Actions",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="px-4 py-3 text-left text-[12px] font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap"
-                >
+            <tr className="bg-gray-50 border-b">
+              {["Student", "Email", "Status", "Approval", "Actions"].map((h) => (
+                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-100">
-            {filteredUsers?.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-3 py-4 whitespace-nowrap flex items-center gap-3">
-                  <div>
-                    <div className="font-medium text-gray-900 text-sm">
-                      {user.name}
+          <tbody className="divide-y">
+            {filteredUsers.map((u) => (
+              <tr key={u.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <p className="font-medium">{u.name}</p>
+                  <p className="text-xs text-gray-500">{u.country}</p>
+                </td>
+
+                <td className="px-4 py-3">{u.email}</td>
+
+                <td className="px-4 py-3">
+                  {u.is_active ? (
+                    <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full">
+                      Pending
+                    </span>
+                  )}
+                </td>
+
+                {/* APPROVAL */}
+                <td className="px-4 py-3">
+                  {!u.is_active ? (
+                    <div className="flex gap-3">
+                      <button onClick={() => handleApprove(u.id)} className="text-green-600">
+                        <CheckCircle2 size={18} />
+                      </button>
+                      <button onClick={() => handleReject(u.id)} className="text-red-600">
+                        <XCircle size={18} />
+                      </button>
                     </div>
-                    <div className="text-xs text-gray-500">{user.country}</div>
-                  </div>
+                  ) : (
+                    <span className="text-xs text-green-600 font-medium">Approved</span>
+                  )}
                 </td>
 
-                <td className="px-3 py-4 whitespace-nowrap text-gray-700 text-sm">
-                  {user.email}
-                </td>
-
-                <td className="px-3 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadge(
-                      user.role
-                    )}`}
-                  >
-                    {user.role}
-                  </span>
-                </td>
-
-                <td className="px-3 py-4 whitespace-nowrap">
-                  <select
-                    value={user.status}
-                    onChange={(e) =>
-                      handleStatusChange(user.id, e.target.value)
-                    }
-                    className={`text-xs rounded-full px-2 py-1 ${getStatusBadge(
-                      user.status
-                    )}`}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
-                    <option value="suspended">Suspended</option>
-                  </select>
-                </td>
-
-                <td className="px-3 py-4 whitespace-nowrap text-gray-600 text-sm">
-                  {formatDate(user.joinDate)}
-                </td>
-
-                <td className="px-3 py-4 whitespace-nowrap text-gray-600 text-sm">
-                  {formatDate(user.lastLogin)}
-                </td>
-
-
-
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
-                  <div className="flex items-center space-x-4">
-                    {/* Edit Icon */}
-                    <button
-                      className="text-blue-600 hover:text-blue-800 transition"
-                      title="Edit User"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-
-                    {/* Delete Icon */}
-                    <button
-                      className="text-red-600 hover:text-red-800 transition"
-                      onClick={() => handleDeleteUser(user.id)}
-                      title="Delete User"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                {/* ACTIONS */}
+                <td className="px-4 py-3 flex gap-3">
+                  <button className="text-blue-600">
+                    <Edit2 size={18} />
+                  </button>
+                  <button onClick={() => handleDelete(u.id)} className="text-red-600">
+                    <Trash2 size={18} />
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
 
-      {/* Empty State */}
-      {filteredUsers?.length === 0 && (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No users found
-          </h3>
-          <p className="text-gray-500 text-sm">
-            Try changing filters or search.
-          </p>
-        </div>
-      )}
+        {filteredUsers.length === 0 && (
+          <p className="text-center py-10 text-gray-500">No students found</p>
+        )}
+      </div>
     </div>
   );
 }

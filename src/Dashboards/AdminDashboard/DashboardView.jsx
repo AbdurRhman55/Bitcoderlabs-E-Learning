@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import StudentTable from "./StudentsTable";
-import PendingApprovals from "./PendingApprovals";
+// import PendingApprovals from "./PendingApprovals";
 import { apiClient } from '../../../src/api/index.js';
 
 import {

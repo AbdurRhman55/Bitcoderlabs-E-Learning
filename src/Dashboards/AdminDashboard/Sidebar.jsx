@@ -19,7 +19,7 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
     { icon: <BookOpen size={20} />, label: "Courses" },
     { icon: <Users size={20} />, label: "Students" },
     { icon: <Users size={20} />, label: "Teachers" },
-    { icon: <UserCheck size={20} />, label: "Pending Approvals" },
+    // { icon: <UserCheck size={20} />, label: "Pending Approvals" },
     { icon: <Phone size={20} />, label: "Contacts" },
     { icon: <ShoppingBag size={20} />, label: "Orders" },
     { icon: <BarChart3 size={20} />, label: "Analytics" },
