@@ -55,37 +55,48 @@ const TeacherDashboard = () => {
      // Load existing instructor profile data
      useEffect(() => {
          const loadProfileData = async () => {
-             if (user?.instructor_id) {
+             if (isAuthenticated && user?.role === 'instructor') {
                  try {
-                     const data = await apiClient.getInstructor(user.instructor_id);
-                     const instructor = data.data; // Assuming API returns { data: instructor }
+                     const data = await apiClient.getMyProfile();
+                     const instructor = data.data; // API returns { data: instructor }
 
                      // Populate profile state
-                     setProfile({
-                         fullName: instructor.name || '',
-                         email: instructor.email || '',
-                         phone: instructor.phone || '',
-                         address: instructor.address || '',
-                         bio: instructor.bio || '',
-                         profileImage: null,
-                         profileImageUrl: instructor.image ? `http://localhost:8000/storage/${instructor.image}` : '',
-                         status: instructor.approval_status || 'draft',
-                     });
+                      setProfile({
+                          fullName: instructor.name || '',
+                          email: instructor.email || '',
+                          phone: instructor.phone || '',
+                          address: '', // Address field not implemented in database
+                          bio: instructor.bio || '',
+                          profileImage: null,
+                          profileImageUrl: (instructor.image && typeof instructor.image === 'string') ? `http://127.0.0.1:8000/storage/${instructor.image}` : '',
+                          status: instructor.approval_status || 'pending',
+                      });
 
-                     // Populate related lists
-                     setEducationList(instructor.education || []);
-                     setExperienceList(instructor.experience || []);
-                     setProjectList(instructor.projects || []);
-                     setCertificationList(instructor.certifications || []);
-                 } catch (error) {
-                     console.error('Error loading profile:', error);
-                     showNotification('Failed to load profile data.', 'error');
-                 }
+                      // Populate related lists
+                      setEducationList(Array.isArray(instructor.education) ? instructor.education : []);
+                      setExperienceList(Array.isArray(instructor.work_experience) ? instructor.work_experience : []);
+                      setProjectList(Array.isArray(instructor.projects) ? instructor.projects : []);
+                      setCertificationList((instructor.certifications || []).map(cert => ({
+                          id: cert.id || Date.now() + Math.random(),
+                          name: cert.name || '',
+                          issuer: cert.issuer || '',
+                          issueDate: cert.issue_date || '',
+                          expiryDate: cert.expiry_date || '',
+                          credentialId: cert.credential_id || '',
+                          credentialUrl: cert.credential_url || '',
+                          description: cert.description || ''
+                      })));
+                  } catch (error) {
+                      console.error('Error loading profile:', error);
+                      console.error('User data:', user);
+                      console.error('Response data:', error.response?.data);
+                      showNotification('Failed to load profile data. Please try refreshing the page.', 'error');
+                  }
              }
          };
 
          loadProfileData();
-     }, [user?.instructor_id]);
+     }, [isAuthenticated, user?.role, user?.id]);
 
      // Show loading or redirect if not authenticated or not instructor
      if (!isAuthenticated || !user || user.role !== 'instructor') {
@@ -107,8 +118,8 @@ const TeacherDashboard = () => {
             const profileData = {
                 name: profile.fullName,
                 bio: profile.bio,
-                // Add other personal fields as needed
-                // Note: File uploads need special handling
+                email: profile.email,
+                phone: profile.phone,
             };
 
             const relatedData = {
@@ -144,15 +155,26 @@ const TeacherDashboard = () => {
                 }))
             };
 
-            // For now, we'll assume creating/updating instructor profile
-            // This needs to be integrated with actual API endpoints
-            console.log('Saving profile data:', { profileData, relatedData });
+            const payload = { ...profileData, ...relatedData };
 
-             // Call API to update instructor profile
-             const instructorId = user?.instructor_id;
-             if (instructorId) {
-                 await apiClient.updateInstructor(instructorId, { ...profileData, ...relatedData });
-             }
+            if (profile.profileImage) {
+                const formData = new FormData();
+                Object.entries(profileData).forEach(([key, value]) => {
+                    if (value !== undefined && value !== null) {
+                        formData.append(key, value);
+                    }
+                });
+
+                formData.append('education', JSON.stringify(relatedData.education));
+                formData.append('work_experience', JSON.stringify(relatedData.work_experience));
+                formData.append('projects', JSON.stringify(relatedData.projects));
+                formData.append('certifications', JSON.stringify(relatedData.certifications));
+                formData.append('image', profile.profileImage);
+
+                await apiClient.updateMyProfile(formData);
+            } else {
+                await apiClient.updateMyProfile(payload);
+            }
 
             showNotification('Profile saved successfully!', 'success');
         } catch (error) {
@@ -170,8 +192,9 @@ const TeacherDashboard = () => {
             // First save the complete profile
             await saveProfileData();
 
-            // Get instructor ID from user data
-            const instructorId = user?.instructor_id || user?.id;
+            // Get instructor profile data to get the ID
+            const profileData = await apiClient.getMyProfile();
+            const instructorId = profileData.data.id;
 
             if (!instructorId) {
                 showNotification('Unable to identify instructor profile. Please contact support.', 'error');

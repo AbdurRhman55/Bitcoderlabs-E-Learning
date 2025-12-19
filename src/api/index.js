@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 
 class ApiClient {
   constructor() {
@@ -10,14 +10,27 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem("token");
 
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
     const config = {
       headers: {
-        "Content-Type": "application/json",
+        Accept: "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
     };
+
+    if (isFormData) {
+      if (config.headers) {
+        delete config.headers["Content-Type"];
+      }
+    } else {
+      // Default to JSON if caller didn't specify a content type.
+      if (config.headers && !config.headers["Content-Type"]) {
+        config.headers["Content-Type"] = "application/json";
+      }
+    }
 
     const response = await fetch(url, config);
 
@@ -165,11 +178,44 @@ class ApiClient {
     });
   }
 
+  async getMyProfile() {
+    return this.request("/instructors/my/profile");
+  }
+
+  async updateMyProfile(instructorData) {
+    const isFormData = typeof FormData !== 'undefined' && instructorData instanceof FormData;
+    if (isFormData) {
+      if (!instructorData.has('_method')) {
+        instructorData.append('_method', 'PUT');
+      }
+      return this.request("/instructors/my/profile", {
+        method: "POST",
+        body: instructorData,
+      });
+    }
+
+    return this.request("/instructors/my/profile", {
+      method: "PUT",
+      body: JSON.stringify(instructorData),
+    });
+  }
+
   async getInstructor(id) {
     return this.request(`/instructors/${id}`);
   }
 
   async updateInstructor(id, instructorData) {
+    const isFormData = typeof FormData !== 'undefined' && instructorData instanceof FormData;
+    if (isFormData) {
+      if (!instructorData.has('_method')) {
+        instructorData.append('_method', 'PUT');
+      }
+      return this.request(`/instructors/${id}`, {
+        method: "POST",
+        body: instructorData,
+      });
+    }
+
     return this.request(`/instructors/${id}`, {
       method: "PUT",
       body: JSON.stringify(instructorData),

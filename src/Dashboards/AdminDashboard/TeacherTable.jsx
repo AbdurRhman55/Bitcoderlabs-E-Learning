@@ -6,6 +6,12 @@ export default function TeachersTable() {
     const [teachers, setTeachers] = useState([]);
     const [selectedTeacher, setSelectedTeacher] = useState(null);
 
+    const getImageUrl = (image) => {
+        if (!image || typeof image !== 'string') return "";
+        if (image.startsWith('http://') || image.startsWith('https://')) return image;
+        return `http://127.0.0.1:8000/storage/${image}`;
+    };
+
     // ================= FETCH =================
     const fetchTeachers = async () => {
         try {
@@ -77,7 +83,7 @@ export default function TeachersTable() {
                             >
                                 <div className="flex items-center gap-3">
                                     <img
-                                        src={t.image || "/avatar.png"}
+                                        src={getImageUrl(t.image) || "/avatar.png"}
                                         className="w-6 h-6 rounded-full border border-[#3baee9]"
                                     />
                                     <div>
@@ -167,12 +173,18 @@ export default function TeachersTable() {
                         {/* Header */}
                         <div className="flex items-center gap-4 border-b pb-4">
                             <img
-                                src={selectedTeacher.image || "/avatar.png"}
+                                src={getImageUrl(selectedTeacher.image) || "/avatar.png"}
                                 className="w-24 h-24 rounded-full border"
                             />
                             <div>
                                 <h3 className="text-2xl font-bold">{selectedTeacher.name}</h3>
                                 <p className="text-sm text-gray-500">{selectedTeacher.bio || "No bio provided"}</p>
+                                {selectedTeacher.email && (
+                                    <p className="text-sm text-gray-600">{selectedTeacher.email}</p>
+                                )}
+                                {selectedTeacher.phone && (
+                                    <p className="text-sm text-gray-600">{selectedTeacher.phone}</p>
+                                )}
                                 {selectedTeacher.portfolio_url && (
                                     <p>
                                         <a href={selectedTeacher.portfolio_url} target="_blank" className="text-blue-500 underline">
@@ -194,8 +206,9 @@ export default function TeachersTable() {
                                         {selectedTeacher.education.map((edu, i) => (
                                             <li key={i}>
                                                 <p>
-                                                    <b>{edu.degree || "Degree"}:</b> {edu.institute || "Institute"} ({edu.year || "-"})
+                                                    <b>{edu.degree || "Degree"}:</b> {edu.institution || "Institute"} ({edu.year || "-"})
                                                 </p>
+                                                {edu.description && <p className="text-gray-600 text-xs">{edu.description}</p>}
                                             </li>
                                         ))}
                                     </ul>
@@ -210,7 +223,7 @@ export default function TeachersTable() {
                                         {selectedTeacher.work_experience.map((work, i) => (
                                             <li key={i}>
                                                 <p>
-                                                    <b>{work.title || "Title"}:</b> {work.company || "Company"} ({work.start_date || "-"} - {work.end_date || "Present"})
+                                                    <b>{work.position || "Position"}:</b> {work.institution || "Company"} {work.duration ? `(${work.duration})` : ''}
                                                 </p>
                                                 {work.description && <p className="text-gray-600 text-xs">{work.description}</p>}
                                             </li>
@@ -224,7 +237,16 @@ export default function TeachersTable() {
                                 <div>
                                     <h4 className="font-semibold text-gray-800 mb-1">Projects</h4>
                                     <ul className="list-disc list-inside ml-4">
-                                        {selectedTeacher.projects.map((p, i) => <li key={i}>{p.description || p.title || "Project"}</li>)}
+                                        {selectedTeacher.projects.map((p, i) => (
+                                            <li key={i}>
+                                                <p><b>{p.title || "Project"}:</b> {p.organization || ""}</p>
+                                                {p.role && <p className="text-gray-600 text-xs">{p.role}{p.duration ? ` • ${p.duration}` : ''}</p>}
+                                                {p.description && <p className="text-gray-600 text-xs">{p.description}</p>}
+                                                {p.link && (
+                                                    <a href={p.link} target="_blank" className="text-blue-500 underline text-xs">{p.link}</a>
+                                                )}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             )}
@@ -234,7 +256,17 @@ export default function TeachersTable() {
                                 <div>
                                     <h4 className="font-semibold text-gray-800 mb-1">Certifications</h4>
                                     <ul className="list-disc list-inside ml-4">
-                                        {selectedTeacher.certifications.map((c, i) => <li key={i}>{c.name || "Certification"}</li>)}
+                                        {selectedTeacher.certifications.map((c, i) => (
+                                            <li key={i}>
+                                                <p><b>{c.name || "Certification"}</b>{c.issuer ? ` — ${c.issuer}` : ''}</p>
+                                                {(c.issue_date || c.expiry_date) && (
+                                                    <p className="text-gray-600 text-xs">{c.issue_date || ''}{c.expiry_date ? ` → ${c.expiry_date}` : ''}</p>
+                                                )}
+                                                {c.credential_url && (
+                                                    <a href={c.credential_url} target="_blank" className="text-blue-500 underline text-xs">Credential</a>
+                                                )}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             )}
