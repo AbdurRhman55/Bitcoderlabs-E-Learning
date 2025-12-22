@@ -124,6 +124,11 @@ const authSlice = createSlice({
             })
 
             // Logout cases
+            .addCase(logoutAsync.pending, (state) => {
+                state.isAuthenticated = false;
+                state.user = null;
+                state.error = null;
+            })
             .addCase(logoutAsync.fulfilled, (state) => {
                 state.token = '';
                 state.isAuthenticated = false;
