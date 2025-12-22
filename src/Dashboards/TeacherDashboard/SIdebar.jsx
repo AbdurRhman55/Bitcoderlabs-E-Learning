@@ -20,7 +20,6 @@ const DashboardSidebar = ({ activeTab, setActiveTab }) => {
         { id: 'students', label: 'Students', icon: <FaUserGraduate /> },
         { id: 'assignments', label: 'Assignments', icon: <FaTasks /> },
         { id: 'messages', label: 'Messages', icon: <FaEnvelope /> },
-        { id: 'earnings', label: 'Earnings', icon: <FaMoneyBillAlt /> },
         { id: 'analytics', label: 'Analytics', icon: <FaChartLine /> },
         { id: 'settings', label: 'Settings', icon: <FaCog /> },
     ];
@@ -41,8 +40,8 @@ const DashboardSidebar = ({ activeTab, setActiveTab }) => {
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
                             className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === item.id
-                                    ? 'bg-primary text-white shadow-sm'
-                                    : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             <span className={`mr-3 text-lg ${activeTab === item.id ? 'text-white' : 'text-gray-500'}`}>

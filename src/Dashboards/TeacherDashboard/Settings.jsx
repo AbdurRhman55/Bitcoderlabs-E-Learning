@@ -1,50 +1,20 @@
 // src/components/sections/SettingsTab.jsx
 import React, { useState } from 'react';
-import { FaUser, FaLock, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaTwitter, FaGithub, FaSave, FaUpload } from 'react-icons/fa';
+import { FaUser, FaLock, FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaTwitter, FaGithub, FaSave, FaUpload, FaEdit } from 'react-icons/fa';
 
 const SettingsTab = ({ profile, setProfile, showNotification }) => {
     const [activeSection, setActiveSection] = useState('profile');
     const [formData, setFormData] = useState({
-        name: profile.name,
-        email: profile.email,
-        phone: '',
-        address: '',
-        qualification: profile.qualification,
-        about: profile.about,
-        social: { ...profile.socialLinks },
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
     });
 
     const handleInputChange = (field, value) => {
-        if (field.includes('.')) {
-            const [parent, child] = field.split('.');
-            setFormData(prev => ({
-                ...prev,
-                [parent]: {
-                    ...prev[parent],
-                    [child]: value
-                }
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [field]: value
-            }));
-        }
-    };
-
-    const handleSaveProfile = () => {
-        setProfile(prev => ({
+        setFormData(prev => ({
             ...prev,
-            name: formData.name,
-            email: formData.email,
-            qualification: formData.qualification,
-            about: formData.about,
-            socialLinks: formData.social
+            [field]: value
         }));
-        showNotification('Profile updated successfully', 'success');
     };
 
     const handleSavePassword = () => {
@@ -61,11 +31,15 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
         }));
     };
 
+    const handleEditProfile = () => {
+        // Redirect to teacher profile page
+        window.location.href = '/teacherprofile'; // Change this to your actual route
+    };
+
     const sections = [
         { id: 'profile', label: 'Profile', icon: <FaUser /> },
         { id: 'security', label: 'Security', icon: <FaLock /> },
         { id: 'notifications', label: 'Notifications', icon: <FaEnvelope /> },
-        { id: 'billing', label: 'Billing', icon: <FaEnvelope /> },
     ];
 
     return (
@@ -87,8 +61,8 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                                     key={section.id}
                                     onClick={() => setActiveSection(section.id)}
                                     className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all ${activeSection === section.id
-                                            ? 'bg-primary text-white'
-                                            : 'text-gray-700 hover:bg-gray-100'
+                                        ? 'bg-primary text-white'
+                                        : 'text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >
                                     <span className={`mr-3 ${activeSection === section.id ? 'text-white' : 'text-gray-500'}`}>
@@ -106,93 +80,58 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                     {activeSection === 'profile' && (
                         <div className="space-y-6">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                <h3 className="text-lg font-medium text-gray-800 mb-6">Personal Information</h3>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-lg font-medium text-gray-800">Personal Information</h3>
+                                    <button
+                                        onClick={handleEditProfile}
+                                        className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                    >
+                                        <FaEdit className="mr-2" />
+                                        Edit Profile
+                                    </button>
+                                </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <FaUser className="text-gray-400" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={formData.name}
-                                                onChange={(e) => handleInputChange('name', e.target.value)}
-                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="Enter your name"
-                                            />
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-gray-800">{profile.name}</p>
                                         </div>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <FaEnvelope className="text-gray-400" />
-                                            </div>
-                                            <input
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={(e) => handleInputChange('email', e.target.value)}
-                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="Enter your email"
-                                            />
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-gray-800">{profile.email}</p>
                                         </div>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <FaPhone className="text-gray-400" />
-                                            </div>
-                                            <input
-                                                type="tel"
-                                                value={formData.phone}
-                                                onChange={(e) => handleInputChange('phone', e.target.value)}
-                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="Enter your phone number"
-                                            />
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-gray-800">{profile.phone || 'Not provided'}</p>
                                         </div>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <FaMapMarkerAlt className="text-gray-400" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={formData.address}
-                                                onChange={(e) => handleInputChange('address', e.target.value)}
-                                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="Enter your address"
-                                            />
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-gray-800">{profile.address || 'Not provided'}</p>
                                         </div>
                                     </div>
 
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">Qualification</label>
-                                        <input
-                                            type="text"
-                                            value={formData.qualification}
-                                            onChange={(e) => handleInputChange('qualification', e.target.value)}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                            placeholder="Enter your qualification"
-                                        />
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-gray-800">{profile.qualification}</p>
+                                        </div>
                                     </div>
 
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">About Me</label>
-                                        <textarea
-                                            rows="4"
-                                            value={formData.about}
-                                            onChange={(e) => handleInputChange('about', e.target.value)}
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                            placeholder="Tell us about yourself..."
-                                        />
+                                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-gray-800">{profile.about}</p>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -204,51 +143,35 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                                                 <FaLinkedin className="inline mr-2 text-blue-600" />
                                                 LinkedIn
                                             </label>
-                                            <input
-                                                type="url"
-                                                value={formData.social.linkedin}
-                                                onChange={(e) => handleInputChange('social.linkedin', e.target.value)}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="https://linkedin.com/in/..."
-                                            />
+                                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                <p className="text-gray-800 truncate">
+                                                    {profile.socialLinks?.linkedin || 'Not provided'}
+                                                </p>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 <FaTwitter className="inline mr-2 text-blue-400" />
                                                 Twitter
                                             </label>
-                                            <input
-                                                type="url"
-                                                value={formData.social.twitter}
-                                                onChange={(e) => handleInputChange('social.twitter', e.target.value)}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="https://twitter.com/..."
-                                            />
+                                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                <p className="text-gray-800 truncate">
+                                                    {profile.socialLinks?.twitter || 'Not provided'}
+                                                </p>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 <FaGithub className="inline mr-2 text-gray-800" />
                                                 GitHub
                                             </label>
-                                            <input
-                                                type="url"
-                                                value={formData.social.github}
-                                                onChange={(e) => handleInputChange('social.github', e.target.value)}
-                                                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                                placeholder="https://github.com/..."
-                                            />
+                                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                <p className="text-gray-800 truncate">
+                                                    {profile.socialLinks?.github || 'Not provided'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="mt-6 flex justify-end">
-                                    <button
-                                        onClick={handleSaveProfile}
-                                        className="flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                                    >
-                                        <FaSave className="mr-2" />
-                                        Save Changes
-                                    </button>
                                 </div>
                             </div>
 
@@ -262,16 +185,14 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                                         className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
                                     />
                                     <div>
-                                        <p className="text-sm text-gray-600 mb-4">Upload a new profile picture. JPG, PNG up to 2MB.</p>
-                                        <div className="flex space-x-3">
-                                            <button className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                                                <FaUpload className="mr-2" />
-                                                Upload Photo
-                                            </button>
-                                            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                                Remove
-                                            </button>
-                                        </div>
+                                        <p className="text-sm text-gray-600 mb-4">Your current profile picture</p>
+                                        <button
+                                            onClick={handleEditProfile}
+                                            className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                        >
+                                            <FaEdit className="mr-2" />
+                                            Edit in Profile
+                                        </button>
                                     </div>
                                 </div>
                             </div>

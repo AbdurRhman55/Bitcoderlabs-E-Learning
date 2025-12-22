@@ -35,21 +35,12 @@ const AnalyticsTab = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Analytics Dashboard</h1>
                     <p className="text-gray-600">Track performance and gain insights</p>
                 </div>
-                <div className="flex items-center space-x-3">
-                    <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <FaCalendarAlt className="mr-2" />
-                        Last 30 Days
-                    </button>
-                    <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <FaFilter className="mr-2" />
-                        Filter
-                    </button>
-                </div>
+
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl  p-6 shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 rounded-lg bg-blue-100">
                             <FaUsers className="text-blue-600" />
@@ -60,7 +51,7 @@ const AnalyticsTab = () => {
                     <p className="text-sm text-gray-600">Total Students</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-xl  p-6 shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-2 rounded-lg bg-green-100">
                             <FaClock className="text-green-600" />
@@ -128,8 +119,8 @@ const AnalyticsTab = () => {
                                         key={range}
                                         onClick={() => setTimeRange(range)}
                                         className={`px-3 py-1 text-sm rounded-lg transition-colors ${timeRange === range
-                                                ? 'bg-primary text-white'
-                                                : 'text-gray-600 hover:bg-gray-100'
+                                            ? 'bg-primary text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
                                             }`}
                                     >
                                         {range === '7days' ? '7D' : range === '30days' ? '30D' : '90D'}

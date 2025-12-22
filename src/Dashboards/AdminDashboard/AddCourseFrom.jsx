@@ -71,8 +71,8 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
     const newValue = type === "checkbox"
       ? checked
       : type === "number"
-      ? Number(value)
-      : value;
+        ? Number(value)
+        : value;
 
     setCourse((prev) => {
       const updated = {
@@ -231,7 +231,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           </select>
         </div>
 
-         {/* Language */}
+        {/* Language */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Language *
@@ -403,15 +403,15 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Original Price
           </label>
-            <input
-              type="number"
-              step="0.01"
-              name="original_price"
-              value={course.original_price}
-              onChange={handleChange}
-              min="0"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            />
+          <input
+            type="number"
+            step="0.01"
+            name="original_price"
+            value={course.original_price}
+            onChange={handleChange}
+            min="0"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+          />
         </div>
 
         {/* Featured Toggle */}

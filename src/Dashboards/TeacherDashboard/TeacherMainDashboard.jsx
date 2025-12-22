@@ -9,7 +9,7 @@ import CoursesManagement from './CoursesManagement';
 import StudentsSection from './Student';
 import AssignmentsQuizzes from './Asssignment&quiz';
 import MessagesNotifications from './Message&Notification';
-import EarningsTab from './EarningTabs';
+// import EarningsTab from './EarningTabs';
 import AnalyticsTab from './Analytics';
 import SettingsTab from './Settings';
 import Notification from './Notifications';

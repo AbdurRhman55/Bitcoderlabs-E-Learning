@@ -34,10 +34,10 @@ const StudentsSection = () => {
                     <p className="text-gray-600">Track student progress and performance</p>
                 </div>
                 <div className="flex space-x-3">
-                    <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                    {/* <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
                         <FaFilter className="mr-2" />
                         Filter
-                    </button>
+                    </button> */}
                     <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
                         Export Data
                     </button>
@@ -60,7 +60,7 @@ const StudentsSection = () => {
                         />
                     </div>
                 </div>
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="bg-white rounded-md flex justify-center items-center gap-5 px-6 shadow-sm border border-gray-200">
                     <p className="text-2xl font-bold text-gray-800">{students.length}</p>
                     <p className="text-sm text-gray-600">Total Students</p>
                 </div>

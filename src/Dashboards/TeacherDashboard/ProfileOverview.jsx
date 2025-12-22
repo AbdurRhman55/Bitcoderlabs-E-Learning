@@ -4,6 +4,12 @@ import { FaDownload, FaEdit, FaStar, FaUsers, FaClock, FaBook, FaTasks, FaChartL
 import { MdSchool, MdWork } from 'react-icons/md';
 
 const ProfileOverview = ({ profile }) => {
+
+    const handleEditProfile = () => {
+        // Redirect to teacher profile page
+        window.location.href = '/teacherprofile'; // Change this to your actual route
+    };
+
     const stats = [
         { label: 'Total Students', value: '243', icon: <FaUsers className="text-blue-500" />, change: '+12%' },
         { label: 'Active Courses', value: '8', icon: <MdSchool className="text-green-500" />, change: '+2' },
@@ -26,11 +32,10 @@ const ProfileOverview = ({ profile }) => {
                     <p className="text-gray-600">Welcome back, {profile.name}</p>
                 </div>
                 <div className="flex space-x-3">
-                    <button className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                        <FaDownload className="mr-2" />
-                        Download CV
-                    </button>
-                    <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+
+                    <button
+                        onClick={handleEditProfile}
+                        className="flex items-center cursor-pointer px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                         <FaEdit className="mr-2 text-gray-600" />
                         Edit Profile
                     </button>

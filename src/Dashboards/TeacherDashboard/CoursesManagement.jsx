@@ -51,13 +51,7 @@ const CoursesManagement = ({ showNotification }) => {
                     <h1 className="text-2xl font-bold text-gray-800">Courses Management</h1>
                     <p className="text-gray-600">Manage your courses and track their performance</p>
                 </div>
-                <button
-                    onClick={handleCreateCourse}
-                    className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                >
-                    <FaPlus className="mr-2" />
-                    Create New Course
-                </button>
+
             </div>
 
             {/* Stats */}
@@ -166,61 +160,7 @@ const CoursesManagement = ({ showNotification }) => {
                 </div>
             </div>
 
-            {/* Create Course Form (Collapsed by default) */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Create New Course</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Course Title</label>
-                        <input
-                            type="text"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            placeholder="Enter course title"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                        <select className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-                            <option>Mathematics</option>
-                            <option>Science</option>
-                            <option>Computer Science</option>
-                            <option>Language</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Price ($)</label>
-                        <input
-                            type="number"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            placeholder="Enter price"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                        <input
-                            type="text"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            placeholder="e.g., 8 weeks"
-                        />
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea
-                            rows="4"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            placeholder="Describe your course..."
-                        />
-                    </div>
-                </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                    <button className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        Cancel
-                    </button>
-                    <button className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
-                        Create Course
-                    </button>
-                </div>
-            </div>
+
         </div>
     );
 };
