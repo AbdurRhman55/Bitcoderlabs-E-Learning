@@ -17,6 +17,7 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard" },
     { icon: <BookOpen size={20} />, label: "Courses" },
+    { icon: <UserCheck size={20} />, label: "Course Requests" },
     { icon: <Users size={20} />, label: "Students" },
     { icon: <Users size={20} />, label: "Teachers" },
     // { icon: <UserCheck size={20} />, label: "Pending Approvals" },

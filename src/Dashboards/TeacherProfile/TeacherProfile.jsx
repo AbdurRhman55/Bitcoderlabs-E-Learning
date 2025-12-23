@@ -52,51 +52,85 @@ const TeacherDashboard = () => {
          }
      }, [isAuthenticated, user, navigate]);
 
-     // Load existing instructor profile data
-     useEffect(() => {
-         const loadProfileData = async () => {
-             if (isAuthenticated && user?.role === 'instructor') {
-                 try {
-                     const data = await apiClient.getMyProfile();
-                     const instructor = data.data; // API returns { data: instructor }
+      // Load existing instructor profile data
+      useEffect(() => {
+          const loadProfileData = async () => {
+              if (isAuthenticated && user?.role === 'instructor') {
+                  try {
+                      const data = await apiClient.getMyProfile();
+                      const instructor = data.data; // API returns { data: instructor }
 
-                     // Populate profile state
-                      setProfile({
-                          fullName: instructor.name || '',
-                          email: instructor.email || '',
-                          phone: instructor.phone || '',
-                          address: '', // Address field not implemented in database
-                          bio: instructor.bio || '',
-                          profileImage: null,
-                          profileImageUrl: (instructor.image && typeof instructor.image === 'string') ? `http://127.0.0.1:8000/storage/${instructor.image}` : '',
-                          status: instructor.approval_status || 'pending',
-                      });
+                      // Populate profile state
+                       setProfile({
+                           fullName: instructor.name || '',
+                           email: instructor.email || '',
+                           phone: instructor.phone || '',
+                           address: '', // Address field not implemented in database
+                           bio: instructor.bio || '',
+                           profileImage: null,
+                           profileImageUrl: (instructor.image && typeof instructor.image === 'string') ? `http://127.0.0.1:8000/storage/${instructor.image}` : '',
+                           status: instructor.approval_status || 'pending',
+                       });
 
-                      // Populate related lists
-                      setEducationList(Array.isArray(instructor.education) ? instructor.education : []);
-                      setExperienceList(Array.isArray(instructor.work_experience) ? instructor.work_experience : []);
-                      setProjectList(Array.isArray(instructor.projects) ? instructor.projects : []);
-                      setCertificationList((instructor.certifications || []).map(cert => ({
-                          id: cert.id || Date.now() + Math.random(),
-                          name: cert.name || '',
-                          issuer: cert.issuer || '',
-                          issueDate: cert.issue_date || '',
-                          expiryDate: cert.expiry_date || '',
-                          credentialId: cert.credential_id || '',
-                          credentialUrl: cert.credential_url || '',
-                          description: cert.description || ''
-                      })));
-                  } catch (error) {
-                      console.error('Error loading profile:', error);
-                      console.error('User data:', user);
-                      console.error('Response data:', error.response?.data);
-                      showNotification('Failed to load profile data. Please try refreshing the page.', 'error');
+                       // Populate related lists
+                       setEducationList(Array.isArray(instructor.education) ? instructor.education : []);
+                       setExperienceList(Array.isArray(instructor.work_experience) ? instructor.work_experience : []);
+                       setProjectList(Array.isArray(instructor.projects) ? instructor.projects : []);
+                       setCertificationList((instructor.certifications || []).map(cert => ({
+                           id: cert.id || Date.now() + Math.random(),
+                           name: cert.name || '',
+                           issuer: cert.issuer || '',
+                           issueDate: cert.issue_date || '',
+                           expiryDate: cert.expiry_date || '',
+                           credentialId: cert.credential_id || '',
+                           credentialUrl: cert.credential_url || '',
+                           description: cert.description
+                       })));
+
+                       // If already approved, redirect immediately
+                       if (instructor.approval_status === 'approved') {
+                           navigate('/teachermaindashboard');
+                           return;
+                       }
+                   } catch (error) {
+                       console.error('Error loading profile:', error);
+                       console.error('User data:', user);
+                       console.error('Response data:', error.response?.data);
+                       showNotification('Failed to load profile data. Please try refreshing the page.', 'error');
+                   }
+              }
+          };
+
+          loadProfileData();
+      }, [isAuthenticated, user, navigate]);
+
+      // Polling for approval status change
+      useEffect(() => {
+          if (!isAuthenticated || user?.role !== 'instructor') return;
+
+          const pollInterval = setInterval(async () => {
+              try {
+                  const data = await apiClient.getMyProfile();
+                  const instructor = data.data;
+                  const currentStatus = instructor.approval_status || 'pending';
+
+                  if (currentStatus !== profile.status) {
+                      setProfile(prev => ({ ...prev, status: currentStatus }));
+
+                      if (currentStatus === 'approved') {
+                          showNotification('Congratulations! Your profile has been approved. Redirecting to dashboard...', 'success');
+                          setTimeout(() => {
+                              navigate('/teachermaindashboard');
+                          }, 3000); // Give time for notification to be seen
+                      }
                   }
-             }
-         };
+              } catch (error) {
+                  console.error('Error polling profile status:', error);
+              }
+          }, 10000); // Poll every 10 seconds
 
-         loadProfileData();
-     }, [isAuthenticated, user?.role, user?.id]);
+          return () => clearInterval(pollInterval);
+      }, [isAuthenticated, user, profile.status, navigate]);
 
      // Show loading or redirect if not authenticated or not instructor
      if (!isAuthenticated || !user || user.role !== 'instructor') {

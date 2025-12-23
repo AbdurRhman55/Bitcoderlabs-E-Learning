@@ -135,6 +135,47 @@ class ApiClient {
     return this.request(`/courses${queryString ? `?${queryString}` : ""}`);
   }
 
+  async getMyCourses(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/courses/my${queryString ? `?${queryString}` : ""}`);
+  }
+
+  // Instructor Course Requests
+  async getAvailableCourses(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/courses/available${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async getMyCourseRequests(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/instructor-course-requests/my${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async createCourseRequest(courseId) {
+    return this.request(`/instructor-course-requests`, {
+      method: "POST",
+      body: JSON.stringify({ course_id: courseId }),
+    });
+  }
+
+  async getCourseRequests(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/instructor-course-requests${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async approveCourseRequest(requestId) {
+    return this.request(`/instructor-course-requests/${requestId}/approve`, {
+      method: "POST",
+    });
+  }
+
+  async rejectCourseRequest(requestId, reason) {
+    return this.request(`/instructor-course-requests/${requestId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
   async createCourse(courseData) {
     return this.request("/courses", {
       method: "POST",
@@ -226,6 +267,20 @@ class ApiClient {
     return this.request(`/instructors/${instructorId}/submit-for-approval`, {
       method: "POST",
     });
+  }
+
+  // Teacher Dashboard APIs
+  async getTeacherStats() {
+    return this.request("/instructors/my/stats");
+  }
+
+  async getNotifications(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/notifications${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async getRecentActivities() {
+    return this.request("/instructors/my/activities");
   }
 
   // Categories

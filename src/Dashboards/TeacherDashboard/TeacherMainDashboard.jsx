@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from '../../../src/api/index.js';
 import DashboardSidebar from './SIdebar';
 import DashboardHeader from './Header';
 import ProfileOverview from './ProfileOverview';
@@ -9,39 +10,44 @@ import CoursesManagement from './CoursesManagement';
 import StudentsSection from './Student';
 import AssignmentsQuizzes from './Asssignment&quiz';
 import MessagesNotifications from './Message&Notification';
-// import EarningsTab from './EarningTabs';
 import AnalyticsTab from './Analytics';
 import SettingsTab from './Settings';
 import Notification from './Notifications';
 
 const TeacherMainDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
-    const [notifications, setNotifications] = useState([]);
+    const [notifications, setNotifications] = useState([
+        { id: 1, message: 'John Doe enrolled in your "React Masterclass" course', time: '10 minutes ago', type: 'student', read: false },
+        { id: 2, message: 'Sarah Smith submitted an assignment for "Advanced JavaScript"', time: '1 hour ago', type: 'assignment', read: false },
+        { id: 3, message: 'Your course "Web Development Bootcamp" has been approved', time: '2 hours ago', type: 'admin', read: true },
+        { id: 4, message: 'You received $249.99 for course sales', time: '1 day ago', type: 'admin', read: false },
+        { id: 5, message: 'Scheduled maintenance on Saturday, 10 PM - 2 AM', time: '2 days ago', type: 'admin', read: true },
+    ]);
     const [userProfile, setUserProfile] = useState({
-        name: 'Dr. Sarah Johnson',
-        email: 'sarah.johnson@example.edu',
+        name: 'Unknown Instructor',
+        email: '',
         profileImage: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200',
-        qualification: 'Ph.D. in Education',
-        experience: '10+ years',
-        skills: ['Mathematics', 'Curriculum Design', 'STEM Education', 'EdTech'],
-        about: 'Dedicated educator with 10+ years of experience in STEM education...',
-        socialLinks: {
-            linkedin: '',
-            twitter: '',
-            github: ''
-        }
+        qualification: 'Instructor',
+        experience: 'Teaching',
+        skills: [],
+        about: 'Profile information unavailable',
+        socialLinks: {},
+        approvalStatus: 'pending'
     });
+    const [stats, setStats] = useState(null);
+    const [recentActivities, setRecentActivities] = useState([]);
+    const [dashboardLoading, setDashboardLoading] = useState(true);
 
     const [showNotification, setShowNotification] = useState({ show: false, message: '', type: '' });
     const navigate = useNavigate();
-    const { isAuthenticated, loading, user } = useSelector(state => state.auth);
+    const { isAuthenticated, loading: authLoading, user } = useSelector(state => state.auth);
 
     // Redirect to login if not authenticated
     useEffect(() => {
-        if (!isAuthenticated && !loading) {
+        if (!isAuthenticated && !authLoading) {
             navigate('/login');
         }
-    }, [isAuthenticated, loading, navigate]);
+    }, [isAuthenticated, authLoading, navigate]);
 
     // Redirect instructors who are not approved to profile page
     useEffect(() => {
@@ -50,16 +56,77 @@ const TeacherMainDashboard = () => {
         }
     }, [isAuthenticated, user, navigate]);
 
-    // Load mock data
+    // Load dashboard data
     useEffect(() => {
-        // Simulate loading notifications
-        const mockNotifications = [
-            { id: 1, type: 'student', message: 'John Doe enrolled in your course "Advanced Mathematics"', time: '2 hours ago', read: false },
-            { id: 2, type: 'admin', message: 'Your course "Introduction to Physics" has been approved', time: '1 day ago', read: true },
-            { id: 3, type: 'assignment', message: '5 new assignments submitted in "Calculus 101"', time: '2 days ago', read: false },
-        ];
-        setNotifications(mockNotifications);
-    }, []);
+        const loadDashboardData = async () => {
+            if (!isAuthenticated || authLoading || user?.role !== 'instructor') return;
+
+            try {
+                setDashboardLoading(true);
+
+                // apiClient returns parsed JSON (not an Axios-style { data: ... } response).
+                // Depending on backend wrappers, responses may be shaped as:
+                // - { data: payload }
+                // - { data: { data: payload } }
+                // - payload
+                const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
+
+                // Fetch only endpoints that exist in the backend.
+                const [profileResult, statsResult, activitiesResult] = await Promise.allSettled([
+                    apiClient.getMyProfile(),
+                    apiClient.getTeacherStats(),
+                    apiClient.getRecentActivities()
+                ]);
+
+                // Set profile data
+                const instructor = profileResult.status === 'fulfilled' ? (unwrap(profileResult.value) || {}) : {};
+                setUserProfile({
+                    name: instructor.name || 'Unknown',
+                    email: instructor.email || '',
+                    profileImage: instructor.image ? `http://127.0.0.1:8000/storage/${instructor.image}` : 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200',
+                    qualification: instructor.bio || 'Instructor',
+                    experience: 'Teaching',
+                    skills: Array.isArray(instructor.specialization) ? instructor.specialization : (instructor.specialization ? [instructor.specialization] : []),
+                    about: instructor.bio || 'Dedicated educator',
+                    socialLinks: instructor.social_links || {},
+                    approvalStatus: instructor.approval_status || 'pending'
+                });
+
+                // Set stats
+                setStats(statsResult.status === 'fulfilled' ? unwrap(statsResult.value) : null);
+
+                // Set recent activities
+                if (activitiesResult.status === 'fulfilled') {
+                    const activitiesData = unwrap(activitiesResult.value);
+                    setRecentActivities(Array.isArray(activitiesData) ? activitiesData : (activitiesData?.items || []));
+                } else {
+                    setRecentActivities([]);
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+
+                // Set default values on error
+                setUserProfile({
+                    name: 'Unknown Instructor',
+                    email: '',
+                    profileImage: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200',
+                    qualification: 'Instructor',
+                    experience: 'Teaching',
+                    skills: [],
+                    about: 'Profile information unavailable',
+                    socialLinks: {},
+                    approvalStatus: 'pending'
+                });
+                setStats(null);
+                setRecentActivities([]);
+            } finally {
+                setDashboardLoading(false);
+            }
+        };
+
+        loadDashboardData();
+    }, [isAuthenticated, authLoading, user]);
 
     const showToastNotification = (message, type) => {
         setShowNotification({ show: true, message, type });
@@ -75,9 +142,22 @@ const TeacherMainDashboard = () => {
     };
 
     const renderContent = () => {
+        if (dashboardLoading) {
+            return (
+                <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <span className="ml-3 text-gray-600">Loading dashboard...</span>
+                </div>
+            );
+        }
+
         switch (activeTab) {
             case 'overview':
-                return <ProfileOverview profile={userProfile} />;
+                return <ProfileOverview
+                    profile={userProfile}
+                    stats={stats}
+                    recentActivities={recentActivities}
+                />;
             case 'courses':
                 return <CoursesManagement showNotification={showToastNotification} />;
             case 'students':
@@ -91,7 +171,11 @@ const TeacherMainDashboard = () => {
                     showNotification={showToastNotification}
                 />;
             case 'earnings':
-                return <EarningsTab />;
+                return <ProfileOverview
+                    profile={userProfile}
+                    stats={stats}
+                    recentActivities={recentActivities}
+                />;
             case 'analytics':
                 return <AnalyticsTab />;
             case 'settings':
@@ -101,12 +185,16 @@ const TeacherMainDashboard = () => {
                     showNotification={showToastNotification}
                 />;
             default:
-                return <ProfileOverview profile={userProfile} />;
+                return <ProfileOverview
+                    profile={userProfile}
+                    stats={stats}
+                    recentActivities={recentActivities}
+                />;
         }
     };
 
     return (
-        <div className="min-h-screen  bg-gray-50">
+        <div className="min-h-screen bg-gray-50">
             <DashboardHeader
                 profile={userProfile}
                 notifications={notifications.filter(n => !n.read).length}
@@ -123,6 +211,7 @@ const TeacherMainDashboard = () => {
                 <DashboardSidebar
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
+                    stats={stats}
                 />
 
                 <main className="flex-1 p-6 lg:p-8">

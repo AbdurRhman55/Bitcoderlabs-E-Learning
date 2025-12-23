@@ -1,14 +1,48 @@
 // src/components/sections/CoursesManagement.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaEye, FaClock, FaUsers, FaStar, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
+import { apiClient } from '../../api/index.js';
 
 const CoursesManagement = ({ showNotification }) => {
-    const [courses, setCourses] = useState([
-        { id: 1, title: 'Advanced Mathematics', students: 45, rating: 4.8, duration: '12 weeks', price: '$99', status: 'approved', category: 'Mathematics' },
-        { id: 2, title: 'Introduction to Physics', students: 32, rating: 4.5, duration: '8 weeks', price: '$79', status: 'pending', category: 'Science' },
-        { id: 3, title: 'Calculus 101', students: 67, rating: 4.9, duration: '10 weeks', price: '$89', status: 'approved', category: 'Mathematics' },
-        { id: 4, title: 'Chemistry Basics', students: 28, rating: 4.3, duration: '6 weeks', price: '$69', status: 'rejected', category: 'Science', rejectionReason: 'Course content needs improvement' },
-    ]);
+    const [courses, setCourses] = useState([]);
+    const [availableCourses, setAvailableCourses] = useState([]);
+    const [myRequests, setMyRequests] = useState([]);
+    const [selectedCourseId, setSelectedCourseId] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+
+    const unwrapList = (res) => {
+        const list = res?.data;
+        return Array.isArray(list) ? list : [];
+    };
+
+    const refreshData = async () => {
+        try {
+            setLoading(true);
+            const [myCoursesRes, availableRes, myRequestsRes] = await Promise.all([
+                apiClient.getMyCourses(),
+                apiClient.getAvailableCourses(),
+                apiClient.getMyCourseRequests(),
+            ]);
+
+            setCourses(unwrapList(myCoursesRes));
+            setAvailableCourses(unwrapList(availableRes));
+            setMyRequests(unwrapList(myRequestsRes));
+        } catch (e) {
+            console.error('Failed to load course requests data:', e);
+            showNotification?.(e?.message || 'Failed to load courses. Please refresh.', 'error');
+            setCourses([]);
+            setAvailableCourses([]);
+            setMyRequests([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        refreshData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -29,20 +63,47 @@ const CoursesManagement = ({ showNotification }) => {
     };
 
     const handleCreateCourse = () => {
-        showNotification('Course creation form opened', 'info');
-        // Implement course creation logic
+        showNotification?.('Course creation is managed by admin. Please request a course instead.', 'info');
     };
 
     const handleEditCourse = (id) => {
-        showNotification(`Editing course #${id}`, 'info');
+        showNotification?.(`Editing course #${id}`, 'info');
     };
 
     const handleDeleteCourse = (id) => {
-        if (window.confirm('Are you sure you want to delete this course?')) {
-            setCourses(courses.filter(course => course.id !== id));
-            showNotification('Course deleted successfully', 'success');
+        showNotification?.(`Deleting course #${id}`, 'info');
+    };
+
+    const handleSubmitRequest = async () => {
+        if (!selectedCourseId) {
+            showNotification?.('Please select a course first.', 'warning');
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            await apiClient.createCourseRequest(Number(selectedCourseId));
+            showNotification?.('Request submitted successfully.', 'success');
+            setSelectedCourseId('');
+            await refreshData();
+        } catch (e) {
+            console.error('Failed to submit course request:', e);
+            showNotification?.(e?.message || 'Failed to submit request.', 'error');
+        } finally {
+            setSubmitting(false);
         }
     };
+
+    const stats = useMemo(() => {
+        const totalCourses = courses.length;
+        const published = courses.filter(c => c.is_active).length;
+        const totalStudents = courses.reduce((acc, c) => acc + (Number(c.students_count) || 0), 0);
+        const totalRevenue = courses
+            .filter(c => c.is_active)
+            .reduce((acc, c) => acc + ((Number(c.price) || 0) * (Number(c.students_count) || 0)), 0);
+
+        return { totalCourses, published, totalStudents, totalRevenue };
+    }, [courses]);
 
     return (
         <div className="space-y-6 ">
@@ -52,26 +113,64 @@ const CoursesManagement = ({ showNotification }) => {
                     <p className="text-gray-600">Manage your courses and track their performance</p>
                 </div>
 
+                <button
+                    onClick={handleCreateCourse}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center"
+                >
+                    <FaPlus className="mr-2" />
+                    Create Course
+                </button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{courses.length}</p>
+                    <p className="text-2xl font-bold text-gray-800">{stats.totalCourses}</p>
                     <p className="text-sm text-gray-600">Total Courses</p>
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{courses.filter(c => c.status === 'approved').length}</p>
+                    <p className="text-2xl font-bold text-gray-800">{stats.published}</p>
                     <p className="text-sm text-gray-600">Published</p>
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{courses.reduce((acc, c) => acc + c.students, 0)}</p>
+                    <p className="text-2xl font-bold text-gray-800">{stats.totalStudents}</p>
                     <p className="text-sm text-gray-600">Total Students</p>
                 </div>
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">${courses.filter(c => c.status === 'approved').reduce((acc, c) => acc + parseInt(c.price.slice(1)) * c.students, 0)}</p>
+                    <p className="text-2xl font-bold text-gray-800">${Math.round(stats.totalRevenue)}</p>
                     <p className="text-sm text-gray-600">Total Revenue</p>
                 </div>
+            </div>
+
+            {/* Request a course */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Request a Course to Teach</h3>
+                {loading ? (
+                    <div className="text-gray-600">Loading available courses...</div>
+                ) : (
+                    <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                        <select
+                            value={selectedCourseId}
+                            onChange={(e) => setSelectedCourseId(e.target.value)}
+                            className="w-full md:flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        >
+                            <option value="">Select a course</option>
+                            {availableCourses.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                    {c.title}
+                                </option>
+                            ))}
+                        </select>
+
+                        <button
+                            onClick={handleSubmitRequest}
+                            disabled={submitting || !selectedCourseId}
+                            className="px-5 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-60"
+                        >
+                            {submitting ? 'Submitting...' : 'Send Request'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Courses Table */}
@@ -94,45 +193,45 @@ const CoursesManagement = ({ showNotification }) => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {courses.map((course) => (
+                            {courses.map((course) => {
+                                const status = course.is_active ? 'approved' : 'pending';
+
+                                return (
                                 <tr key={course.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div>
                                             <div className="text-sm font-medium text-gray-900">{course.title}</div>
-                                            <div className="text-sm text-gray-500">{course.category}</div>
+                                            <div className="text-sm text-gray-500">{course.category?.name || '—'}</div>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <FaUsers className="mr-2 text-gray-400" />
-                                            <span className="text-sm text-gray-900">{course.students}</span>
+                                            <span className="text-sm text-gray-900">{course.students_count ?? 0}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <FaStar className="mr-2 text-amber-500" />
-                                            <span className="text-sm text-gray-900">{course.rating}</span>
+                                            <span className="text-sm text-gray-900">{course.rating ?? 0}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <FaClock className="mr-2 text-gray-400" />
-                                            <span className="text-sm text-gray-900">{course.duration}</span>
+                                            <span className="text-sm text-gray-900">{course.duration || '—'}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {course.price}
+                                        ${Number(course.price || 0)}
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
-                                            {getStatusIcon(course.status)}
-                                            <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(course.status)}`}>
-                                                {course.status.charAt(0).toUpperCase() + course.status.slice(1)}
+                                            {getStatusIcon(status)}
+                                            <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
+                                                {status.charAt(0).toUpperCase() + status.slice(1)}
                                             </span>
                                         </div>
-                                        {course.rejectionReason && (
-                                            <p className="text-xs text-red-600 mt-1">{course.rejectionReason}</p>
-                                        )}
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                         <div className="flex items-center space-x-2">
@@ -154,15 +253,77 @@ const CoursesManagement = ({ showNotification }) => {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
+
+                            {!loading && courses.length === 0 && (
+                                <tr>
+                                    <td className="px-4 py-6 text-sm text-gray-600" colSpan={7}>
+                                        No courses assigned yet.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            {/* Requests Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-800">My Course Requests</h3>
+                </div>
 
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {myRequests.map((req) => (
+                                <tr key={req.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-900">{req.course?.title || '—'}</div>
+                                            <div className="text-sm text-gray-500">{req.course?.category?.name || '—'}</div>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            {getStatusIcon(req.status)}
+                                            <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(req.status)}`}>
+                                                {req.status ? (req.status.charAt(0).toUpperCase() + req.status.slice(1)) : '—'}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                        {req.status === 'rejected' ? (
+                                            <p className="text-sm text-red-700">{req.reason || '—'}</p>
+                                        ) : (
+                                            <span className="text-sm text-gray-500">—</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+
+                            {!loading && myRequests.length === 0 && (
+                                <tr>
+                                    <td className="px-4 py-6 text-sm text-gray-600" colSpan={3}>
+                                        No course requests yet.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    );
+);
+
 };
 
 export default CoursesManagement;

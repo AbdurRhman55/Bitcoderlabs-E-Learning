@@ -31,6 +31,7 @@ import { useDispatch } from 'react-redux';
 import { logoutAsync } from '../../../slices/AuthSlice';
 import AllCourses from "./AllCourses";
 import TeachersTable from "./TeacherTable.jsx";
+import CourseRequests from "./CourseRequests";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -327,6 +328,34 @@ export default function DashboardView() {
   // State for pending instructor requests
   const [pendingRequests, setPendingRequests] = useState([]);
 
+  // Pending course requests (for header badge only)
+  const [pendingCourseRequestsCount, setPendingCourseRequestsCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingCourseRequestsCount = async () => {
+      try {
+        const response = await apiClient.getCourseRequests({ status: 'pending', per_page: 1 });
+        const meta = response?.meta;
+        const total = typeof meta?.total === 'number' ? meta.total : undefined;
+
+        if (typeof total === 'number') {
+          setPendingCourseRequestsCount(total);
+          return;
+        }
+
+        // Fallback if meta isn't present
+        const data = response?.data;
+        const items = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+        setPendingCourseRequestsCount(items.length);
+      } catch (error) {
+        console.error('Error fetching pending course requests count:', error);
+        setPendingCourseRequestsCount(0);
+      }
+    };
+
+    fetchPendingCourseRequestsCount();
+  }, []);
+
   const handleApprove = async (id) => {
     try {
       await apiClient.approveInstructor(id);
@@ -379,9 +408,9 @@ export default function DashboardView() {
               onClick={() => setNotificationOpen(true)}
             >
               <Bell size={18} className="text-gray-700" />
-              {pendingRequests.length > 0 && (
+              {(pendingRequests.length + pendingCourseRequestsCount) > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-[10px] text-white font-medium">{pendingRequests.length}</span>
+                  <span className="text-[10px] text-white font-medium">{pendingRequests.length + pendingCourseRequestsCount}</span>
                 </span>
               )}
             </button>
@@ -446,6 +475,7 @@ export default function DashboardView() {
         <div className="space-y-6">
           {active === "Dashboard" && <DashboardCards />}
           {active === "Courses" && <AllCourses />}
+          {active === "Course Requests" && <CourseRequests />}
           {active === "Students" && <StudentTable />}
           {active === "Teachers" && <TeachersTable />}
           {active === "Pending Approvals" && <PendingApprovals />}

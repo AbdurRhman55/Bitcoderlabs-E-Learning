@@ -13,7 +13,7 @@ import {
     FaFileAlt
 } from 'react-icons/fa';
 
-const DashboardSidebar = ({ activeTab, setActiveTab }) => {
+const DashboardSidebar = ({ activeTab, setActiveTab, stats }) => {
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: <FaHome /> },
         { id: 'courses', label: 'Courses', icon: <FaBook /> },
@@ -57,11 +57,11 @@ const DashboardSidebar = ({ activeTab, setActiveTab }) => {
                     <div className="bg-primary-light rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-700">Teaching Hours</span>
-                            <span className="text-sm font-bold text-primary">156h</span>
+                            <span className="text-sm font-bold text-primary">{stats?.teaching_hours ?? 0}h</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700">Students</span>
-                            <span className="text-sm font-bold text-primary">243</span>
+                            <span className="text-sm font-bold text-primary">{stats?.total_students ?? 0}</span>
                         </div>
                     </div>
                 </div>
