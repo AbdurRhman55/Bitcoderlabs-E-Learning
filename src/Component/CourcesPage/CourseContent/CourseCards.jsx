@@ -35,9 +35,16 @@ export default function CourseCard({
             }`}
         >
           <img
+<<<<<<< Updated upstream
             src={course.image || "/placeholder-course.jpg"}
+=======
+            src={course.image || '/src/assets/course-placeholder.jpg'}
+>>>>>>> Stashed changes
             alt={course.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            onError={(e) => {
+              e.target.src = 'https://via.placeholder.com/400x300/4f46e5/ffffff?text=Course+Image';
+            }}
           />
 
           {/* LEVEL */}

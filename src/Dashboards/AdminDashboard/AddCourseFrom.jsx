@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "../../Component/UI/Button";
 import { FiX } from "react-icons/fi";
+import ImageUpload from "../../Component/UI/ImageUpload";
 import { apiClient } from '../../../src/api/index.js';
 
 export default function AddCourseForm({ onSubmit, onClose, initialData = null }) {
@@ -87,11 +88,30 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
           .replace(/\s+/g, '-') // Replace spaces with hyphens
           .replace(/-+/g, '-') // Replace multiple hyphens with single
-          .trim();
+          .replace(/^-+|-+$/g, '');
       }
 
       return updated;
     });
+  };
+
+  const handleCommaListChange = (name) => (e) => {
+    const raw = e.target.value;
+    const arr = raw
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    setCourse(prev => ({
+      ...prev,
+      [name]: arr,
+    }));
+  };
+
+  const handleImageChange = (file) => {
+    setCourse((prev) => ({
+      ...prev,
+      image: file,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -105,7 +125,70 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
 
     setLoading(true);
     try {
-      await onSubmit?.(course);
+
+
+      // Prepare data for submission
+      let submitData = course;
+
+      // If there's an image file, use FormData
+      if (course.image && course.image instanceof File) {
+        const formData = new FormData();
+
+        // Add all course fields to FormData
+        // For updates, ensure required fields are included even if empty
+        const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
+
+        Object.keys(course).forEach(key => {
+          const value = course[key];
+          const isRequiredField = requiredFields.includes(key);
+
+          // Include field if it has a value, or if it's a required field (even if empty, to allow Laravel to validate)
+          if (value !== null && value !== undefined && (value !== '' || isRequiredField)) {
+            if (key === 'features' || key === 'tags') {
+              // JSON stringify arrays
+              formData.append(key, JSON.stringify(value || []));
+            } else if (key === 'image') {
+              // Handle file upload
+              formData.append('image', value);
+            } else if (key === 'is_featured' || key === 'is_active') {
+              // Convert boolean to integer for Laravel validation
+              formData.append(key, value ? '1' : '0');
+            } else {
+              formData.append(key, value || '');
+            }
+          }
+        });
+
+        // Ensure boolean fields are included
+        if (!formData.has('is_featured')) {
+          formData.append('is_featured', course.is_featured ? '1' : '0');
+        }
+        if (!formData.has('is_active')) {
+          formData.append('is_active', course.is_active ? '1' : '0');
+        }
+
+        submitData = formData;
+      } else {
+        submitData = {
+          ...course,
+          short_description: course.short_description || null,
+          video_url: course.video_url || null,
+          duration: course.duration || null,
+          original_price: course.original_price ? parseFloat(course.original_price) : null,
+          features: course.features ? JSON.stringify(course.features) : "[]",
+          tags: course.tags ? JSON.stringify(course.tags) : "[]",
+          price: parseFloat(course.price) || 0,
+          rating: course.rating ? parseFloat(course.rating) : 0,
+          reviews_count: course.reviews_count ? parseInt(course.reviews_count) : 0,
+          students_count: course.students_count ? parseInt(course.students_count) : 0,
+          instructor_id: course.instructor_id ? parseInt(course.instructor_id) : undefined,
+          category_id: course.category_id ? parseInt(course.category_id) : undefined,
+          is_featured: Boolean(course.is_featured),
+          is_active: Boolean(course.is_active),
+        };
+      }
+
+      await onSubmit?.(submitData);
       // Reset form only if not editing
       if (!initialData) {
         setCourse({
@@ -115,6 +198,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           level: "beginner",
           instructor_id: "",
           description: "",
+          short_description: "",
           image: "",
           video_url: "",
           duration: "",
@@ -228,6 +312,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
             <option value="advanced">Advanced</option>
+            <option value="all_levels">All Levels</option>
           </select>
         </div>
 
@@ -287,22 +372,15 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
             placeholder="e.g., 5h 30m"
-            required
           />
         </div>
 
-        {/* Image URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Image URL
-          </label>
-          <input
-            type="url"
-            name="image"
+        {/* Course Image */}
+        <div className="md:col-span-2">
+          <ImageUpload
             value={course.image}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            placeholder="https://example.com/image.jpg"
+            onChange={handleImageChange}
+            label="Course Image"
           />
         </div>
       </div>
@@ -320,6 +398,64 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           rows={4}
           placeholder="Describe the course content, objectives, and what students will learn..."
           required
+        />
+      </div>
+
+      {/* Features */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Features (comma separated)
+        </label>
+        <input
+          type="text"
+          value={(course.features || []).join(', ')}
+          onChange={handleCommaListChange('features')}
+          className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+          placeholder="e.g., Certificate, Lifetime access, Projects"
+        />
+      </div>
+
+      {/* Tags */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Tags (comma separated)
+        </label>
+        <input
+          type="text"
+          value={(course.tags || []).join(', ')}
+          onChange={handleCommaListChange('tags')}
+          className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+          placeholder="e.g., React, Frontend, Beginner"
+        />
+      </div>
+
+      {/* Short Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Short Description
+        </label>
+        <textarea
+          name="short_description"
+          value={course.short_description}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+          rows={2}
+          placeholder="A short tagline for the course (max ~500 characters)"
+        />
+      </div>
+
+      {/* Video URL */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Video URL
+        </label>
+        <input
+          type="url"
+          name="video_url"
+          value={course.video_url}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
+          placeholder="https://..."
         />
       </div>
 
@@ -451,45 +587,6 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         >
           Course is Active
         </label>
-      </div>
-
-      {/* Pricing Section */}
-      <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Current Price */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Price ($) *
-            </label>
-            <input
-              type="number"
-              name="price"
-              value={course.price}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-              required
-            />
-          </div>
-
-          {/* Original Price */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Original Price ($)
-            </label>
-            <input
-              type="number"
-              name="originalPrice"
-              value={course.originalPrice}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-            />
-          </div>
-        </div>
       </div>
 
       {/* Form Actions */}

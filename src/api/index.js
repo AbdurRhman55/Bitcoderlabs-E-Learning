@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+export const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 class ApiClient {
   constructor() {
@@ -177,6 +179,17 @@ class ApiClient {
   }
 
   async createCourse(courseData) {
+    const isFormData = typeof FormData !== 'undefined' && courseData instanceof FormData;
+    if (isFormData) {
+      if (!courseData.has('_method')) {
+        courseData.append('_method', 'POST');
+      }
+      return this.request("/courses", {
+        method: "POST",
+        body: courseData,
+      });
+    }
+
     return this.request("/courses", {
       method: "POST",
       body: JSON.stringify(courseData),
@@ -184,6 +197,17 @@ class ApiClient {
   }
 
   async updateCourse(id, courseData) {
+    const isFormData = typeof FormData !== 'undefined' && courseData instanceof FormData;
+    if (isFormData) {
+      if (!courseData.has('_method')) {
+        courseData.append('_method', 'PUT');
+      }
+      return this.request(`/courses/${id}`, {
+        method: "POST",
+        body: courseData,
+      });
+    }
+
     return this.request(`/courses/${id}`, {
       method: "PUT",
       body: JSON.stringify(courseData),
