@@ -56,11 +56,11 @@ export default function CourseRequests() {
   };
 
   return (
-    <div className="bg-white rounded-xl border shadow-sm">
-      <div className="px-6 py-4 border-b bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold">Course Requests</h2>
-          <p className="text-sm text-gray-500">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="px-6 py-4  bg-primary rounded-xl rounded-b text-white  flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="">
+          <h2 className="text-3xl font-bold">Course Requests</h2>
+          <p className="text-sm text-white">
             Review instructor requests to teach courses{filter === "pending" ? ` (${pendingCount} pending)` : ""}
           </p>
         </div>
@@ -69,9 +69,9 @@ export default function CourseRequests() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm"
+            className="px-3 py-2 border bg-primary text-white rounded-lg text-sm"
           >
-            <option value="pending">Pending</option>
+            <option value="pending" className="bg-primary hover:bg-primary-dark">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
             <option value="">All</option>
@@ -79,7 +79,7 @@ export default function CourseRequests() {
 
           <button
             onClick={fetchRequests}
-            className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50"
+            className="px-3 py-2 text-white border rounded-lg text-sm hover:bg-primary-dark "
           >
             Refresh
           </button>
@@ -88,7 +88,7 @@ export default function CourseRequests() {
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50 border-b border-gray-200  text-left text-xs font-semibold text-gray-600 uppercase">
             <tr>
               <th className="px-6 py-3 text-left">Course</th>
               <th className="px-6 py-3 text-left">Instructor</th>
@@ -123,13 +123,12 @@ export default function CourseRequests() {
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        r.status === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : r.status === "rejected"
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${r.status === "approved"
+                        ? "bg-green-100 text-green-800"
+                        : r.status === "rejected"
                           ? "bg-red-100 text-red-800"
                           : "bg-yellow-100 text-yellow-800"
-                      }`}
+                        }`}
                     >
                       {r.status}
                     </span>

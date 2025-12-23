@@ -83,21 +83,21 @@ export default function CoursesPage() {
 
       console.log('Prepared data for API:', preparedData);
 
-       let response;
-       if (editingCourse) {
-         // Update existing course
-         console.log('Updating course:', editingCourse.id);
-         response = await apiClient.updateCourse(editingCourse.id, preparedData);
+      let response;
+      if (editingCourse) {
+        // Update existing course
+        console.log('Updating course:', editingCourse.id);
+        response = await apiClient.updateCourse(editingCourse.id, preparedData);
 
-         // Update the course in local state with server response for accurate data
-         setCourses(prevCourses =>
-           prevCourses.map(course =>
-             course.id === editingCourse.id
-               ? response.data // Use server response which has correct structure
-               : course
-           )
-         );
-       } else {
+        // Update the course in local state with server response for accurate data
+        setCourses(prevCourses =>
+          prevCourses.map(course =>
+            course.id === editingCourse.id
+              ? response.data // Use server response which has correct structure
+              : course
+          )
+        );
+      } else {
         // Check if user is authenticated and is admin
         if (!isAuthenticated) {
           throw new Error('You must be logged in to create courses.');
@@ -207,33 +207,33 @@ export default function CoursesPage() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Courses Management
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Manage and organize your course offerings
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={forceRefresh}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Refresh courses"
-            >
-              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-              Refresh
-            </button>
-            <Button
-              variant="primary"
-              text="+ Add New Course"
-              onClick={() => setOpenForm(true)}
-              className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
-            />
-          </div>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Courses Management
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Manage and organize your course offerings
+          </p>
         </div>
+        <div className="flex gap-3">
+          <button
+            onClick={forceRefresh}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Refresh courses"
+          >
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          <Button
+            variant="primary"
+            text="+ Add New Course"
+            onClick={() => setOpenForm(true)}
+            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+          />
+        </div>
+      </div>
 
       {/* Add Course Form Modal */}
       {openForm && (
@@ -253,8 +253,8 @@ export default function CoursesPage() {
 
       {/* Courses Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <div className="px-6 py-4 bg-primary border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-white">
             All Courses ({courses.length})
           </h2>
         </div>
@@ -262,23 +262,23 @@ export default function CoursesPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <tr className="bg-primary  border-b border-gray-200">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Course
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Instructor
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Duration
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -299,15 +299,15 @@ export default function CoursesPage() {
                           {course.description}
                         </p>
                         <div className="flex items-center mt-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary text-white mr-2">
                             {course.category?.name || course.category}
                           </span>
                           <span
                             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.level === "beginner"
-                                ? "bg-green-100 text-green-800"
-                                : course.level === "intermediate"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
+                              ? "bg-green-100 text-green-800"
+                              : course.level === "intermediate"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
                               }`}
                           >
                             {course.level}
@@ -336,7 +336,7 @@ export default function CoursesPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col space-y-1">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white w-fit">
                         Active
                       </span>
                       <span className="text-xs text-gray-500">

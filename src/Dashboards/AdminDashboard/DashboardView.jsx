@@ -35,7 +35,7 @@ import CourseRequests from "./CourseRequests";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
-    className={`bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 transition-all duration-300
+    className={`bg-white rounded-2xl p-2 sm:p-4 shadow-sm border border-gray-100 transition-all duration-300
       ${hover ? "hover:shadow-lg hover:border-blue-100" : ""} ${className}`}
   >
     {children}
@@ -107,7 +107,7 @@ function DashboardCards() {
           {
             title: "Total Courses",
             value: response.total_courses?.toString() || "0",
-            change: "+12%", // This would need historical data to calculate
+            change: "+12%",
             icon: <BookOpen />
           },
           {
@@ -127,8 +127,15 @@ function DashboardCards() {
             value: response.pending_instructors_count?.toString() || "0",
             change: "0",
             icon: <UserPlus />
+          },
+          {
+            title: "Pending Requests",
+            value: response.pending_requests_count?.toString() || "0",
+            change: "+5%",
+            icon: <Clock />
           }
         ];
+
 
         // Transform recent activities
         const transformedActivities = response.recent_activities?.map(activity => ({
@@ -203,16 +210,16 @@ function DashboardCards() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {stats.map((stat, index) => (
           <Card key={index} hover>
-            <div className="flex justify-between items-start">
+            <div className=" flex justify-between items-start">
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
-                <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                <p className="text-green-500 text-sm mt-2 font-medium">{stat.change}</p>
+                <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                <p className="text-primary-dark text-sm mt-2 font-medium">{stat.change}</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-xl text-gray-600">{stat.icon}</div>
+              <div className="p-3 bg-primary-dark rounded-xl text-white">{stat.icon}</div>
             </div>
           </Card>
         ))}
@@ -223,34 +230,37 @@ function DashboardCards() {
         <Card className="xl:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-lg text-gray-900">Revenue Overview</h3>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark cursor-pointer transition-colors">
               <Download size={16} />
               Export
             </button>
           </div>
           <div className="h-64 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl flex flex-col items-center justify-center">
-            <BarChart3 size={48} className="text-blue-500 mb-3" />
+            <BarChart3 size={48} className="text-primary-dark mb-3" />
             <p className="text-gray-600">Revenue chart visualization</p>
             <h2 className="text-2xl font-bold mt-2 text-gray-900">$24,580</h2>
-            <p className="text-green-600 text-sm font-medium mt-1">+18% from last month</p>
+            <p className="text-primary-dark text-sm font-medium mt-1">+18% from last month</p>
           </div>
         </Card>
 
         <Card>
           <h3 className="font-bold text-lg text-gray-900 mb-4">Recent Activities</h3>
+
           <div className="space-y-4">
             {recentActivities.length > 0 ? (
-              recentActivities.map((act, i) => (
+              recentActivities.slice(0, 3).map((act, i) => (
                 <div
                   key={i}
                   className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                  <div className="w-10 h-10 bg-primary-dark rounded-full flex items-center justify-center text-white flex-shrink-0">
                     <UserPlus size={18} />
                   </div>
+
                   <div className="min-w-0">
                     <p className="text-sm text-gray-800">
-                      <span className="font-medium">{act.user}</span> {act.action}{" "}
+                      <span className="font-medium">{act.user}</span>{" "}
+                      {act.action}{" "}
                       <span className="font-semibold text-gray-900">{act.course}</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-1">{act.time}</p>
@@ -262,6 +272,7 @@ function DashboardCards() {
             )}
           </div>
         </Card>
+
       </div>
     </div>
   );
@@ -391,16 +402,6 @@ export default function DashboardView() {
 
           {/* Right Actions */}
           <div className="hidden sm:flex items-center gap-4">
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2.5 w-64 rounded-lg border border-gray-300 bg-white shadow-sm 
-                  focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
-              />
-              <Search className="absolute left-3 top-3 text-gray-400" size={18} />
-            </div>
 
             {/* Notification */}
             <button
@@ -427,7 +428,7 @@ export default function DashboardView() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setProfileDropdown(!profileDropdown)}
-                className="flex items-center gap-3 pl-1 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 pl-1 p-2 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <img
@@ -444,14 +445,14 @@ export default function DashboardView() {
               </button>
 
               {profileDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <div className="py-2">
+                <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className=" ">
                     <button
                       onClick={() => {
                         handleLogout();
                         setProfileDropdown(false);
                       }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      className="flex items-center w-full rounded-lg px-4 py-2 w-full text-sm text-primary hover:bg-primary-dark hover:text-white cursor-pointer"
                     >
                       <LogOut className="mr-3" size={16} />
                       Logout

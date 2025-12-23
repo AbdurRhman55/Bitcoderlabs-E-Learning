@@ -118,37 +118,37 @@ export default function TeachersTable() {
             )}
 
             {/* ================= ACTIVE TEACHERS ================= */}
-            <section className="bg-white rounded-xl border shadow-sm">
-                <div className="px-6 py-4 border-b bg-gray-50">
-                    <h2 className="text-2xl font-bold">Active Teachers</h2>
-                    <p className="text-sm text-gray-500">
+            <section className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-200 bg-primary rounded-t-xl">
+                    <h2 className="text-3xl font-bold text-white">Active Teachers</h2>
+                    <p className="text-sm text-white">
                         {activeTeachers.length} approved instructors
                     </p>
                 </div>
 
                 <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b">
-                        <tr>
-                            <th className="px-6 py-3 text-left">Name</th>
-                            <th className="px-6 py-3 text-left">Specialization</th>
-                            <th className="px-6 py-3 text-left">Status</th>
-                            <th className="px-6 py-3 text-left">View</th>
+                    <thead className="bg-gray-50  ">
+                        <tr className="border-gray-200 border-b">
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase ">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Specialization</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">View</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y">
                         {activeTeachers.map((t) => (
-                            <tr key={t.id} className="hover:bg-gray-50">
+                            <tr key={t.id} className="hover:bg-gray-50 border-gray-200 border-b">
                                 <td className="px-6 py-4 font-medium">{t.name}</td>
                                 <td className="px-6 py-4">{t.specialization || "—"}</td>
                                 <td className="px-6 py-4">
-                                    <span className="px-2 py-1 text-xs rounded-full bg-[#e8f7ff] text-[#2a9fd8]">
+                                    <span className="px-2 py-1 text-xs rounded-full bg-primary text-white">
                                         Active
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
                                     <button
                                         onClick={() => handleViewCV(t.id)}
-                                        className="text-[#3baee9] flex items-center gap-1"
+                                        className="text-[#3baee9] cursor-pointer flex items-center gap-1"
                                     >
                                         <Eye size={16} /> View CV
                                     </button>
@@ -165,7 +165,7 @@ export default function TeachersTable() {
                     <div className="bg-white w-full max-w-3xl rounded-2xl shadow-lg overflow-y-auto max-h-[90vh] p-6 relative">
                         <button
                             onClick={() => setSelectedTeacher(null)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-black text-lg"
+                            className="absolute top-4 right-4 cursor-pointer text-gray-400 hover:text-black text-lg"
                         >
                             ✕
                         </button>
