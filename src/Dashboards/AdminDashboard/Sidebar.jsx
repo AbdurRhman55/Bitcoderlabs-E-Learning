@@ -10,7 +10,8 @@ import {
   Settings,
   ChevronRight,
   LayoutDashboard,
-  UserCheck
+  UserCheck,
+  UserPlus
 } from "lucide-react";
 
 export default function Sidebar({ open, setOpen, active, setActive }) {
@@ -19,8 +20,8 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
     { icon: <BookOpen size={20} />, label: "Courses" },
     { icon: <UserCheck size={20} />, label: "Course Requests" },
     { icon: <Users size={20} />, label: "Students" },
+    { icon: <UserPlus size={20} />, label: "Enrolled Students" },
     { icon: <Users size={20} />, label: "Teachers" },
-    // { icon: <UserCheck size={20} />, label: "Pending Approvals" },
     { icon: <Phone size={20} />, label: "Contacts" },
     { icon: <ShoppingBag size={20} />, label: "Orders" },
     { icon: <BarChart3 size={20} />, label: "Analytics" },
@@ -28,12 +29,28 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
   ];
 
 
+
   return (
     <aside
-      className={`${open ? "w-64" : "w-20"
-        } fixed sm:static top-0 left-0 h-100% z-50
-      bg-gradient-to-b from-gray-900 to-gray-800 text-white p-5 transition-all duration-500 ease-in-out`}
+      className={`${open ? "w-64" : "w-20"} sticky top-0 left-0 h-screen z-50
+    bg-gradient-to-b from-gray-900 to-gray-800 text-white p-5
+    transition-all duration-500 ease-in-out`}
+      style={{
+        overflowY: "auto",
+        scrollbarWidth: "none", // Firefox
+        msOverflowStyle: "none" // IE 10+
+      }}
     >
+      {/* Optional inline for Webkit browsers (Chrome, Safari) */}
+      <style>
+        {`
+      aside::-webkit-scrollbar {
+        display: none;
+      }
+    `}
+      </style>
+
+
       {/* Toggle */}
       <button
         className={`absolute top-4 cursor-pointer p-2 rounded-full ${open ? "left-54" : "left-6"}`}

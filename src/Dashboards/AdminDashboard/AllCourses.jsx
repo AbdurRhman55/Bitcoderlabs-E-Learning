@@ -117,12 +117,11 @@ export default function CoursesPage() {
 
       console.log('Prepared data for API:', submitData);
 
-<<<<<<< Updated upstream
       let response;
       if (editingCourse) {
         // Update existing course
         console.log('Updating course:', editingCourse.id);
-        response = await apiClient.updateCourse(editingCourse.id, preparedData);
+        response = await apiClient.updateCourse(editingCourse.id, submitData);
 
         // Update the course in local state with server response for accurate data
         setCourses(prevCourses =>
@@ -140,49 +139,25 @@ export default function CoursesPage() {
         if (user?.role !== 'admin') {
           throw new Error('Only administrators can create courses.');
         }
-=======
-       let response;
-        if (editingCourse) {
-          // Update existing course
-          console.log('Updating course:', editingCourse.id);
-          response = await apiClient.updateCourse(editingCourse.id, submitData);
 
-         // Update the course in local state with server response for accurate data
-         setCourses(prevCourses =>
-           prevCourses.map(course =>
-             course.id === editingCourse.id
-               ? response.data // Use server response which has correct structure
-               : course
-           )
-         );
-        } else {
-         // Check if user is authenticated and is admin
-         if (!isAuthenticated) {
-           throw new Error('You must be logged in to create courses.');
-         }
-         if (user?.role !== 'admin') {
-           throw new Error('Only administrators can create courses.');
-         }
->>>>>>> Stashed changes
+        // For FormData, validation is handled by Laravel on the backend
+        if (!isFormData) {
+          // Validate required fields before creating (only for regular object data)
+          const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
+          const missingFields = requiredFields.filter(field => !submitData[field] || submitData[field] === '' || submitData[field] === null || submitData[field] === undefined);
 
-         // For FormData, validation is handled by Laravel on the backend
-         if (!isFormData) {
-           // Validate required fields before creating (only for regular object data)
-           const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
-           const missingFields = requiredFields.filter(field => !submitData[field] || submitData[field] === '' || submitData[field] === null || submitData[field] === undefined);
+          if (missingFields.length > 0) {
+            throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please fill all required fields.`);
+          }
 
-           if (missingFields.length > 0) {
-             throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please fill all required fields.`);
-           }
+          // Check if instructor_id and category_id are valid numbers
+          if (isNaN(submitData.instructor_id) || isNaN(submitData.category_id)) {
+            throw new Error('Please select a valid instructor and category.');
+          }
+        }
 
-           // Check if instructor_id and category_id are valid numbers
-           if (isNaN(submitData.instructor_id) || isNaN(submitData.category_id)) {
-             throw new Error('Please select a valid instructor and category.');
-           }
-         }
-
-         console.log('Creating new course with data:', submitData);
-         response = await apiClient.createCourse(submitData);
+        console.log('Creating new course with data:', submitData);
+        response = await apiClient.createCourse(submitData);
         console.log('Create response:', response);
 
         // Add new course to the beginning of the list
@@ -265,7 +240,7 @@ export default function CoursesPage() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className=" bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -280,7 +255,7 @@ export default function CoursesPage() {
           <button
             onClick={forceRefresh}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-1 cursor-pointer border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Refresh courses"
           >
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -290,7 +265,7 @@ export default function CoursesPage() {
             variant="primary"
             text="+ Add New Course"
             onClick={() => setOpenForm(true)}
-            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-1 rounded-lg font-semibold transition-colors duration-200"
           />
         </div>
       </div>
@@ -312,110 +287,6 @@ export default function CoursesPage() {
       )}
 
       {/* Courses Table */}
-<<<<<<< Updated upstream
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 bg-primary border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-white">
-            All Courses ({courses.length})
-          </h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-primary  border-b border-gray-200">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                  Course
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                  Instructor
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                  Duration
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {courses.map((course) => (
-                <tr
-                  key={course.id}
-                  className="hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm">
-                          {course.title}
-                        </h3>
-                        <p className="text-gray-500 text-xs mt-1 line-clamp-2 max-w-xs">
-                          {course.description}
-                        </p>
-                        <div className="flex items-center mt-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary text-white mr-2">
-                            {course.category?.name || course.category}
-                          </span>
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.level === "beginner"
-                              ? "bg-green-100 text-green-800"
-                              : course.level === "intermediate"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                              }`}
-                          >
-                            {course.level}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
-                      {course.instructor?.user?.name || course.instructor?.name || course.instructor}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-600">
-                      {course.duration}
-                    </span>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {course.lessons} lessons
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="font-semibold text-gray-900">
-                      {formatPrice(course.price || 0)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col space-y-1">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white w-fit">
-                        Active
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {course.students} students
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      {/* Edit Icon */}
-                      <button
-                        className="text-blue-600 hover:text-blue-800 transition"
-                        onClick={() => handleEditCourse(course)}
-                        title="Edit Course"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-=======
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">
@@ -426,7 +297,7 @@ export default function CoursesPage() {
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
+              <thead className="bg-primary  text-white">
                 <tr>
                   <th className="text-left font-semibold px-4 py-3">Course</th>
                   <th className="text-left font-semibold px-4 py-3">Category</th>
@@ -461,7 +332,6 @@ export default function CoursesPage() {
                         </div>
                       </div>
                     </td>
->>>>>>> Stashed changes
 
                     <td className="px-4 py-3 text-gray-700">
                       {course.category?.name || course.category || '-'}
@@ -482,9 +352,8 @@ export default function CoursesPage() {
                     </td>
 
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        course.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.is_active ? 'bg-primary text-white' : 'bg-red-100 text-red-800'
+                        }`}>
                         {course.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -494,18 +363,18 @@ export default function CoursesPage() {
                         <button
                           type="button"
                           onClick={() => handleEditCourse(course)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                          className="inline-flex items-center gap-1  text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                         >
                           <Edit2 className="w-4 h-4" />
-                          Edit
+
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteCourse(course.id)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                          className="inline-flex items-center gap-1  text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
-                          Delete
+
                         </button>
                       </div>
                     </td>
@@ -571,11 +440,10 @@ export default function CoursesPage() {
                     <button
                       key={pageNum}
                       onClick={() => handlePageChange(pageNum)}
-                      className={`px-3 py-1 border rounded-md text-sm ${
-                        currentPage === pageNum
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
+                      className={`px-3 py-1 border rounded-md text-sm ${currentPage === pageNum
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-300 hover:bg-gray-50'
+                        }`}
                     >
                       {pageNum}
                     </button>

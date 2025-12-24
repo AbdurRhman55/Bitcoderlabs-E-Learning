@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "./Sidebar";
 import StudentTable from "./StudentsTable";
-// import PendingApprovals from "./PendingApprovals";
+import EnrolledStudentsTable from "./EnrolledStudentsTable.jsx";
 import { apiClient } from '../../../src/api/index.js';
 
 import {
@@ -129,7 +129,7 @@ function DashboardCards() {
             icon: <UserPlus />
           },
           {
-            title: "Pending Requests",
+            title: "Pending Students",
             value: response.pending_requests_count?.toString() || "0",
             change: "+5%",
             icon: <Clock />
@@ -219,7 +219,7 @@ function DashboardCards() {
                 <p className="text-2xl font-bold mt-1">{stat.value}</p>
                 <p className="text-primary-dark text-sm mt-2 font-medium">{stat.change}</p>
               </div>
-              <div className="p-3 bg-primary-dark rounded-xl text-white">{stat.icon}</div>
+              <div className="p-2 bg-primary rounded-xl text-white">{stat.icon}</div>
             </div>
           </Card>
         ))}
@@ -292,7 +292,6 @@ export default function DashboardView() {
     dispatch(logoutAsync());
   };
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated && !loading) {
       navigate('/login');
@@ -339,7 +338,6 @@ export default function DashboardView() {
   // State for pending instructor requests
   const [pendingRequests, setPendingRequests] = useState([]);
 
-  // Pending course requests (for header badge only)
   const [pendingCourseRequestsCount, setPendingCourseRequestsCount] = useState(0);
 
   useEffect(() => {
@@ -354,7 +352,6 @@ export default function DashboardView() {
           return;
         }
 
-        // Fallback if meta isn't present
         const data = response?.data;
         const items = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
         setPendingCourseRequestsCount(items.length);
@@ -419,7 +416,7 @@ export default function DashboardView() {
             {/* Messages */}
             <button className="relative p-2 bg-white rounded-lg shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors">
               <Mail size={18} className="text-gray-700" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-dark rounded-full flex items-center justify-center">
                 <span className="text-[10px] text-white font-medium">3</span>
               </span>
             </button>
@@ -452,7 +449,7 @@ export default function DashboardView() {
                         handleLogout();
                         setProfileDropdown(false);
                       }}
-                      className="flex items-center w-full rounded-lg px-4 py-2 w-full text-sm text-primary hover:bg-primary-dark hover:text-white cursor-pointer"
+                      className="flex items-center w-full rounded-lg px-4 py-2 w-full text-sm text-primary hover:bg-red-500 hover:text-white cursor-pointer"
                     >
                       <LogOut className="mr-3" size={16} />
                       Logout
@@ -479,7 +476,9 @@ export default function DashboardView() {
           {active === "Course Requests" && <CourseRequests />}
           {active === "Students" && <StudentTable />}
           {active === "Teachers" && <TeachersTable />}
-          {active === "Pending Approvals" && <PendingApprovals />}
+          {active === "Enrolled Students" && <EnrolledStudentsTable />}
+          {/* {active === "Pending Approvals" && <PendingApprovals />} */}
+
 
         </div>
       </main>

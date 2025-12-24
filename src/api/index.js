@@ -105,6 +105,12 @@ class ApiClient {
     return this.request(`/users${queryString ? `?${queryString}` : ""}`);
   }
 
+  // Get single user by ID
+  async getUserById(id) {
+    return this.request(`/users/${id}`);
+  }
+
+
   async createUser(userData) {
     return this.request("/users", {
       method: "POST",
@@ -137,9 +143,28 @@ class ApiClient {
     return this.request(`/courses${queryString ? `?${queryString}` : ""}`);
   }
 
+  // Get single course by ID
+  async getCourseById(id) {
+    return this.request(`/courses/${id}`);
+  }
+
+
   async getMyCourses(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/courses/my${queryString ? `?${queryString}` : ""}`);
+  }
+
+  // courses modules
+  async getCourseModules(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/course-modules${queryString ? `?${queryString}` : ""}`);
+  }
+
+
+  // courses lessons
+  async getModuleLessons(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/course-lessons${queryString ? `?${queryString}` : ""}`);
   }
 
   // Instructor Course Requests
