@@ -4,7 +4,7 @@ import {
   AiOutlineBarChart,
   AiOutlineBook,
   AiOutlinePieChart,
-  AiOutlineTrophy,
+
   AiOutlineFileText,
   AiOutlineSetting,
 } from "react-icons/ai";
@@ -44,7 +44,6 @@ const Sidebar = ({
     { id: "overview", label: "Overview", icon: AiOutlineBarChart },
     { id: "courses", label: "My Courses", icon: AiOutlineBook, badge: userData.enrolledCourses },
     { id: "progress", label: "Progress", icon: AiOutlinePieChart },
-    { id: "achievements", label: "Achievements", icon: AiOutlineTrophy, badge: "12" },
     { id: "certificates", label: "Certificates", icon: AiOutlineFileText, badge: userData.completedCourses },
     { id: "settings", label: "Settings", icon: AiOutlineSetting },
   ];
@@ -78,12 +77,20 @@ const Sidebar = ({
                 onClick={() => setProfileDropdown(!profileDropdown)}
                 className="place-items-center hover:bg-gray-50 p-2 rounded-lg transition-colors"
               >
-                <div className="w-30 h-30 bg-gradient-to-br from-primary to-primary-dark
+                <div className="w-30 h-30 overflow-hidden bg-gradient-to-br from-primary to-primary-dark
                 rounded-full flex items-center justify-center text-5xl text-white font-bold">
-                  {userData.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+                  {userData.avatar && userData.avatar.startsWith('data:') ? (
+                    <img
+                      src={userData.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    userData.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                  )}
                 </div>
                 <div className="text-center">
                   <h2 className="text-lg font-semibold text-gray-900">{userData.name}</h2>
@@ -134,11 +141,10 @@ const Sidebar = ({
                   }}
                   className={`group w-full flex items-center cursor-pointer justify-between px-4 py-3 
                   rounded-xl text-left transition-all duration-200
-                  ${
-                    isActive
+                  ${isActive
                       ? "bg-primary-light text-primary border border-primary/20"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
+                    }`}
                 >
                   <div
                     className={`flex items-center space-x-3
@@ -151,11 +157,10 @@ const Sidebar = ({
                   {item.badge && (
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full
-                    ${
-                      isActive
-                        ? "bg-primary text-white"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
+                    ${isActive
+                          ? "bg-primary text-white"
+                          : "bg-gray-200 text-gray-700"
+                        }`}
                     >
                       {item.badge}
                     </span>

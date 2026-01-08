@@ -11,6 +11,7 @@ class ApiClient {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem("token");
+    console.log(token);
 
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
@@ -295,6 +296,8 @@ class ApiClient {
   }
 
   async updateInstructor(id, instructorData) {
+    console.log(id);
+    
     const isFormData = typeof FormData !== 'undefined' && instructorData instanceof FormData;
     if (isFormData) {
       if (!instructorData.has('_method')) {

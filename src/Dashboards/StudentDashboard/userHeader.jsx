@@ -14,8 +14,16 @@ const UserHeader = ({ userData, activeView, setActiveView }) => {
       {/* User Identity */}
       <div className="flex items-center space-x-4">
         <div className="relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold text-lg">
-            {userData.name.split(' ').map(n => n[0]).join('')}
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-lg">
+            {userData.avatar && userData.avatar.startsWith('data:') ? (
+              <img
+                src={userData.avatar}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              userData.name.split(' ').map(n => n[0]).join('')
+            )}
           </div>
           <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full w-4 h-4"></div>
         </div>
@@ -35,11 +43,10 @@ const UserHeader = ({ userData, activeView, setActiveView }) => {
           <button
             key={view.id}
             onClick={() => setActiveView(view.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              activeView === view.id
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeView === view.id
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
-            }`}
+              }`}
           >
             <span>{view.icon}</span>
             <span>{view.label}</span>

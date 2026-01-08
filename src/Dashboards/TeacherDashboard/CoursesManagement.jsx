@@ -217,13 +217,6 @@ const CoursesManagement = ({ showNotification }) => {
                     <p className="text-gray-600">Manage your courses and track their performance</p>
                 </div>
 
-                <button
-                    onClick={handleCreateCourse}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center"
-                >
-                    <FaPlus className="mr-2" />
-                    Create Course
-                </button>
             </div>
 
             {/* Stats */}

@@ -395,8 +395,16 @@ const Navbar = () => {
                 />
               </button>
               <Link to={getDashboardRoute(user?.role)} onClick={handleNavLinkClick} className="relative">
-                <div className="rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center items-center font-semibold">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                <div className="rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center overflow-hidden items-center font-semibold">
+                  {user?.avatar && user.avatar.startsWith('data:') ? (
+                    <img
+                      src={user.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    user?.name?.charAt(0)?.toUpperCase() || 'U'
+                  )}
                 </div>
               </Link>
             </>
@@ -477,36 +485,44 @@ const Navbar = () => {
             ))}
           </nav>
 
-           <div className="space-y-3 pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
-             {isAuthenticated ? (
-               <div className="flex items-center gap-3">
-                 <Link to={getDashboardRoute(user?.role)} onClick={handleNavLinkClick} className="relative">
-                   <div className="rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center items-center font-semibold">
-                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                   </div>
-                 </Link>
-                 <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-800">
-                   Logout
-                 </button>
-               </div>
-             ) : (
-               <>
-                 <Link to="/register" className="block" onClick={handleNavLinkClick}>
-                   <Button
-                     text="Sign In"
-                     variant="squarefull"
-                     className="w-full justify-center"
-                   />
-                 </Link>
-                 <Link to="/login" className="block" onClick={handleNavLinkClick}>
-                   <Button
-                     text="Log In"
-                     variant="squarefull"
-                     className="w-full justify-center"
-                   />
-                 </Link>
-               </>
-             )}
+          <div className="space-y-3 pt-4 border-t border-gray-200 flex items-center justify-end gap-3">
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <Link to={getDashboardRoute(user?.role)} onClick={handleNavLinkClick} className="relative">
+                  <div className="rounded-full w-8 h-8 bg-primary text-white text-center flex justify-center overflow-hidden items-center font-semibold">
+                    {user?.avatar && user.avatar.startsWith('data:') ? (
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      user?.name?.charAt(0)?.toUpperCase() || 'U'
+                    )}
+                  </div>
+                </Link>
+                <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-800">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link to="/register" className="block" onClick={handleNavLinkClick}>
+                  <Button
+                    text="Sign In"
+                    variant="squarefull"
+                    className="w-full justify-center"
+                  />
+                </Link>
+                <Link to="/login" className="block" onClick={handleNavLinkClick}>
+                  <Button
+                    text="Log In"
+                    variant="squarefull"
+                    className="w-full justify-center"
+                  />
+                </Link>
+              </>
+            )}
           </div>
 
         </div>

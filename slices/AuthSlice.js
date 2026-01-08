@@ -3,7 +3,8 @@ import { apiClient } from '../src/api/index.js';
 
 const initialState = {
     isAuthenticated: false,
-    user: null,
+    // Initialize user if token exists, also check for saved avatar
+    user: JSON.parse(localStorage.getItem('userData')) || null,
     token: localStorage.getItem('token') || '',
     loading: !!localStorage.getItem('token'),
     error: null,
@@ -23,7 +24,7 @@ export const login = createAsyncThunk(
 
 export const logoutAsync = createAsyncThunk(
     'auth/logout',
-    async (_, { rejectWithValue }) => {
+    async () => {
         try {
             await apiClient.logout();
             return null;
@@ -65,6 +66,15 @@ const authSlice = createSlice({
     reducers: {
         clearError: (state) => {
             state.error = null;
+        },
+        updateUserAvatar: (state, action) => {
+            if (state.user) {
+                state.user.avatar = action.payload;
+                // Update local storage
+                const savedUser = JSON.parse(localStorage.getItem('userData') || '{}');
+                savedUser.avatar = action.payload;
+                localStorage.setItem('userData', JSON.stringify({ ...savedUser, ...state.user }));
+            }
         }
     },
     extraReducers: (builder) => {
@@ -78,8 +88,14 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.token = action.payload.token;
                 state.user = action.payload.user;
+                // Check if there's a saved avatar for this user
+                const savedAvatar = localStorage.getItem(`avatar_${action.payload.user.id}`);
+                if (savedAvatar) {
+                    state.user.avatar = savedAvatar;
+                }
                 state.isAuthenticated = true;
                 localStorage.setItem('token', action.payload.token);
+                localStorage.setItem('userData', JSON.stringify(state.user));
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
@@ -98,6 +114,7 @@ const authSlice = createSlice({
                     state.user = action.payload.user;
                     state.isAuthenticated = true;
                     localStorage.setItem('token', action.payload.token);
+                    localStorage.setItem('userData', JSON.stringify(state.user));
                 }
                 // For inactive users, just show success message, no auto-login
             })
@@ -113,14 +130,21 @@ const authSlice = createSlice({
             .addCase(checkAuth.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload.user;
+                // Restore avatar from local storage if available
+                const savedAvatar = localStorage.getItem(`avatar_${action.payload.user.id}`);
+                if (savedAvatar) {
+                    state.user.avatar = savedAvatar;
+                }
                 state.isAuthenticated = true;
+                localStorage.setItem('userData', JSON.stringify(state.user));
             })
-            .addCase(checkAuth.rejected, (state, action) => {
+            .addCase(checkAuth.rejected, (state) => {
                 state.loading = false;
                 state.token = '';
                 state.isAuthenticated = false;
                 state.user = null;
                 localStorage.removeItem('token');
+                localStorage.removeItem('userData');
             })
 
             // Logout cases
@@ -135,9 +159,10 @@ const authSlice = createSlice({
                 state.user = null;
                 state.error = null;
                 localStorage.removeItem('token');
+                localStorage.removeItem('userData');
             });
     },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, updateUserAvatar } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,7 +1,13 @@
 // components/Settings.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUserAvatar } from '../../../slices/AuthSlice';
 
 const Settings = ({ userData }) => {
+  const dispatch = useDispatch();
+  const fileInputRef = useRef(null);
+  const { user } = useSelector(state => state.auth);
+
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     name: userData.name,
@@ -18,6 +24,38 @@ const Settings = ({ userData }) => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.match('image.*')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size too large. Maximum size is 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        dispatch(updateUserAvatar(base64String));
+        // Save specifically for this user to avoid conflicts
+        if (user && user.id) {
+          localStorage.setItem(`avatar_${user.id}`, base64String);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const tabs = [
@@ -61,11 +99,31 @@ const Settings = ({ userData }) => {
           {activeTab === 'profile' && (
             <div className="space-y-6 max-w-2xl">
               <div className="flex items-center space-x-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold text-xl">
-                  {userData.name.split(' ').map(n => n[0]).join('')}
+                <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark">
+                  {userData.avatar && userData.avatar.startsWith('data:') ? (
+                    <img
+                      src={userData.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-white font-bold text-xl">
+                      {userData.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <button className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <button
+                    onClick={handleAvatarClick}
+                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                  >
                     Change Avatar
                   </button>
                   <p className="text-xs text-gray-500 mt-2">JPG, GIF or PNG. Max size 5MB.</p>
@@ -152,11 +210,11 @@ const Settings = ({ userData }) => {
                     <div className="text-sm text-gray-600">Get notified about course updates and deadlines</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={formData.notifications}
                       onChange={(e) => handleInputChange('notifications', e.target.checked)}
-                      className="sr-only peer" 
+                      className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
@@ -167,11 +225,11 @@ const Settings = ({ userData }) => {
                     <div className="text-sm text-gray-600">Receive weekly learning tips and new course recommendations</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={formData.newsletter}
                       onChange={(e) => handleInputChange('newsletter', e.target.checked)}
-                      className="sr-only peer" 
+                      className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
@@ -186,11 +244,11 @@ const Settings = ({ userData }) => {
                     <div className="text-sm text-gray-600">Switch to dark theme</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={formData.darkMode}
                       onChange={(e) => handleInputChange('darkMode', e.target.checked)}
-                      className="sr-only peer" 
+                      className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>

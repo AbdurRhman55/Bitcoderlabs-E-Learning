@@ -1,10 +1,10 @@
 import React from 'react'
-import TeacherProfile from "../Dashboards/TeacherProfile/TeacherProfile"
+import TeacherProfileComponent from "../Dashboards/TeacherProfile/TeacherProfile"
 
 export default function TeacherProfile() {
     return (
         <div>
-            <TeacherProfile />
+            <TeacherProfileComponent />
         </div>
     )
 }
