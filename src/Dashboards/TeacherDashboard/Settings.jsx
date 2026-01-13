@@ -228,11 +228,9 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
       }
 
       // Call API to update profile using FormData
-      console.log(`Calling updateInstructor with ID: ${instructorId}`);
-      const response = await apiClient.updateInstructor(
-        instructorId,
-        updateData
-      );
+      // Use updateInstructorProfile instead of updateInstructor to avoid backend temp path bug
+      console.log(`Calling updateInstructorProfile`);
+      const response = await apiClient.updateInstructorProfile(updateData);
       console.log("Update response:", response);
 
       if (response && response.data) {
@@ -255,12 +253,12 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
             ? Array.isArray(responseData.specialization)
               ? responseData.specialization
               : typeof responseData.specialization === "string"
-              ? responseData.specialization.split(",").map((s) => s.trim())
-              : [responseData.specialization]
+                ? responseData.specialization.split(",").map((s) => s.trim())
+                : [responseData.specialization]
             : profileForm.specialization
-                .split(",")
-                .map((s) => s.trim())
-                .filter((s) => s),
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s),
 
           // Handle social_links
           socialLinks: responseData.social_links
@@ -268,8 +266,8 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
               ? JSON.parse(responseData.social_links)
               : responseData.social_links
             : profileForm.social_links
-            ? JSON.parse(profileForm.social_links)
-            : {},
+              ? JSON.parse(profileForm.social_links)
+              : {},
 
           // Handle arrays
           education: responseData.education || profileForm.education,
@@ -325,32 +323,26 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
       formData.append("image", file);
       formData.append("_method", "PUT");
 
-      // Get instructor ID
-      const currentUser = await apiClient.getCurrentUser();
+      console.log("Uploading image for current user");
+      await apiClient.updateInstructorProfile(formData);
 
-      // Instructor ID you need
-      const instructorId = currentUser?.user?.id;
-      console.log("kjhkjhkjh", instructorId);
-      if (!instructorId) {
-        console.error("No instructor ID found in response:", currentUser);
-        showNotification("Unable to get instructor ID", "error");
-        return;
-      }
+      // Fetch fresh profile to get the correct URL
+      const freshProfileResponse = await apiClient.getMyProfile();
+      const freshData = freshProfileResponse.data?.data || freshProfileResponse.data;
 
-      console.log("Uploading image for instructor:", instructorId);
-      const response = await apiClient.updateInstructor(instructorId, formData);
-      console.log("Image upload response:", response);
+      if (freshData) {
+        const imageUrl = freshData.image;
+        console.log("Refetched Image URL:", imageUrl);
 
-      if (response?.data) {
-        const imageUrl = response.data.image;
-        console.log("Image URL:", imageUrl);
+        let finalImageUrl = profile.profileImage;
+        if (imageUrl && typeof imageUrl === 'string' && imageUrl !== "null") {
+          finalImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://127.0.0.1:8000/storage/${imageUrl}`;
+        }
 
         // Update local state
         const updatedProfile = {
           ...profile,
-          profileImage: imageUrl
-            ? `http://127.0.0.1:8000/storage/${imageUrl}`
-            : profile.profileImage,
+          profileImage: finalImageUrl,
         };
 
         setProfile(updatedProfile);
@@ -510,18 +502,16 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                       setIsEditing(false);
                     }
                   }}
-                  className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all ${
-                    activeSection === section.id
-                      ? "bg-primary text-white"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all ${activeSection === section.id
+                    ? "bg-primary text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                    }`}
                 >
                   <span
-                    className={`mr-3 ${
-                      activeSection === section.id
-                        ? "text-white"
-                        : "text-gray-500"
-                    }`}
+                    className={`mr-3 ${activeSection === section.id
+                      ? "text-white"
+                      : "text-gray-500"
+                      }`}
                   >
                     {section.icon}
                   </span>

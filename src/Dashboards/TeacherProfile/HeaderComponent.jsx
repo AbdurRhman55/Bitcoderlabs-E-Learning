@@ -75,11 +75,12 @@ const DashboardHeader = ({ profile }) => {
                             >
                                 <img
                                     src={
-                                        profile.profileImageUrl ||
-                                        "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=faces&fit=crop&w=100&h=100"
+                                        profile.profileImageUrl && profile.profileImageUrl !== "http://127.0.0.1:8000/storage/null"
+                                            ? profile.profileImageUrl
+                                            : "https://images.unsplash.com/photo-1633332755192-727a05c4013d?crop=faces&fit=crop&w=100&h=100"
                                     }
                                     alt="Profile"
-                                    className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
+                                    className="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover"
                                 />
                                 {profile.status === "approved" && (
                                     <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-1 border border-white">

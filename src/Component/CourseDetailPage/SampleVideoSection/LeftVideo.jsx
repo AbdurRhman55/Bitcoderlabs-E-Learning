@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { FaPlay, FaClock, FaUser, FaStar } from "react-icons/fa";
 
-export default function LeftVideo() {
+export default function LeftVideo({ course }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -65,19 +65,19 @@ export default function LeftVideo() {
           {
             icon: <FaClock className="text-primary text-sm" />,
             color: "bg-primary-light",
-            title: "15:30",
+            title: course?.duration || "15:30",
             label: "Duration",
           },
           {
             icon: <FaUser className="text-primary text-sm" />,
             color: "bg-primary-light",
-            title: "12.5K",
+            title: course?.students_count || "12.5K",
             label: "Students",
           },
           {
             icon: <FaStar className="text-primary text-sm" />,
             color: "bg-primary-light",
-            title: "4.8/5",
+            title: `${Number(course?.rating || 4.8).toFixed(1)}/5`,
             label: "Rating",
           },
         ].map((item, i) => (

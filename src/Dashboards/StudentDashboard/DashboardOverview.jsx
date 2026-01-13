@@ -1,5 +1,8 @@
-// components/DashboardOverview.jsx
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchMyCourses, selectCourses } from "../../../slices/courseSlice";
+import { API_ORIGIN } from "../../api/index.js";
+import { useNavigate } from "react-router-dom";
 import {
   AiFillStar,
   AiOutlineCheckCircle,
@@ -12,7 +15,26 @@ import {
   AiOutlineTeam,
 } from "react-icons/ai";
 
-const DashboardOverview = ({ userData }) => {
+const DashboardOverview = ({ userData, setActiveSection }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const enrolledCourses = useSelector(selectCourses);
+  const { loading } = useSelector((state) => state.courses);
+
+  useEffect(() => {
+    dispatch(fetchMyCourses());
+  }, [dispatch]);
+
+  const resolveImageUrl = (image) => {
+    if (!image) return null;
+    if (typeof image !== "string") return null;
+    if (image.startsWith("http://") || image.startsWith("https://")) return image;
+    if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
+    return `${API_ORIGIN}/storage/${image}`;
+  };
+
+  const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
   const stats = [
     {
       label: "Learning Points",
@@ -30,7 +52,7 @@ const DashboardOverview = ({ userData }) => {
     },
     {
       label: "Active Courses",
-      value: userData.enrolledCourses,
+      value: enrolledCourses.length,
       change: "0",
       trend: "stable",
       icon: <AiOutlineBook className="text-blue-500" size={26} />,
@@ -44,32 +66,22 @@ const DashboardOverview = ({ userData }) => {
     },
   ];
 
-  const recentCourses = [
-    {
-      id: 1,
-      title: "Advanced React Patterns",
-      progress: 85,
-      nextLesson: "State Management",
-      timeLeft: "2h 30m",
-      thumbnail: <AiOutlineDashboard className="text-primary" size={26} />,
-    },
-    {
-      id: 2,
-      title: "Node.js Backend Development",
-      progress: 45,
-      nextLesson: "API Security",
-      timeLeft: "5h 15m",
-      thumbnail: <AiFillThunderbolt className="text-yellow-500" size={26} />,
-    },
-    {
-      id: 3,
-      title: "UI/UX Design Fundamentals",
-      progress: 30,
-      nextLesson: "Design Systems",
-      timeLeft: "3h 45m",
-      thumbnail: <AiOutlineFlag className="text-red-500" size={26} />,
-    },
-  ];
+  const recentCourses = enrolledCourses.slice(0, 3).map(course => ({
+    id: course.id,
+    title: course.title,
+    progress: course.progress || 0,
+    nextLesson: course.status === 'pending' ? 'Pending Approval' : 'Continue Learning',
+    timeLeft: course.duration || "N/A",
+    thumbnail: resolveImageUrl(course.image) || PLACEHOLDER_IMAGE,
+  }));
+
+  if (loading && enrolledCourses.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-dark"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -103,13 +115,12 @@ const DashboardOverview = ({ userData }) => {
             <div className="flex items-center justify-between mb-4">
               <div className="text-2xl">{stat.icon}</div>
               <span
-                className={`text-sm font-medium ${
-                  stat.trend === "up"
-                    ? "text-green-600"
-                    : stat.trend === "down"
+                className={`text-sm font-medium ${stat.trend === "up"
+                  ? "text-green-600"
+                  : stat.trend === "down"
                     ? "text-red-600"
                     : "text-gray-600"
-                }`}
+                  }`}
               >
                 {stat.change}
               </span>
@@ -140,8 +151,12 @@ const DashboardOverview = ({ userData }) => {
                 key={course.id}
                 className="flex items-center space-x-4 p-4 rounded-lg border border-gray-200 hover:border-primary/30 transition-colors duration-200"
               >
-                <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center text-xl">
-                  {course.thumbnail}
+                <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center text-xl overflow-hidden">
+                  {typeof course.thumbnail === 'string' ? (
+                    <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                  ) : (
+                    course.thumbnail
+                  )}
                 </div>
 
                 <div className="flex-1">
@@ -174,29 +189,41 @@ const DashboardOverview = ({ userData }) => {
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center">
+            <button
+              onClick={() => setActiveSection('courses')}
+              className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center"
+            >
               <AiOutlineRocket className="text-primary mx-auto mb-2" size={26} />
               <div className="font-medium text-gray-900 text-sm">
                 Resume Learning
               </div>
             </button>
 
-            <button className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center">
-              <AiOutlineFlag className="text-primary mx-auto mb-2" size={26} />
-              <div className="font-medium text-gray-900 text-sm">Set Goals</div>
+            <button
+              onClick={() => navigate('/prices')}
+              className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center"
+            >
+              <AiFillThunderbolt className="text-primary mx-auto mb-2" size={26} />
+              <div className="font-medium text-gray-900 text-sm">Pricing Plans</div>
             </button>
 
-            <button className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center">
+            <button
+              onClick={() => navigate('/courses')}
+              className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center"
+            >
               <AiOutlineBook className="text-primary mx-auto mb-2" size={26} />
               <div className="font-medium text-gray-900 text-sm">
                 Browse Courses
               </div>
             </button>
 
-            <button className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center">
+            <button
+              onClick={() => setActiveSection('settings')}
+              className="p-4 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary-light transition-all duration-200 text-center"
+            >
               <AiOutlineTeam className="text-primary mx-auto mb-2" size={26} />
               <div className="font-medium text-gray-900 text-sm">
-                Study Groups
+                Account Settings
               </div>
             </button>
           </div>

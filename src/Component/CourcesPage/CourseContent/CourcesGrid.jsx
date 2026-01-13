@@ -17,7 +17,7 @@ export default function CourseGrid() {
   const error = useSelector((state) => state.courses.error);
 
   console.log("===courses", course);
-  
+
   useEffect(() => {
     dispatch(fetchCourses());
   }, [dispatch]);
@@ -68,24 +68,24 @@ export default function CourseGrid() {
 
         <div className="flex gap-8 lg:ml-5 items-start transition-all duration-500 ease-in-out">
           {/* Left: Courses */}
-          <Link to="/course/:id">
-            <div className="flex-1 transition-all duration-500">
-              <div
-                className={
-                  layout === "grid"
-                    ? `grid gap-6 ${showFilter
-                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-                    }`
-                    : "space-y-6"
-                }
-              >
-                {course.map((course) => (
-                  <CourseCard key={course.id} course={course} layout={layout} />
-                ))}
-              </div>
+
+          <div className="flex-1 transition-all duration-500">
+            <div
+              className={
+                layout === "grid"
+                  ? `grid gap-6 ${showFilter
+                    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                    : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                  }`
+                  : "space-y-6"
+              }
+            >
+              {course.map((course) => (
+                <CourseCard key={course.id} course={course} layout={layout} />
+              ))}
             </div>
-          </Link>
+          </div>
+
           {/* Right: Filter (visible on large screen only) */}
           <div
             className={`hidden lg:block transition-all duration-500 ease-in-out transform ${showFilter
@@ -112,12 +112,14 @@ export default function CourseGrid() {
       </div>
 
       {/* Dark Overlay when Filter is Open */}
-      {showFilter && (
-        <div
-          className="fixed inset-0 bg-black/70 z-40 lg:hidden"
-          onClick={() => setShowFilter(false)}
-        ></div>
-      )}
-    </section>
+      {
+        showFilter && (
+          <div
+            className="fixed inset-0 bg-black/70 z-40 lg:hidden"
+            onClick={() => setShowFilter(false)}
+          ></div>
+        )
+      }
+    </section >
   );
 }

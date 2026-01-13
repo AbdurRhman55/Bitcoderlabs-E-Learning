@@ -12,22 +12,22 @@ const LoginPage = () => {
 
   const [formData, setFormData] = useState({ email: "", password: "" })
 
-   useEffect(() => {
-     if (isAuthenticated && user) {
-       let redirectPath = '/';
-       if (user.role === 'admin') {
-         redirectPath = '/admindashboard';
-       } else if (user.role === 'instructor') {
-         // If instructor is approved, go to main dashboard, else to profile creation
-         redirectPath = user.instructor_approved ? '/teachermaindashboard' : '/teacherprofile';
-       } else if (user.role === 'moderator') {
-         redirectPath = '/admindashboard'; // Moderators use admin dashboard for now
-       } else if (user.role === 'student') {
-         redirectPath = '/studentdashboard';
-       }
-       navigate(redirectPath);
-     }
-   }, [isAuthenticated, user, navigate]);
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      let redirectPath = '/';
+      if (user.role === 'admin') {
+        redirectPath = '/admindashboard';
+      } else if (user.role === 'instructor') {
+        // If instructor is approved, go to main dashboard, else to profile creation
+        redirectPath = user.instructor_approved ? '/teachermaindashboard' : '/teacherprofile';
+      } else if (user.role === 'moderator') {
+        redirectPath = '/admindashboard'; // Moderators use admin dashboard for now
+      } else if (user.role === 'student') {
+        redirectPath = '/studentdashboard';
+      }
+      navigate(redirectPath);
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     // Clear errors when component mounts
@@ -50,7 +50,7 @@ const LoginPage = () => {
       if (user.role === "admin") {
         navigate("/admindashboard"); // Admin
       } else if (user.is_active && user.role === "instructor") {
-        navigate("/teacherprofile"); // Instructor
+        navigate("/teachermaindashboard"); // Instructor
       } else {
         navigate("/");
       }

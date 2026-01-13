@@ -1,71 +1,64 @@
-// components/MyCourses.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPaintBrush, FaBolt, FaBullseye, FaScroll, FaBook } from "react-icons/fa";
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchMyCourses, selectCourses } from '../../../slices/courseSlice';
+import { API_ORIGIN } from '../../api/index.js';
 const MyCourses = () => {
   const [activeFilter, setActiveFilter] = useState('all');
+  const dispatch = useDispatch();
+  const fetchedCourses = useSelector(selectCourses);
+  const { loading } = useSelector((state) => state.courses);
 
-  const courses = [
-    {
-      id: 1,
-      title: 'Advanced React Patterns',
-      instructor: 'Sarah Johnson',
-      category: 'Frontend',
-      progress: 85,
-      duration: '12h 30m',
-      enrolledDate: '2024-01-15',
-      thumbnail: <FaPaintBrush className="text-2xl text-primary" />,
-      status: 'in-progress'
-    },
-    {
-      id: 2,
-      title: 'Node.js Backend Development',
-      instructor: 'Mike Chen',
-      category: 'Backend',
-      progress: 45,
-      duration: '18h 15m',
-      enrolledDate: '2024-01-20',
-      thumbnail: <FaBolt className="text-2xl text-primary" />,
-      status: 'in-progress'
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Fundamentals',
-      instructor: 'Emily Davis',
-      category: 'Design',
-      progress: 30,
-      duration: '8h 45m',
-      enrolledDate: '2024-02-01',
-      thumbnail: <FaBullseye className="text-2xl text-primary" />,
-      status: 'in-progress'
-    },
-    {
-      id: 4,
-      title: 'JavaScript Fundamentals',
-      instructor: 'David Kim',
-      category: 'Frontend',
-      progress: 100,
-      duration: '10h 00m',
-      enrolledDate: '2023-12-10',
-      thumbnail: <FaScroll className="text-2xl text-primary" />,
-      status: 'completed'
-    }
-  ];
+  useEffect(() => {
+    dispatch(fetchMyCourses());
+  }, [dispatch]);
+
+  const resolveImageUrl = (image) => {
+    if (!image) return null;
+    if (typeof image !== "string") return null;
+    if (image.startsWith("http://") || image.startsWith("https://")) return image;
+    if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
+    // If it looks like a relative storage path, prepend API_ORIGIN/storage/
+    return `${API_ORIGIN}/storage/${image}`;
+  };
+
+  const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
+  const getCategoryName = (category) => {
+    if (!category) return 'General';
+    if (typeof category === 'string') return category;
+    return category.name || 'General';
+  };
+
+  const getInstructorName = (instructor) => {
+    if (!instructor) return 'Unknown Instructor';
+    if (typeof instructor === 'string') return instructor;
+    return instructor.user?.name || instructor.name || 'Unknown Instructor';
+  };
 
   const filters = [
     { id: 'all', label: 'All Courses' },
-    { id: 'in-progress', label: 'In Progress' },
-    { id: 'completed', label: 'Completed' },
-    { id: 'new', label: 'New' }
+    { id: 'active', label: 'Active' },
+    { id: 'pending', label: 'Pending' },
+    { id: 'completed', label: 'Completed' }
   ];
 
-  const filteredCourses = courses.filter(
-    (course) => activeFilter === 'all' || course.status === activeFilter
+  const filteredCourses = fetchedCourses.filter(
+    (course) => activeFilter === 'all' || (course.status === activeFilter)
   );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-dark"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -103,34 +96,46 @@ const MyCourses = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
           >
             <div className="p-6">
-              
+
               {/* Thumbnail + Status */}
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center text-xl">
-                  {course.thumbnail}
+                <div className="w-16 h-12 bg-primary-light rounded-lg flex items-center justify-center text-xl overflow-hidden">
+                  <img
+                    src={resolveImageUrl(course.image) || PLACEHOLDER_IMAGE}
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      if (e.target.src !== PLACEHOLDER_IMAGE) {
+                        e.target.onerror = null;
+                        e.target.src = PLACEHOLDER_IMAGE;
+                      }
+                    }}
+                  />
                 </div>
 
                 <span
                   className={`
-                    px-2 py-1 text-xs font-medium rounded-full
+                    px-2 py-1 text-xs font-medium rounded-full capitalize
                     ${course.status === 'completed'
                       ? 'bg-green-100 text-green-800'
-                      : 'bg-blue-100 text-blue-800'}
+                      : course.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-blue-100 text-blue-800'}
                   `}
                 >
-                  {course.status === 'completed' ? 'Completed' : 'In Progress'}
+                  {course.status}
                 </span>
               </div>
 
-              <h3 className="font-semibold text-gray-900 mb-2">{course.title}</h3>
-              <p className="text-sm text-gray-600 mb-4">by {course.instructor}</p>
+              <h3 className="font-semibold text-gray-900 mb-2 truncate" title={course.title}>{course.title}</h3>
+              <p className="text-sm text-gray-600 mb-4">by {getInstructorName(course.instructor)}</p>
 
               {/* Progress */}
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Progress</span>
-                    <span>{course.progress}%</span>
+                    <span>{course.progress || 0}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
@@ -138,14 +143,14 @@ const MyCourses = () => {
                         h-2 rounded-full transition-all duration-300
                         ${course.status === 'completed' ? 'bg-green-500' : 'bg-primary'}
                       `}
-                      style={{ width: `${course.progress}%` }}
+                      style={{ width: `${course.progress || 0}%` }}
                     ></div>
                   </div>
                 </div>
 
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Duration: {course.duration}</span>
-                  <span>{course.category}</span>
+                  <span>Duration: {course.duration || 'N/A'}</span>
+                  <span>{getCategoryName(course.category)}</span>
                 </div>
               </div>
             </div>

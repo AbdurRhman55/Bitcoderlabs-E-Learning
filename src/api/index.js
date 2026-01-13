@@ -95,6 +95,18 @@ class ApiClient {
     return this.request("/me");
   }
 
+  // Update current user's own profile (for students)
+  // Update current user's own profile (for students)
+  async updateMyProfile(id, userData) {
+    console.log('Updating profile for user ID:', id);
+    console.log('User data:', userData);
+
+    return this.request(`/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(userData),
+    });
+  }
+
   // Admin Dashboard
   async getAdminStats() {
     return this.request("/dashboard/admin/stats");
@@ -122,6 +134,48 @@ class ApiClient {
   async updateUser(id, userData) {
     return this.request(`/users/${id}`, {
       method: "PUT",
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateProfile(id, userData) {
+    const isFormData = typeof FormData !== 'undefined' && userData instanceof FormData;
+
+    // If we have an ID, we use the specific user endpoint
+    // Using POST + _method: PUT is often more reliable than direct PUT/PATCH
+    if (id) {
+      if (isFormData) {
+        if (!userData.has('_method')) {
+          userData.append('_method', 'PUT');
+        }
+        return this.request(`/users/${id}`, {
+          method: "POST",
+          body: userData,
+        });
+      }
+
+      return this.request(`/users/${id}`, {
+        method: "POST",
+        body: JSON.stringify({
+          ...userData,
+          _method: "PUT"
+        }),
+      });
+    }
+
+    // Default to /me for self-updates (GET only usually, but kept for fallback)
+    if (isFormData) {
+      if (!userData.has('_method')) {
+        userData.append('_method', 'PUT');
+      }
+      return this.request("/me", {
+        method: "POST",
+        body: userData,
+      });
+    }
+
+    return this.request("/me", {
+      method: "PATCH",
       body: JSON.stringify(userData),
     });
   }
@@ -273,7 +327,7 @@ class ApiClient {
     return this.request("/instructors/my/profile");
   }
 
-  async updateMyProfile(instructorData) {
+  async updateInstructorProfile(instructorData) {
     const isFormData = typeof FormData !== 'undefined' && instructorData instanceof FormData;
     if (isFormData) {
       if (!instructorData.has('_method')) {
@@ -297,7 +351,7 @@ class ApiClient {
 
   async updateInstructor(id, instructorData) {
     console.log(id);
-    
+
     const isFormData = typeof FormData !== 'undefined' && instructorData instanceof FormData;
     if (isFormData) {
       if (!instructorData.has('_method')) {
@@ -351,6 +405,13 @@ class ApiClient {
   async getEnrollments(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/enrollments${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async enrollCourse(enrollmentData) {
+    return this.request("/enrollments", {
+      method: "POST",
+      body: JSON.stringify(enrollmentData),
+    });
   }
 }
 

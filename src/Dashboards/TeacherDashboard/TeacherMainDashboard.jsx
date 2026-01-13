@@ -124,19 +124,36 @@ const TeacherMainDashboard = () => {
         // Only update state when we have ALL data
         if (profileData && statsData && activitiesData !== null) {
           // Process profile
+          // Determine profile image
+          let imageUrl = "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200";
+
+          // Try API profile image first, then Redux user avatar/image
+          const rawImage = profileData.image || user?.avatar || user?.image;
+
+          if (rawImage && typeof rawImage === 'string' && rawImage !== "null") {
+            if (rawImage.startsWith('http://') || rawImage.startsWith('https://')) {
+              imageUrl = rawImage;
+            } else {
+              // Ensure no double slash if rawImage starts with /
+              const cleanPath = rawImage.startsWith('/') ? rawImage.substring(1) : rawImage;
+              imageUrl = `http://127.0.0.1:8000/storage/${cleanPath}`;
+            }
+          } else if (rawImage && typeof rawImage === 'object') {
+            console.warn("Profile image is an object:", rawImage);
+            // Attempt to extract if possible, otherwise ignore
+          }
+
           const processedProfile = {
-            name: profileData.name || "",
-            email: profileData.email || "",
-            profileImage: profileData.image
-              ? `http://127.0.0.1:8000/storage/${profileData.image}`
-              : "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200",
+            name: profileData.name || user?.name || "",
+            email: profileData.email || user?.email || "",
+            profileImage: imageUrl,
             qualification: profileData.bio || "Instructor",
             experience: "Teaching",
             skills: Array.isArray(profileData.specialization)
               ? profileData.specialization
               : profileData.specialization
-              ? [profileData.specialization]
-              : [],
+                ? [profileData.specialization]
+                : [],
             about: profileData.bio || "Dedicated educator",
             socialLinks: profileData.social_links || {},
             approvalStatus: profileData.approval_status || "pending",
@@ -362,10 +379,10 @@ const TeacherMainDashboard = () => {
   const headerProfile =
     !allDataLoaded || isLoading || !userProfile
       ? {
-          name: "Loading...",
-          profileImage:
-            "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200",
-        }
+        name: "Loading...",
+        profileImage:
+          "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200",
+      }
       : userProfile;
 
   return (

@@ -2,14 +2,20 @@ import React, { useEffect, useState } from "react";
 import { Eye } from "lucide-react";
 import { apiClient } from "../../../src/api/index.js";
 
+const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
 export default function TeachersTable() {
     const [teachers, setTeachers] = useState([]);
     const [selectedTeacher, setSelectedTeacher] = useState(null);
 
     const getImageUrl = (image) => {
         if (!image || typeof image !== 'string') return "";
+        if (image.includes('C:') || image.includes('Users') || image.includes('tmp')) return "";
         if (image.startsWith('http://') || image.startsWith('https://')) return image;
-        return `http://127.0.0.1:8000/storage/${image}`;
+        // If image already has 'storage/' prefix, don't duplicate it if the base url also has it
+        // But here we assume standard Laravel storage link
+        const cleanImage = image.startsWith('/') ? image.substring(1) : image;
+        return `http://127.0.0.1:8000/storage/${cleanImage}`;
     };
 
     // ================= FETCH =================
@@ -83,8 +89,14 @@ export default function TeachersTable() {
                             >
                                 <div className="flex items-center gap-3">
                                     <img
-                                        src={getImageUrl(t.image) || "/avatar.png"}
+                                        src={getImageUrl(t.image) || PLACEHOLDER_IMAGE}
                                         className="w-6 h-6 rounded-full border border-[#3baee9]"
+                                        onError={(e) => {
+                                            if (e.target.src !== PLACEHOLDER_IMAGE) {
+                                                e.target.onerror = null;
+                                                e.target.src = PLACEHOLDER_IMAGE;
+                                            }
+                                        }}
                                     />
                                     <div>
                                         <p className="text-lg font-semibold">{t.name}</p>
@@ -173,8 +185,14 @@ export default function TeachersTable() {
                         {/* Header */}
                         <div className="flex items-center gap-4 border-b pb-4">
                             <img
-                                src={getImageUrl(selectedTeacher.image) || "/avatar.png"}
+                                src={getImageUrl(selectedTeacher.image) || PLACEHOLDER_IMAGE}
                                 className="w-24 h-24 rounded-full border"
+                                onError={(e) => {
+                                    if (e.target.src !== PLACEHOLDER_IMAGE) {
+                                        e.target.onerror = null;
+                                        e.target.src = PLACEHOLDER_IMAGE;
+                                    }
+                                }}
                             />
                             <div>
                                 <h3 className="text-2xl font-bold">{selectedTeacher.name}</h3>

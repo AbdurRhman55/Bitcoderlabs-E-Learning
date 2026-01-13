@@ -158,6 +158,9 @@ const DashboardHeader = ({ profile, notifications, setActiveTab }) => {
     setUnreadNotifications(unreadCount);
   }, [notificationList]);
 
+  console.log(profile.profileImage);
+
+
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50 border-gray-200">
       <div className="px-4 sm:px-6 lg:px-8">
@@ -285,9 +288,8 @@ const DashboardHeader = ({ profile, notifications, setActiveTab }) => {
                                 onClick={() =>
                                   handleNotificationItemClick(notification.id)
                                 }
-                                className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                                  !notification.read ? "bg-blue-50" : ""
-                                }`}
+                                className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.read ? "bg-blue-50" : ""
+                                  }`}
                               >
                                 <div className="flex items-start">
                                   <div className="flex-shrink-0 pt-1">

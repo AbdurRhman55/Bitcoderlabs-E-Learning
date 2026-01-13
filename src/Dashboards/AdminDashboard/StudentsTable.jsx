@@ -59,7 +59,7 @@ export default function StudentsTable() {
     }
   };
 
-  // ================= DELETE =================
+  //  DELETE 
   const handleDelete = async (userId) => {
     if (!window.confirm("Delete this student?")) return;
 
@@ -125,7 +125,7 @@ export default function StudentsTable() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 ">
-              {["Student", "Email", "Status", "Approval", "Actions"].map((h) => (
+              {["ID", "Student", "Email", "Status", "Approval", "Actions"].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
@@ -139,6 +139,12 @@ export default function StudentsTable() {
           <tbody className="divide-y ">
             {filteredUsers.map((u) => (
               <tr key={u.id} className="hover:bg-gray-50 border-gray-200">
+                <td className="px-4 py-3">
+                  <span className="text-xs font-mono text-gray-700 ">
+                    #{u.id}
+                  </span>
+                </td>
+
                 <td className="px-4 py-3">
                   <p className="font-medium">{u.name}</p>
                 </td>
@@ -185,16 +191,14 @@ export default function StudentsTable() {
 
                 {/* ACTIONS */}
                 <td className="px-4 py-3 flex gap-3">
-                  <button className="text-primary-dark">
-                    <Edit2 size={18} />
-                  </button>
                   <button
                     onClick={() => handleDelete(u.id)}
                     disabled={loadingIds.includes(u.id)}
-                    className={`text-red-600 ${loadingIds.includes(u.id) ? "opacity-50 cursor-not-allowed" : ""
+                    className={`text-white text-xs flex bg-red-500 px-2 py-1 rounded ${loadingIds.includes(u.id) ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                   >
-                    <Trash2 size={18} />
+                    DELETE
+                    <Trash2 size={14} />
                   </button>
                 </td>
               </tr>

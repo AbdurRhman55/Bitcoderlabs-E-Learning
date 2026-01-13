@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import { MdSchool, MdWork } from "react-icons/md";
 
+const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
 const ProfileOverview = ({ profile, stats, recentActivities }) => {
   // This component ONLY receives data when ALL is loaded
   // No fallbacks, no loading states
@@ -72,14 +74,14 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
     recentActivities.length > 0
       ? recentActivities
       : [
-          {
-            id: 1,
-            type: "course",
-            title: "No recent activities",
-            description: "Your recent activities will appear here",
-            time: "",
-          },
-        ];
+        {
+          id: 1,
+          type: "course",
+          title: "No recent activities",
+          description: "Your recent activities will appear here",
+          time: "",
+        },
+      ];
 
   return (
     <div className="space-y-6">
@@ -113,11 +115,10 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
               {stat.change && (
                 <span
                   className={`text-xs font-semibold px-2 py-1 rounded-full
-              ${
-                stat.change.startsWith("+")
-                  ? "bg-gray-100 text-primary"
-                  : "bg-red-100 text-red-700"
-              }`}
+              ${stat.change.startsWith("+")
+                      ? "bg-gray-100 text-primary"
+                      : "bg-red-100 text-red-700"
+                    }`}
                 >
                   {stat.change}
                 </span>
@@ -141,9 +142,15 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-start space-x-6">
               <img
-                src={profile.profileImage}
+                src={profile.profileImage || PLACEHOLDER_IMAGE}
                 alt={profile.name}
-                className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+                className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
+                onError={(e) => {
+                  if (e.target.src !== PLACEHOLDER_IMAGE) {
+                    e.target.onerror = null;
+                    e.target.src = PLACEHOLDER_IMAGE;
+                  }
+                }}
               />
               <div className="flex-1">
                 <div className="flex justify-between items-start">

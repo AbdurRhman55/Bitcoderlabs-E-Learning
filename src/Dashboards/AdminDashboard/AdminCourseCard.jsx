@@ -2,6 +2,8 @@ import React from "react";
 import { API_ORIGIN } from "../../api/index.js";
 import { Edit2, Trash2, Eye, Users, Clock, DollarSign } from "lucide-react";
 
+const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
 const AdminCourseCard = ({ course, onEdit, onDelete }) => {
   const formatPrice = (price) => {
     return new Intl.NumberFormat("en-US", {
@@ -23,26 +25,28 @@ const AdminCourseCard = ({ course, onEdit, onDelete }) => {
       {/* Course Image Banner */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={resolveImageUrl(course.image) || 'https://via.placeholder.com/400x300/4f46e5/ffffff?text=Course+Image'}
+          src={resolveImageUrl(course.image) || PLACEHOLDER_IMAGE}
           alt={course.title}
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/400x300/4f46e5/ffffff?text=Course+Image';
+            if (e.target.src !== PLACEHOLDER_IMAGE) {
+              e.target.onerror = null;
+              e.target.src = PLACEHOLDER_IMAGE;
+            }
           }}
         />
 
         {/* Course Level Badge */}
         <div className="absolute top-3 left-3">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
-              course.level === "beginner"
+            className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${course.level === "beginner"
                 ? "bg-green-100 text-green-800"
                 : course.level === "intermediate"
                   ? "bg-yellow-100 text-yellow-800"
                   : course.level === "advanced"
                     ? "bg-blue-100 text-blue-800"
                     : "bg-red-100 text-red-800"
-            }`}
+              }`}
           >
             {course.level}
           </span>
@@ -50,9 +54,8 @@ const AdminCourseCard = ({ course, onEdit, onDelete }) => {
 
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            course.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${course.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
             {course.is_active ? 'Active' : 'Inactive'}
           </span>
         </div>

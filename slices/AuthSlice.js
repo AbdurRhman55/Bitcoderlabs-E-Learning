@@ -3,7 +3,6 @@ import { apiClient } from '../src/api/index.js';
 
 const initialState = {
     isAuthenticated: false,
-    // Initialize user if token exists, also check for saved avatar
     user: JSON.parse(localStorage.getItem('userData')) || null,
     token: localStorage.getItem('token') || '',
     loading: !!localStorage.getItem('token'),
@@ -29,7 +28,6 @@ export const logoutAsync = createAsyncThunk(
             await apiClient.logout();
             return null;
         } catch (err) {
-            // Even if API call fails, we should still clear local state
             console.warn('Logout API call failed, clearing local state anyway:', err);
             return null;
         }
@@ -60,6 +58,26 @@ export const checkAuth = createAsyncThunk(
     }
 );
 
+export const updateProfile = createAsyncThunk(
+    'auth/updateProfile',
+    async ({ userData }, { rejectWithValue, getState }) => { // Changed: removed id parameter
+        try {
+            const state = getState();
+            const currentUser = state.auth.user;
+
+            if (!currentUser || !currentUser.id) {
+                throw new Error('User not authenticated');
+            }
+
+            // Always use the current user's ID
+            const data = await apiClient.updateMyProfile(currentUser.id, userData);
+            return data;
+        } catch (err) {
+            return rejectWithValue(err.message);
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: "auth",
     initialState,
@@ -70,7 +88,6 @@ const authSlice = createSlice({
         updateUserAvatar: (state, action) => {
             if (state.user) {
                 state.user.avatar = action.payload;
-                // Update local storage
                 const savedUser = JSON.parse(localStorage.getItem('userData') || '{}');
                 savedUser.avatar = action.payload;
                 localStorage.setItem('userData', JSON.stringify({ ...savedUser, ...state.user }));
@@ -88,7 +105,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.token = action.payload.token;
                 state.user = action.payload.user;
-                // Check if there's a saved avatar for this user
                 const savedAvatar = localStorage.getItem(`avatar_${action.payload.user.id}`);
                 if (savedAvatar) {
                     state.user.avatar = savedAvatar;
@@ -116,7 +132,6 @@ const authSlice = createSlice({
                     localStorage.setItem('token', action.payload.token);
                     localStorage.setItem('userData', JSON.stringify(state.user));
                 }
-                // For inactive users, just show success message, no auto-login
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
@@ -130,7 +145,6 @@ const authSlice = createSlice({
             .addCase(checkAuth.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload.user;
-                // Restore avatar from local storage if available
                 const savedAvatar = localStorage.getItem(`avatar_${action.payload.user.id}`);
                 if (savedAvatar) {
                     state.user.avatar = savedAvatar;
@@ -160,6 +174,22 @@ const authSlice = createSlice({
                 state.error = null;
                 localStorage.removeItem('token');
                 localStorage.removeItem('userData');
+            })
+
+            // Update profile cases
+            .addCase(updateProfile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateProfile.fulfilled, (state, action) => {
+                state.loading = false;
+                const updatedUser = action.payload.user || action.payload;
+                state.user = { ...state.user, ...updatedUser };
+                localStorage.setItem('userData', JSON.stringify(state.user));
+            })
+            .addCase(updateProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     },
 });

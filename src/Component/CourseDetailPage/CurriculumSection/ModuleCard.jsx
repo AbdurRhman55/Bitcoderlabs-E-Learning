@@ -15,9 +15,8 @@ export default function ModuleCard({
   return (
     <div className="group">
       <div
-        className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 ${
-          isEven ? "hover:border-blue-200" : "hover:border-purple-200"
-        }`}
+        className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 ${isEven ? "hover:border-blue-200" : "hover:border-purple-200"
+          }`}
       >
         {/* Header */}
         <div
@@ -75,14 +74,12 @@ export default function ModuleCard({
 
               {/* Expand Icon */}
               <div
-                className={`p-3 rounded-xl transition-all duration-300 flex-shrink-0 ${
-                  isEven ? "bg-blue-50" : "bg-purple-50"
-                } ${isExpanded ? "rotate-180" : ""}`}
+                className={`p-3 rounded-xl transition-all duration-300 flex-shrink-0 ${isEven ? "bg-blue-50" : "bg-purple-50"
+                  } ${isExpanded ? "rotate-180" : ""}`}
               >
                 <FaChevronDown
-                  className={`transition-transform duration-500 ${
-                    isEven ? "text-blue-500" : "text-purple-500"
-                  }`}
+                  className={`transition-transform duration-500 ${isEven ? "text-blue-500" : "text-purple-500"
+                    }`}
                 />
               </div>
             </div>
@@ -94,7 +91,7 @@ export default function ModuleCard({
           <div className="border-t border-gray-200">
             <div className="p-6 sm:p-8 bg-gradient-to-b from-white to-gray-50">
               <div className="space-y-4 mb-8">
-                {module.lessonsList.map((lesson, i) => (
+                {(module.lessonsList || []).map((lesson, i) => (
                   <LessonItem key={i} lesson={lesson} />
                 ))}
               </div>

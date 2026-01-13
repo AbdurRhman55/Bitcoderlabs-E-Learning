@@ -1,12 +1,13 @@
-// components/Settings.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUserAvatar } from '../../../slices/AuthSlice';
+import { updateUserAvatar, updateProfile } from '../../../slices/AuthSlice';
+import { useNavigate } from 'react-router-dom';
 
 const Settings = ({ userData }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const { user } = useSelector(state => state.auth);
+  const { user, loading: authLoading } = useSelector(state => state.auth);
 
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
@@ -16,8 +17,22 @@ const Settings = ({ userData }) => {
     bio: userData.bio,
     notifications: true,
     newsletter: true,
-    darkMode: false
+    darkMode: false,
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
+
+  // Sync form data when userData changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      name: userData.name,
+      email: userData.email,
+      title: userData.title,
+      bio: userData.bio
+    }));
+  }, [userData]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -55,6 +70,63 @@ const Settings = ({ userData }) => {
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await dispatch(updateProfile({
+        userData: {
+          name: formData.name,
+          email: formData.email,
+          title: formData.title,
+          bio: formData.bio
+        }
+      })).unwrap();
+      alert('Profile updated successfully!');
+    } catch (err) {
+      alert('Failed to update profile: ' + err.message);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    const { currentPassword, newPassword, confirmPassword } = formData;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      alert('Please fill all password fields');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      await dispatch(updateProfile({
+        userData: {
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: confirmPassword
+        }
+      })).unwrap();
+      alert('Password updated successfully!');
+      // Clear password fields
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+    } catch (err) {
+      alert('Failed to update password: ' + err.message);
     }
   };
 
@@ -190,10 +262,26 @@ const Settings = ({ userData }) => {
               </div>
 
               <div className="flex space-x-4">
-                <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
-                  Save Changes
+                <button
+                  onClick={handleSubmit}
+                  disabled={authLoading}
+                  className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+                >
+                  {authLoading ? 'Saving...' : 'Save Changes'}
                 </button>
-                <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      name: userData.name,
+                      email: userData.email,
+                      title: userData.title,
+                      bio: userData.bio
+                    }));
+                  }}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200"
+                >
                   Cancel
                 </button>
               </div>
@@ -268,7 +356,10 @@ const Settings = ({ userData }) => {
                     </label>
                     <input
                       type="password"
+                      value={formData.currentPassword}
+                      onChange={(e) => handleInputChange('currentPassword', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      placeholder="Enter current password"
                     />
                   </div>
                   <div>
@@ -277,7 +368,10 @@ const Settings = ({ userData }) => {
                     </label>
                     <input
                       type="password"
+                      value={formData.newPassword}
+                      onChange={(e) => handleInputChange('newPassword', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      placeholder="Enter new password"
                     />
                   </div>
                   <div>
@@ -286,12 +380,19 @@ const Settings = ({ userData }) => {
                     </label>
                     <input
                       type="password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200"
+                      placeholder="Confirm new password"
                     />
                   </div>
                 </div>
-                <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
-                  Update Password
+                <button
+                  onClick={handleUpdatePassword}
+                  disabled={authLoading}
+                  className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+                >
+                  {authLoading ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </div>
@@ -313,8 +414,11 @@ const Settings = ({ userData }) => {
                     </div>
                   </div>
                 </div>
-                <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
-                  Manage Subscription
+                <button
+                  onClick={() => navigate('/prices')}
+                  className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+                >
+                  Update Plan
                 </button>
               </div>
             </div>

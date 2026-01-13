@@ -7,9 +7,19 @@ import {
   FaUniversity,
 } from "react-icons/fa";
 
-export default function PaymentMethod() {
-    const [selectedPayment, setSelectedPayment] = useState("card");
-const renderPaymentForm = () => {
+export default function PaymentMethod({ formData, updateFormData }) {
+  const selectedPayment = formData.payment_method || "card";
+
+  const setSelectedPayment = (method) => {
+    updateFormData((prev) => ({ ...prev, payment_method: method }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    updateFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const renderPaymentForm = () => {
     switch (selectedPayment) {
       case "card":
         return (
@@ -22,6 +32,9 @@ const renderPaymentForm = () => {
                 <FaCreditCard className="absolute left-4 top-3.5 text-gray-400" />
                 <input
                   type="text"
+                  name="card_number"
+                  value={formData.card_number || ""}
+                  onChange={handleChange}
                   placeholder="1234 5678 9012 3456"
                   className="w-full pl-12 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
                 />
@@ -35,6 +48,9 @@ const renderPaymentForm = () => {
                 </label>
                 <input
                   type="text"
+                  name="card_expiry"
+                  value={formData.card_expiry || ""}
+                  onChange={handleChange}
                   placeholder="MM/YY"
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
                 />
@@ -45,6 +61,9 @@ const renderPaymentForm = () => {
                 </label>
                 <input
                   type="password"
+                  name="card_cvv"
+                  value={formData.card_cvv || ""}
+                  onChange={handleChange}
                   placeholder="123"
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
                 />
@@ -57,6 +76,9 @@ const renderPaymentForm = () => {
               </label>
               <input
                 type="text"
+                name="card_holder_name"
+                value={formData.card_holder_name || ""}
+                onChange={handleChange}
                 placeholder="John Doe"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
               />
@@ -75,6 +97,9 @@ const renderPaymentForm = () => {
                 <FaMobileAlt className="absolute left-4 top-3.5 text-gray-400" />
                 <input
                   type="tel"
+                  name="jazzcash_number"
+                  value={formData.jazzcash_number || ""}
+                  onChange={handleChange}
                   placeholder="0300 1234567"
                   className="w-full pl-12 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
                 />
@@ -87,6 +112,9 @@ const renderPaymentForm = () => {
               </label>
               <input
                 type="text"
+                name="jazzcash_account_name"
+                value={formData.jazzcash_account_name || ""}
+                onChange={handleChange}
                 placeholder="John Doe"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
               />
@@ -114,6 +142,9 @@ const renderPaymentForm = () => {
                 <FaWallet className="absolute left-4 top-3.5 text-gray-400" />
                 <input
                   type="tel"
+                  name="easypaisa_number"
+                  value={formData.easypaisa_number || ""}
+                  onChange={handleChange}
                   placeholder="0345 1234567"
                   className="w-full pl-12 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
                 />
@@ -126,6 +157,9 @@ const renderPaymentForm = () => {
               </label>
               <input
                 type="text"
+                name="easypaisa_account_name"
+                value={formData.easypaisa_account_name || ""}
+                onChange={handleChange}
                 placeholder="John Doe"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
               />
@@ -149,7 +183,12 @@ const renderPaymentForm = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Bank Name
               </label>
-              <select className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all">
+              <select
+                name="bank_name"
+                value={formData.bank_name || ""}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
+              >
                 <option value="">Select your bank</option>
                 <option value="hbl">HBL</option>
                 <option value="ubl">UBL</option>
@@ -166,6 +205,9 @@ const renderPaymentForm = () => {
               </label>
               <input
                 type="text"
+                name="bank_account_number"
+                value={formData.bank_account_number || ""}
+                onChange={handleChange}
                 placeholder="12345678901"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
               />
@@ -177,6 +219,9 @@ const renderPaymentForm = () => {
               </label>
               <input
                 type="text"
+                name="bank_account_holder_name"
+                value={formData.bank_account_holder_name || ""}
+                onChange={handleChange}
                 placeholder="John Doe"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all"
               />
@@ -184,7 +229,7 @@ const renderPaymentForm = () => {
 
             <div className="bg-primary border border-primary rounded-xl p-4">
               <p className="text-sm text-white">
-                 <strong>Bank Transfer Details:</strong><br />
+                <strong>Bank Transfer Details:</strong><br />
                 Account: BitcoderLabs PVT LTD<br />
                 Bank: HBL Main Branch<br />
                 Account #: 1234-5678901-2<br />
@@ -199,7 +244,7 @@ const renderPaymentForm = () => {
     }
   };
 
-  
+
   // Payment method configuration
   const paymentMethods = [
     { id: "card", name: "Card", icon: FaCreditCard },
@@ -228,11 +273,10 @@ const renderPaymentForm = () => {
                 key={method.id}
                 type="button"
                 onClick={() => setSelectedPayment(method.id)}
-                className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl font-medium transition-all ${
-                  isSelected
+                className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl font-medium transition-all ${isSelected
                     ? "border-[#3baee9] bg-[#e8f7ff] text-[#2a9fd8]"
                     : "border-gray-200 text-gray-600 hover:border-[#3baee9] hover:bg-[#e8f7ff]"
-                }`}
+                  }`}
               >
                 <IconComponent className="text-xl mb-2" />
                 <span className="text-sm">{method.name}</span>

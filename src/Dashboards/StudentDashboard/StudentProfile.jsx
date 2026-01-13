@@ -10,6 +10,7 @@ import Settings from './Settings';
 import Certificates from './Certificates';
 import { FiLogOut } from 'react-icons/fi';
 import { logoutAsync } from '../../../slices/AuthSlice';
+import { fetchMyCourses, selectCourses } from '../../../slices/courseSlice';
 
 const UserDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
@@ -29,26 +30,38 @@ const UserDashboard = () => {
     }
   }, [isAuthenticated, loading, navigate]);
 
+  const enrolledCoursesList = useSelector(selectCourses);
+
+  useEffect(() => {
+    dispatch(fetchMyCourses());
+  }, [dispatch]);
+
+  const completedCount = enrolledCoursesList.filter(c => c.status === 'completed' || c.progress === 100).length;
+  const totalEnrolled = enrolledCoursesList.length;
+  const avgProgress = totalEnrolled > 0
+    ? Math.round(enrolledCoursesList.reduce((acc, curr) => acc + (curr.progress || 0), 0) / totalEnrolled)
+    : 0;
+
   const userData = {
     id: user?.id || 1,
     name: user?.name || 'Student',
     email: user?.email || 'student@example.com',
-    avatar: user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face',
-    joinDate: 'March 2024',
-    title: user?.role === 'student' ? 'Student' : 'Full Stack Developer',
-    bio: 'Passionate about building digital experiences that make a difference.',
-    level: 'Beginner',
-    points: 0,
-    streak: 0,
-    completedCourses: 0,
-    enrolledCourses: 0,
-    completionRate: 0
+    avatar: user?.avatar || null,
+    joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'March 2024',
+    title: user?.role === 'student' ? 'Student' : (user?.role || 'Learner'),
+    bio: user?.bio || 'Passionate about building digital experiences that make a difference.',
+    level: avgProgress > 70 ? 'Advanced' : (avgProgress > 30 ? 'Intermediate' : 'Beginner'),
+    points: user?.points || (completedCount * 100),
+    streak: user?.streak || 0,
+    completedCourses: completedCount,
+    enrolledCourses: totalEnrolled,
+    completionRate: avgProgress
   };
 
   const renderMainContent = () => {
     switch (activeSection) {
       case 'overview':
-        return <DashboardOverview userData={userData} />;
+        return <DashboardOverview userData={userData} setActiveSection={setActiveSection} />;
       case 'courses':
         return <MyCourses />;
       case 'progress':

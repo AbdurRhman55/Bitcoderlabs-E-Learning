@@ -4,18 +4,21 @@ import HeaderSection from "./HeaderSection";
 import ModuleCard from "./ModuleCard";
 import DownloadSection from "./DownloadSection";
 
-const CurriculumSection = () => {
+const CurriculumSection = ({ course }) => {
   const [expandedModule, setExpandedModule] = useState(null);
   const toggleModule = (id) =>
     setExpandedModule(expandedModule === id ? null : id);
 
+  // Use dynamic modules if available, otherwise fall back to dummy data
+  const modules = Array.isArray(course?.modules) ? course.modules : (Syllabus.modules || []);
+
   return (
     <div className="max-w-6xl mx-auto py-20 px-4">
-      <HeaderSection Syllabus={Syllabus} />
+      <HeaderSection Syllabus={course?.modules ? { modules: course.modules } : Syllabus} />
       <div className="space-y-6">
-        {Syllabus.modules.map((module, index) => (
+        {modules.map((module, index) => (
           <ModuleCard
-            key={module.id}
+            key={module.id || index}
             module={module}
             index={index}
             expandedModule={expandedModule}

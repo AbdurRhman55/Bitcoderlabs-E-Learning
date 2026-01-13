@@ -2,28 +2,26 @@ import React from "react";
 import { courseData } from "../../../../Data/Courses.Array";
 import Button from "../../UI/Button";
 import { FaShieldAlt, FaBolt, FaLock, FaCreditCard } from "react-icons/fa";
-// import { useAuth } from "../../Auth/AuthLogic";
-import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-export default function Heroright() {
-  // const { user } = useAuth();
-  // Temporary mock user while auth is not wired. Replace when integrating auth provider.
-  const user = null;
+export default function Heroright({ course }) {
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
   const handleEnroll = () => {
-    if (!user) {
-      alert("Plloginease login to enroll in the course.");
-      navigate("/");    
+    if (!isAuthenticated) {
+      alert("Please log in to your account to enroll in this course. Redirection to login page...");
+      navigate("/login");
       return;
     }
 
-    if (courseData.price === 0) {
+    if (course?.price === 0) {
       alert("Successfully enrolled in free course!");
-      navigate(`/course/${courseData.id || 1}/content`); //  redirect to course content
+      navigate(`/course/${course?.id}/content`); //  redirect to course content
     } else {
       alert("Redirecting to payment...");
-      navigate(`/Enroll/${courseData.id || 1}`); //  redirect to payment page
+      navigate(`/Enroll/${course?.id}`); //  redirect to payment page
     }
   };
 
@@ -36,10 +34,10 @@ export default function Heroright() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-4 mb-2">
               <span className="text-4xl font-bold text-gray-900">
-                {courseData.price}
+                {course?.price === 0 || course?.price === "0" ? "Free" : `Rs ${course?.price}`}
               </span>
               <span className="text-lg text-gray-400 line-through">
-                {courseData.originalPrice}
+                {course?.original_price ? `Rs ${course.original_price}` : ""}
               </span>
               <span className="px-2 bg-red-100 text-red-600 text-sm font-bold rounded-full">
                 40% OFF
@@ -53,13 +51,13 @@ export default function Heroright() {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center py-2 bg-gradient-to-br from-[#e8f7ff] to-white rounded-2xl border border-[#e8f7ff] hover:border-[#3baee9] transition-colors duration-300">
                 <div className="text-xl font-bold text-[#3baee9] ">
-                  {courseData.duration}
+                  {course?.duration || "0h"}
                 </div>
                 <div className="text-gray-600 text-sm font-medium">Duration</div>
               </div>
               <div className="text-center py-2 bg-gradient-to-br from-[#e8f7ff] to-white rounded-2xl border border-[#e8f7ff] hover:border-[#3baee9] transition-colors duration-300">
-                <div className="text-xl font-bold text-[#3baee9] ">
-                  {courseData.level}
+                <div className="text-xl font-bold text-[#3baee9] capitalize">
+                  {course?.level || "All Levels"}
                 </div>
                 <div className="text-gray-600 text-sm font-medium">Level</div>
               </div>
@@ -68,12 +66,14 @@ export default function Heroright() {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center py-2 bg-gradient-to-br from-[#e8f7ff] to-white rounded-2xl border border-[#e8f7ff] hover:border-[#3baee9] transition-colors duration-300">
                 <div className="text-xl font-bold text-[#3baee9] ">
-                  {courseData.students}
+                  {course?.students_count || 0}
                 </div>
                 <div className="text-gray-600 text-sm font-medium">Students</div>
               </div>
               <div className="text-center py-2 bg-gradient-to-br from-[#e8f7ff] to-white rounded-2xl border border-[#e8f7ff] hover:border-[#3baee9] transition-colors duration-300">
-                <div className="text-xl font-bold text-[#3baee9] ">12</div>
+                <div className="text-xl font-bold text-[#3baee9] ">
+                  {course?.projects_count || 0}
+                </div>
                 <div className="text-gray-600 text-sm font-medium">Projects</div>
               </div>
             </div>
@@ -81,18 +81,16 @@ export default function Heroright() {
 
           {/* Enrollment CTA */}
           <div className="space-y-4">
-            <Link to="/enroll/:id">
             <Button
               onClick={handleEnroll}
               text={
-                courseData.price === 0
+                course?.price === 0 || course?.price === "0"
                   ? "Enroll Free"
-                  : `Enroll Now – Rs ${courseData.price}`
+                  : `Enroll Now – Rs ${course?.price}`
               }
               variant="squarefull"
               size="lg"
             />
-            </Link>
 
             <div className="text-center space-y-3">
               <p className="text-gray-500 text-sm font-medium">

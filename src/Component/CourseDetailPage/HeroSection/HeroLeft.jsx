@@ -1,7 +1,12 @@
 import React from "react";
 import { courseData } from "../../../../Data/Courses.Array";
 import Button from "../../UI/Button";
+import { API_ORIGIN } from "../../../api/index";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
+
+const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
 
 export default function HeroLeft({ course }) {
   // Helper to parse potentially double-encoded JSON arrays
@@ -23,7 +28,7 @@ export default function HeroLeft({ course }) {
     }
   };
 
-  // const badges = parseList(course.badges || course.tags);
+  const badges = parseList(course.badges || course.tags);
   const features = parseList(course.features);
   const rating = course.rating || 0;
   const reviews = course.reviews_count || course.reviews || 0;
@@ -31,12 +36,30 @@ export default function HeroLeft({ course }) {
   const instructorRole = course.instructor?.role || "Instructor";
   // Determine avatar source
   const instructorAvatar = course.instructor?.avatar;
-  // If it looks like a relative path from DB (e.g. "instructors/..."), you might need to prepend base URL
-  // For now we use it as is or fallback
-  const avatarSrc = instructorAvatar
-    ? (instructorAvatar.startsWith('http') || instructorAvatar.startsWith('data') ? instructorAvatar : `/${instructorAvatar}`)
-    : "https://via.placeholder.com/40";
 
+  const avatarSrc = instructorAvatar
+    ? (instructorAvatar.startsWith('http') || instructorAvatar.startsWith('data')
+      ? instructorAvatar
+      : `${API_ORIGIN}/storage/${instructorAvatar.startsWith('/') ? instructorAvatar.substring(1) : instructorAvatar}`)
+    : PLACEHOLDER_IMAGE;
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  const handleEnroll = () => {
+    if (!isAuthenticated) {
+      alert("Please log in to your account to enroll in this course. Redirection to login page...");
+      navigate("/login");
+      return;
+    }
+
+    if (course?.price === 0 || course?.price === "0") {
+      alert("Successfully enrolled in free course!");
+      navigate(`/course/${course?.id}/content`);
+    } else {
+      alert("Redirecting to payment...");
+      navigate(`/Enroll/${course?.id}`);
+    }
+  };
 
   return (
     <div>
@@ -59,7 +82,7 @@ export default function HeroLeft({ course }) {
             {course.title}
           </h1>
           <p className="text-2xl text-gray-600 leading-relaxed font-light">
-            {course.tagline || course.short_description}
+            {course.description || course.short_description}
           </p>
         </div>
 
@@ -86,7 +109,12 @@ export default function HeroLeft({ course }) {
               src={avatarSrc}
               alt={instructorName}
               className="w-10 h-10 rounded-full object-cover"
-              onError={(e) => { e.target.src = "https://via.placeholder.com/40"; }}
+              onError={(e) => {
+                if (e.target.src !== PLACEHOLDER_IMAGE) {
+                  e.target.onerror = null;
+                  e.target.src = PLACEHOLDER_IMAGE;
+                }
+              }}
             />
 
             <div>
@@ -100,19 +128,12 @@ export default function HeroLeft({ course }) {
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          {features.map((feature, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-[#3baee9] rounded-full"></div>
-              <span className="text-gray-700 font-medium">{feature}</span>
-            </div>
-          ))}
-        </div>
+
 
         {/* Primary CTA */}
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <Button
+            onClick={handleEnroll}
             text="Enroll Now"
           />
           <Button
