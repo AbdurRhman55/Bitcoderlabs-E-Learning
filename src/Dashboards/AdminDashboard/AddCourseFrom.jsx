@@ -125,8 +125,6 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
 
     setLoading(true);
     try {
-
-
       // Prepare data for submission
       let submitData = course;
 
@@ -135,29 +133,45 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         const formData = new FormData();
 
         // Add all course fields to FormData
-        // For updates, ensure required fields are included even if empty
         const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
 
         Object.keys(course).forEach(key => {
           const value = course[key];
           const isRequiredField = requiredFields.includes(key);
 
-          // Include field if it has a value, or if it's a required field (even if empty, to allow Laravel to validate)
-          if (value !== null && value !== undefined && (value !== '' || isRequiredField)) {
-            if (key === 'features' || key === 'tags') {
-              // JSON stringify arrays
-              formData.append(key, JSON.stringify(value || []));
-            } else if (key === 'image') {
-              // Handle file upload
-              formData.append('image', value);
-            } else if (key === 'is_featured' || key === 'is_active') {
-              // Convert boolean to integer for Laravel validation
-              formData.append(key, value ? '1' : '0');
+          // Handle different field types
+          if (key === 'features' || key === 'tags') {
+            // JSON stringify arrays - ensure empty arrays if null/undefined
+            formData.append(key, JSON.stringify(value || []));
+          } else if (key === 'image') {
+            // Handle file upload
+            formData.append('image', value);
+          } else if (key === 'is_featured' || key === 'is_active') {
+            // Convert boolean to integer for Laravel validation
+            formData.append(key, value ? '1' : '0');
+          } else if (value !== null && value !== undefined && (value !== '' || isRequiredField)) {
+            // For numeric fields, ensure they have a value even if 0
+            if (key === 'reviews_count' || key === 'students_count' || key === 'rating') {
+              formData.append(key, value.toString()); // Convert to string
             } else {
               formData.append(key, value || '');
             }
           }
         });
+
+        // CRITICAL FIX: Ensure all required numeric fields are present
+        if (!formData.has('reviews_count')) {
+          formData.append('reviews_count', course.reviews_count?.toString() || '0');
+        }
+        if (!formData.has('students_count')) {
+          formData.append('students_count', course.students_count?.toString() || '0');
+        }
+        if (!formData.has('rating')) {
+          formData.append('rating', course.rating?.toString() || '0');
+        }
+        if (!formData.has('price')) {
+          formData.append('price', course.price?.toString() || '0');
+        }
 
         // Ensure boolean fields are included
         if (!formData.has('is_featured')) {
@@ -169,6 +183,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
 
         submitData = formData;
       } else {
+        // For non-FormData submission (without image)
         submitData = {
           ...course,
           short_description: course.short_description || null,

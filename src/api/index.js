@@ -1,5 +1,4 @@
 export const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
-
 export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 class ApiClient {
@@ -7,11 +6,9 @@ class ApiClient {
     this.baseURL = API_BASE_URL;
   }
 
-
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem("token");
-    console.log(token);
 
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
@@ -29,26 +26,22 @@ class ApiClient {
         delete config.headers["Content-Type"];
       }
     } else {
-      // Default to JSON if caller didn't specify a content type.
       if (config.headers && !config.headers["Content-Type"]) {
         config.headers["Content-Type"] = "application/json";
       }
     }
 
     const response = await fetch(url, config);
-
-    // Check if response is JSON before parsing
     const contentType = response.headers.get("content-type");
+
     if (!contentType || !contentType.includes("application/json")) {
-      // For non-JSON responses, check if it's an auth issue
       if (response.status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login"; // Redirect to login
+        window.location.href = "/login";
         throw new Error("Authentication failed. Please log in again.");
       }
-      // For other non-JSON responses (like validation errors returning HTML), don't clear token
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}. Server returned non-JSON response. Check if all required fields are filled.`);
+        throw new Error(`HTTP error! status: ${response.status}. Server returned non-JSON response.`);
       }
       throw new Error("Server returned non-JSON response");
     }
@@ -56,10 +49,9 @@ class ApiClient {
     const data = await response.json();
 
     if (!response.ok) {
-      // Handle authentication errors
       if (response.status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login"; // Redirect to login
+        window.location.href = "/login";
         throw new Error("Authentication failed. Please log in again.");
       }
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
@@ -95,12 +87,7 @@ class ApiClient {
     return this.request("/me");
   }
 
-  // Update current user's own profile (for students)
-  // Update current user's own profile (for students)
   async updateMyProfile(id, userData) {
-    console.log('Updating profile for user ID:', id);
-    console.log('User data:', userData);
-
     return this.request(`/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
@@ -118,11 +105,9 @@ class ApiClient {
     return this.request(`/users${queryString ? `?${queryString}` : ""}`);
   }
 
-  // Get single user by ID
   async getUserById(id) {
     return this.request(`/users/${id}`);
   }
-
 
   async createUser(userData) {
     return this.request("/users", {
@@ -141,8 +126,6 @@ class ApiClient {
   async updateProfile(id, userData) {
     const isFormData = typeof FormData !== 'undefined' && userData instanceof FormData;
 
-    // If we have an ID, we use the specific user endpoint
-    // Using POST + _method: PUT is often more reliable than direct PUT/PATCH
     if (id) {
       if (isFormData) {
         if (!userData.has('_method')) {
@@ -163,7 +146,6 @@ class ApiClient {
       });
     }
 
-    // Default to /me for self-updates (GET only usually, but kept for fallback)
     if (isFormData) {
       if (!userData.has('_method')) {
         userData.append('_method', 'PUT');
@@ -198,28 +180,109 @@ class ApiClient {
     return this.request(`/courses${queryString ? `?${queryString}` : ""}`);
   }
 
-  // Get single course by ID
   async getCourseById(id) {
     return this.request(`/courses/${id}`);
   }
-
 
   async getMyCourses(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/courses/my${queryString ? `?${queryString}` : ""}`);
   }
 
-  // courses modules
+  // Module Management
   async getCourseModules(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/course-modules${queryString ? `?${queryString}` : ""}`);
   }
 
+  async createModule(moduleData) {
+    const isFormData = typeof FormData !== 'undefined' && moduleData instanceof FormData;
+    if (isFormData) {
+      if (!moduleData.has('_method')) {
+        moduleData.append('_method', 'POST');
+      }
+      return this.request("/course-modules", {
+        method: "POST",
+        body: moduleData,
+      });
+    }
 
-  // courses lessons
+    return this.request("/course-modules", {
+      method: "POST",
+      body: JSON.stringify(moduleData),
+    });
+  }
+
+  async updateModule(id, moduleData) {
+    const isFormData = typeof FormData !== 'undefined' && moduleData instanceof FormData;
+    if (isFormData) {
+      if (!moduleData.has('_method')) {
+        moduleData.append('_method', 'PUT');
+      }
+      return this.request(`/course-modules/${id}`, {
+        method: "POST",
+        body: moduleData,
+      });
+    }
+
+    return this.request(`/course-modules/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(moduleData),
+    });
+  }
+
+  async deleteModule(id) {
+    return this.request(`/course-modules/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Lesson Management
   async getModuleLessons(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/course-lessons${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async createLesson(lessonData) {
+    const isFormData = typeof FormData !== 'undefined' && lessonData instanceof FormData;
+    if (isFormData) {
+      if (!lessonData.has('_method')) {
+        lessonData.append('_method', 'POST');
+      }
+      return this.request("/course-lessons", {
+        method: "POST",
+        body: lessonData,
+      });
+    }
+
+    return this.request("/course-lessons", {
+      method: "POST",
+      body: JSON.stringify(lessonData),
+    });
+  }
+
+  async updateLesson(id, lessonData) {
+    const isFormData = typeof FormData !== 'undefined' && lessonData instanceof FormData;
+    if (isFormData) {
+      if (!lessonData.has('_method')) {
+        lessonData.append('_method', 'PUT');
+      }
+      return this.request(`/course-lessons/${id}`, {
+        method: "POST",
+        body: lessonData,
+      });
+    }
+
+    return this.request(`/course-lessons/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(lessonData),
+    });
+  }
+
+  async deleteLesson(id) {
+    return this.request(`/course-lessons/${id}`, {
+      method: "DELETE",
+    });
   }
 
   // Instructor Course Requests
@@ -350,8 +413,6 @@ class ApiClient {
   }
 
   async updateInstructor(id, instructorData) {
-    console.log(id);
-
     const isFormData = typeof FormData !== 'undefined' && instructorData instanceof FormData;
     if (isFormData) {
       if (!instructorData.has('_method')) {

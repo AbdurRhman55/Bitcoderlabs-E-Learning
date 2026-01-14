@@ -2,11 +2,508 @@ import React, { useState, useEffect, Fragment } from "react";
 import { useSelector } from 'react-redux';
 import AddCourseForm from "./AddCourseFrom";
 import Button from "../../Component/UI/Button";
-import { Edit2, RefreshCw, Trash2, ChevronDown, ChevronRight, Book, PlayCircle, Plus, Minus, FileText, Video, Link } from "lucide-react";
+import { Edit2, RefreshCw, Trash2, ChevronDown, ChevronRight, Book, PlayCircle, Plus, Minus, FileText, Video, Link, X, Clock } from "lucide-react";
 import { apiClient } from '../../../src/api/index.js';
 import { API_ORIGIN } from "../../api/index.js";
 
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
+// Module Form Component
+function AddModuleForm({ onClose, onSubmit, initialData, courseId, courses }) {
+  const [formData, setFormData] = useState({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    course_id: courseId || initialData?.course_id || '',
+    order: initialData?.order || '',
+    is_published: initialData?.is_published ?? true,
+    prerequisites: initialData?.prerequisites || '',
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!formData.title.trim()) {
+        throw new Error('Module title is required');
+      }
+      if (!formData.course_id) {
+        throw new Error('Please select a course');
+      }
+
+      const submitData = {
+        ...formData,
+        order: formData.order ? parseInt(formData.order) : null,
+        course_id: parseInt(formData.course_id),
+        is_published: Boolean(formData.is_published),
+      };
+
+      console.log('Submitting module data:', submitData);
+
+      if (initialData?.id) {
+        await apiClient.updateModule(initialData.id, submitData);
+      } else {
+        await apiClient.createModule(submitData);
+      }
+
+      onSubmit(submitData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving module:', error);
+      setError(error.message || 'Failed to save module. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {initialData?.id ? 'Edit Module' : 'Add New Module'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Module Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter module title"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Describe what this module covers"
+              />
+            </div>
+
+            {!courseId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Course *
+                </label>
+                <select
+                  name="course_id"
+                  value={formData.course_id}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Select a course</option>
+                  {courses.map(course => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Order (Optional)
+                </label>
+                <input
+                  type="number"
+                  name="order"
+                  value={formData.order}
+                  onChange={handleChange}
+                  min="1"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Display order"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Prerequisites
+                </label>
+                <input
+                  type="text"
+                  name="prerequisites"
+                  value={formData.prerequisites}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Module prerequisites"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="is_published"
+                name="is_published"
+                checked={formData.is_published}
+                onChange={handleChange}
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="is_published" className="ml-2 text-sm text-gray-700">
+                Publish module immediately
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : initialData?.id ? 'Update Module' : 'Create Module'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Lesson Form Component
+function AddLessonForm({ onClose, onSubmit, initialData, moduleId }) {
+  const [formData, setFormData] = useState({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    content: initialData?.content || '',
+    lesson_type: initialData?.lesson_type || 'video',
+    video_url: initialData?.video_url || '',
+    duration: initialData?.duration || '',
+    order: initialData?.order || '',
+    module_id: moduleId || initialData?.module_id || '',
+    is_free: initialData?.is_free || false,
+    is_preview: initialData?.is_preview || false,
+    is_published: initialData?.is_published ?? true,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!formData.title.trim()) {
+        throw new Error('Lesson title is required');
+      }
+      if (!formData.module_id) {
+        throw new Error('Module is required');
+      }
+
+      const submitData = {
+        ...formData,
+        order: formData.order ? parseInt(formData.order) : null,
+        module_id: parseInt(formData.module_id),
+        duration: formData.duration || null,
+      };
+
+      console.log('Submitting lesson data:', submitData);
+
+      if (initialData?.id) {
+        await apiClient.updateLesson(initialData.id, submitData);
+      } else {
+        await apiClient.createLesson(submitData);
+      }
+
+      onSubmit(submitData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving lesson:', error);
+      setError(error.message || 'Failed to save lesson. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {initialData?.id ? 'Edit Lesson' : 'Add New Lesson'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lesson Title *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter lesson title"
+                  required
+                />
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="2"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Brief description of the lesson"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lesson Type *
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="lesson_type"
+                      value="video"
+                      checked={formData.lesson_type === 'video'}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <div className="flex items-center">
+                      <Video className="w-4 h-4 mr-2" />
+                      <span>Video</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="lesson_type"
+                      value="article"
+                      checked={formData.lesson_type === 'article'}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 mr-2" />
+                      <span>Article</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="lesson_type"
+                      value="quiz"
+                      checked={formData.lesson_type === 'quiz'}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600"
+                    />
+                    <div className="flex items-center">
+                      <Link className="w-4 h-4 mr-2" />
+                      <span>Quiz</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Duration
+                  </div>
+                </label>
+                <input
+                  type="text"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., 15:30 or 45 min"
+                />
+              </div>
+
+              {formData.lesson_type === 'video' && (
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Video URL (YouTube, Vimeo, etc.)
+                  </label>
+                  <input
+                    type="url"
+                    name="video_url"
+                    value={formData.video_url}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+              )}
+
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lesson Content *
+                </label>
+                <textarea
+                  name="content"
+                  value={formData.content}
+                  onChange={handleChange}
+                  rows="6"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                  placeholder="Enter your lesson content here..."
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  For articles: Write your content. For quizzes: Enter quiz questions and answers in JSON format.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Order (Optional)
+                </label>
+                <input
+                  type="number"
+                  name="order"
+                  value={formData.order}
+                  onChange={handleChange}
+                  min="1"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Display order"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="is_free"
+                    checked={formData.is_free}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <span className="text-sm text-gray-700">Free Lesson</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="is_preview"
+                    checked={formData.is_preview}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Available as Preview</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="is_published"
+                    checked={formData.is_published}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Publish Immediately</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : initialData?.id ? 'Update Lesson' : 'Create Lesson'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
@@ -22,6 +519,14 @@ export default function CoursesPage() {
   const [courseModules, setCourseModules] = useState({});
   const [loadingModules, setLoadingModules] = useState({});
   const [expandedModules, setExpandedModules] = useState({});
+
+  // Module and Lesson Management States
+  const [showModuleForm, setShowModuleForm] = useState(false);
+  const [showLessonForm, setShowLessonForm] = useState(false);
+  const [selectedCourseForModule, setSelectedCourseForModule] = useState(null);
+  const [selectedModuleForLesson, setSelectedModuleForLesson] = useState(null);
+  const [editingModule, setEditingModule] = useState(null);
+  const [editingLesson, setEditingLesson] = useState(null);
 
   const { user, isAuthenticated } = useSelector(state => state.auth);
 
@@ -48,6 +553,8 @@ export default function CoursesPage() {
         // Reset expanded states when fetching new courses
         setExpandedCourses({});
         setExpandedModules({});
+        // Clear course modules cache
+        setCourseModules({});
       } else {
         setCourses([]);
         setPagination(null);
@@ -80,6 +587,18 @@ export default function CoursesPage() {
       if (isFormData) {
         console.log('Received FormData, using directly for API call');
         submitData = courseData;
+
+        // CRITICAL: Ensure all required fields are included in FormData
+        // Add numeric fields with default values if not present
+        if (!submitData.has('reviews_count')) {
+          submitData.append('reviews_count', '0');
+        }
+        if (!submitData.has('students_count')) {
+          submitData.append('students_count', '0');
+        }
+        if (!submitData.has('rating')) {
+          submitData.append('rating', '0');
+        }
         if (!submitData.has('is_featured')) submitData.append('is_featured', '0');
         if (!submitData.has('is_active')) submitData.append('is_active', '1');
         if (!submitData.has('features')) submitData.append('features', '[]');
@@ -175,7 +694,7 @@ export default function CoursesPage() {
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
+    if (window.confirm("Are you sure you want to delete this course? This will also delete all modules and lessons in this course.")) {
       try {
         setIsOperationInProgress(true);
         await apiClient.deleteCourse(courseId);
@@ -187,6 +706,12 @@ export default function CoursesPage() {
           return newExpanded;
         });
         setExpandedModules({});
+        // Remove course modules from cache
+        setCourseModules(prev => {
+          const newCourseModules = { ...prev };
+          delete newCourseModules[courseId];
+          return newCourseModules;
+        });
         setTimeout(() => fetchCourses(currentPage, false), 1000);
       } catch (error) {
         console.error('Error deleting course:', error);
@@ -197,7 +722,208 @@ export default function CoursesPage() {
     }
   };
 
-  // Fetch modules and lessons for a specific course
+  // Module Management Functions - SINGLE DECLARATION
+  const handleAddModuleClick = (courseId = null) => {
+    if (courseId) {
+      setSelectedCourseForModule(courseId);
+    }
+    setEditingModule(null);
+    setShowModuleForm(true);
+  };
+
+  const handleEditModule = (module, courseId) => {
+    setEditingModule(module);
+    setSelectedCourseForModule(courseId);
+    setShowModuleForm(true);
+  };
+
+  const handleDeleteModule = async (moduleId, courseId) => {
+    if (window.confirm("Are you sure you want to delete this module and all its lessons?")) {
+      try {
+        setIsOperationInProgress(true);
+        await apiClient.deleteModule(moduleId);
+
+        // Remove module from state
+        setCourseModules(prev => ({
+          ...prev,
+          [courseId]: prev[courseId]?.filter(module => module.id !== moduleId) || []
+        }));
+
+        // Clear expanded state for this module
+        setExpandedModules(prev => {
+          const newExpanded = { ...prev };
+          delete newExpanded[moduleId];
+          return newExpanded;
+        });
+      } catch (error) {
+        console.error('Error deleting module:', error);
+        alert('Failed to delete module. Please try again.');
+      } finally {
+        setIsOperationInProgress(false);
+      }
+    }
+  };
+
+  const handleSubmitModule = async (moduleData) => {
+    try {
+      setIsOperationInProgress(true);
+
+      // Get course_id from moduleData or selectedCourseForModule
+      const courseId = moduleData.course_id || selectedCourseForModule;
+
+      if (!courseId) {
+        throw new Error('Course ID is required');
+      }
+
+      // Prepare data for submission
+      const dataToSubmit = {
+        ...moduleData,
+        course_id: parseInt(courseId),
+      };
+
+      console.log('Submitting module:', dataToSubmit);
+
+      let response;
+      if (editingModule) {
+        response = await apiClient.updateModule(editingModule.id, dataToSubmit);
+
+        // Update module in state
+        if (courseId) {
+          setCourseModules(prev => ({
+            ...prev,
+            [courseId]: prev[courseId]?.map(module =>
+              module.id === editingModule.id ? { ...module, ...response.data } : module
+            ) || []
+          }));
+        }
+      } else {
+        response = await apiClient.createModule(dataToSubmit);
+
+        // Add new module to state
+        const newModule = response.data;
+        if (courseId) {
+          setCourseModules(prev => ({
+            ...prev,
+            [courseId]: [...(prev[courseId] || []), newModule]
+          }));
+        }
+      }
+
+      setShowModuleForm(false);
+      setEditingModule(null);
+      setSelectedCourseForModule(null);
+
+    } catch (error) {
+      console.error('Error saving module:', error);
+      alert(error.message || 'Failed to save module. Please try again.');
+    } finally {
+      setIsOperationInProgress(false);
+    }
+  };
+
+  // Lesson Management Functions
+  const handleAddLessonClick = (moduleId, courseId) => {
+    setSelectedModuleForLesson({ moduleId, courseId });
+    setEditingLesson(null);
+    setShowLessonForm(true);
+  };
+
+  const handleEditLesson = (lesson, moduleId, courseId) => {
+    setEditingLesson(lesson);
+    setSelectedModuleForLesson({ moduleId, courseId });
+    setShowLessonForm(true);
+  };
+
+  const handleDeleteLesson = async (lessonId, moduleId, courseId) => {
+    if (window.confirm("Are you sure you want to delete this lesson?")) {
+      try {
+        setIsOperationInProgress(true);
+        await apiClient.deleteLesson(lessonId);
+
+        // Remove lesson from state
+        setCourseModules(prev => ({
+          ...prev,
+          [courseId]: prev[courseId]?.map(module => {
+            if (module.id === moduleId) {
+              return {
+                ...module,
+                lessons: module.lessons?.filter(lesson => lesson.id !== lessonId) || []
+              };
+            }
+            return module;
+          }) || []
+        }));
+      } catch (error) {
+        console.error('Error deleting lesson:', error);
+        alert('Failed to delete lesson. Please try again.');
+      } finally {
+        setIsOperationInProgress(false);
+      }
+    }
+  };
+
+  const handleSubmitLesson = async (lessonData) => {
+    try {
+      setIsOperationInProgress(true);
+
+      const dataToSubmit = {
+        ...lessonData,
+        module_id: lessonData.module_id || selectedModuleForLesson.moduleId,
+      };
+
+      console.log('Submitting lesson:', dataToSubmit);
+
+      let response;
+      if (editingLesson) {
+        response = await apiClient.updateLesson(editingLesson.id, dataToSubmit);
+
+        // Update lesson in state
+        setCourseModules(prev => ({
+          ...prev,
+          [selectedModuleForLesson.courseId]: prev[selectedModuleForLesson.courseId]?.map(module => {
+            if (module.id === selectedModuleForLesson.moduleId) {
+              return {
+                ...module,
+                lessons: module.lessons?.map(lesson =>
+                  lesson.id === editingLesson.id ? { ...lesson, ...response.data } : lesson
+                ) || []
+              };
+            }
+            return module;
+          }) || []
+        }));
+      } else {
+        response = await apiClient.createLesson(dataToSubmit);
+
+        // Add new lesson to state
+        const newLesson = response.data;
+        setCourseModules(prev => ({
+          ...prev,
+          [selectedModuleForLesson.courseId]: prev[selectedModuleForLesson.courseId]?.map(module => {
+            if (module.id === selectedModuleForLesson.moduleId) {
+              return {
+                ...module,
+                lessons: [...(module.lessons || []), newLesson]
+              };
+            }
+            return module;
+          }) || []
+        }));
+      }
+
+      setShowLessonForm(false);
+      setEditingLesson(null);
+      setSelectedModuleForLesson(null);
+
+    } catch (error) {
+      console.error('Error saving lesson:', error);
+      alert(error.message || 'Failed to save lesson. Please try again.');
+    } finally {
+      setIsOperationInProgress(false);
+    }
+  };
+
+  // Fetch modules for a specific course
   const fetchCourseModules = async (courseId) => {
     try {
       setLoadingModules(prev => ({ ...prev, [courseId]: true }));
@@ -205,27 +931,17 @@ export default function CoursesPage() {
       const modulesResponse = await apiClient.getCourseModules({ course_id: courseId });
       const modules = modulesResponse.data || [];
 
-      const modulesWithLessons = await Promise.all(
-        modules.map(async (module) => {
-          try {
-            const lessonsResponse = await apiClient.getModuleLessons({ module_id: module.id });
-            return {
-              ...module,
-              lessons: lessonsResponse.data || []
-            };
-          } catch (error) {
-            console.error(`Error fetching lessons for module ${module.id}:`, error);
-            return {
-              ...module,
-              lessons: []
-            };
-          }
-        })
-      );
+      console.log(`Fetched modules for course ${courseId}:`, modules);
+
+      // Create a cache of modules without lessons initially
+      const modulesCache = modules.map(module => ({
+        ...module,
+        lessons: [] // Initialize with empty lessons array
+      }));
 
       setCourseModules(prev => ({
         ...prev,
-        [courseId]: modulesWithLessons
+        [courseId]: modulesCache
       }));
     } catch (error) {
       console.error('Error fetching course modules:', error);
@@ -238,12 +954,13 @@ export default function CoursesPage() {
     }
   };
 
-  // Toggle course expansion - ALL modules will be collapsed by default
+  // Toggle course expansion
   const toggleCourseExpansion = async (courseId) => {
     const isCurrentlyExpanded = expandedCourses[courseId];
 
     // If we're expanding, fetch modules if not already loaded
-    if (!isCurrentlyExpanded && !courseModules[courseId]) {
+    if (!isCurrentlyExpanded) {
+      // Always fetch fresh modules when expanding
       await fetchCourseModules(courseId);
     }
 
@@ -259,8 +976,56 @@ export default function CoursesPage() {
     }
   };
 
-  // Toggle module expansion - only one module can be expanded at a time
-  const toggleModuleExpansion = (moduleId, courseId) => {
+  // Fetch lessons for a specific module
+  const fetchModuleLessons = async (moduleId, courseId) => {
+    try {
+      const lessonsResponse = await apiClient.getModuleLessons({ module_id: moduleId });
+      const lessons = lessonsResponse.data || [];
+
+      console.log(`Fetched lessons for module ${moduleId}:`, lessons);
+
+      // Update the specific module with its lessons
+      setCourseModules(prev => ({
+        ...prev,
+        [courseId]: prev[courseId]?.map(module => {
+          if (module.id === moduleId) {
+            return { ...module, lessons };
+          }
+          return module;
+        }) || []
+      }));
+    } catch (error) {
+      console.error(`Error fetching lessons for module ${moduleId}:`, error);
+      // Update with empty lessons on error
+      setCourseModules(prev => ({
+        ...prev,
+        [courseId]: prev[courseId]?.map(module => {
+          if (module.id === moduleId) {
+            return { ...module, lessons: [] };
+          }
+          return module;
+        }) || []
+      }));
+    }
+  };
+
+  // Toggle module expansion with on-demand lesson loading
+  const toggleModuleExpansion = async (moduleId, courseId) => {
+    const isCurrentlyExpanded = expandedModules[moduleId];
+
+    // If we're expanding and lessons aren't loaded yet, fetch them
+    if (!isCurrentlyExpanded) {
+      const module = courseModules[courseId]?.find(m => m.id === moduleId);
+      if (module && (!module.lessons || module.lessons.length === 0)) {
+        try {
+          setLoadingModules(prev => ({ ...prev, [courseId]: true }));
+          await fetchModuleLessons(moduleId, courseId);
+        } finally {
+          setLoadingModules(prev => ({ ...prev, [courseId]: false }));
+        }
+      }
+    }
+
     setExpandedModules(prev => {
       const newExpanded = {};
       // Only expand the clicked module, collapse others
@@ -281,6 +1046,7 @@ export default function CoursesPage() {
   const collapseAllModulesForCourse = (courseId) => {
     setExpandedModules(prev => {
       const newExpanded = { ...prev };
+      // Remove all module expansions
       Object.keys(newExpanded).forEach(moduleId => {
         delete newExpanded[moduleId];
       });
@@ -331,6 +1097,13 @@ export default function CoursesPage() {
             </button>
           )}
           <button
+            onClick={() => handleAddModuleClick()}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200"
+          >
+            <Plus size={18} />
+            Add Module
+          </button>
+          <button
             onClick={forceRefresh}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -362,6 +1135,35 @@ export default function CoursesPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Add Module Form Modal */}
+      {showModuleForm && (
+        <AddModuleForm
+          onClose={() => {
+            setShowModuleForm(false);
+            setSelectedCourseForModule(null);
+            setEditingModule(null);
+          }}
+          onSubmit={handleSubmitModule}
+          initialData={editingModule}
+          courseId={selectedCourseForModule}
+          courses={courses}
+        />
+      )}
+
+      {/* Add Lesson Form Modal */}
+      {showLessonForm && (
+        <AddLessonForm
+          onClose={() => {
+            setShowLessonForm(false);
+            setSelectedModuleForLesson(null);
+            setEditingLesson(null);
+          }}
+          onSubmit={handleSubmitLesson}
+          initialData={editingLesson}
+          moduleId={selectedModuleForLesson?.moduleId}
+        />
       )}
 
       {/* Courses Table */}
@@ -486,6 +1288,13 @@ export default function CoursesPage() {
                             <div className="flex justify-between items-center mb-4">
                               <h3 className="font-bold text-gray-900 text-lg">Course Content</h3>
                               <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleAddModuleClick(course.id)}
+                                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                >
+                                  <Plus size={18} />
+                                  Add Module
+                                </button>
                                 {Object.keys(expandedModules).length > 0 && (
                                   <button
                                     onClick={() => collapseAllModulesForCourse(course.id)}
@@ -540,6 +1349,28 @@ export default function CoursesPage() {
                                           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
                                             Module
                                           </span>
+                                          {/* Module Action Buttons */}
+                                          <button
+                                            onClick={() => handleEditModule(module, course.id)}
+                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                            title="Edit module"
+                                          >
+                                            <Edit2 className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleAddLessonClick(module.id, course.id)}
+                                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                            title="Add lesson"
+                                          >
+                                            <Plus className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteModule(module.id, course.id)}
+                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                            title="Delete module"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
                                         </div>
                                       </div>
                                     </div>
@@ -553,7 +1384,10 @@ export default function CoursesPage() {
                                               <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                   <div className="flex-shrink-0">
-                                                    {lesson.lesson_type === 'video' ? (
+                                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                                      <Video className="w-4 h-4 text-red-600" />
+                                                    </div>
+                                                    {/* {lesson.lesson_type === 'video' ? (
                                                       <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                                                         <Video className="w-4 h-4 text-red-600" />
                                                       </div>
@@ -565,7 +1399,7 @@ export default function CoursesPage() {
                                                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                                                         <Link className="w-4 h-4 text-green-600" />
                                                       </div>
-                                                    )}
+                                                    )} */}
                                                   </div>
                                                   <div>
                                                     <h5 className="font-medium text-gray-900">{lesson.title}</h5>
@@ -603,6 +1437,21 @@ export default function CoursesPage() {
                                                       Preview
                                                     </span>
                                                   )}
+                                                  {/* Lesson Action Buttons */}
+                                                  <button
+                                                    onClick={() => handleEditLesson(lesson, module.id, course.id)}
+                                                    className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                    title="Edit lesson"
+                                                  >
+                                                    <Edit2 className="w-3 h-3" />
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleDeleteLesson(lesson.id, module.id, course.id)}
+                                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                                    title="Delete lesson"
+                                                  >
+                                                    <Trash2 className="w-3 h-3" />
+                                                  </button>
                                                 </div>
                                               </div>
                                             </div>
@@ -611,17 +1460,29 @@ export default function CoursesPage() {
                                       </div>
                                     )}
 
-                                    {/* Empty Lessons State */}
-                                    {expandedModules[module.id] && (!module.lessons || module.lessons.length === 0) && (
+                                    {/* Loading or Empty Lessons State */}
+                                    {expandedModules[module.id] && (
                                       <div className="p-6 text-center bg-gray-50">
-                                        <div className="text-gray-400 mb-2">
-                                          <Book className="w-12 h-12 mx-auto" />
-                                        </div>
-                                        <p className="text-gray-500">No lessons added to this module yet</p>
-                                        <button className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:text-primary-dark">
-                                          <Plus size={14} />
-                                          Add Lesson
-                                        </button>
+                                        {loadingModules[course.id] ? (
+                                          <div className="flex flex-col items-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
+                                            <p className="text-gray-600">Loading lessons...</p>
+                                          </div>
+                                        ) : (!module.lessons || module.lessons.length === 0) ? (
+                                          <>
+                                            <div className="text-gray-400 mb-2">
+                                              <Book className="w-12 h-12 mx-auto" />
+                                            </div>
+                                            <p className="text-gray-500 mb-4">No lessons added to this module yet</p>
+                                            <button
+                                              onClick={() => handleAddLessonClick(module.id, course.id)}
+                                              className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:text-primary-dark"
+                                            >
+                                              <Plus size={14} />
+                                              Add Lesson
+                                            </button>
+                                          </>
+                                        ) : null}
                                       </div>
                                     )}
                                   </div>
@@ -632,11 +1493,14 @@ export default function CoursesPage() {
                                 <div className="text-gray-400 mb-3">
                                   <Book className="w-16 h-16 mx-auto" />
                                 </div>
-                                <h4 className="text-lg font-medium text-gray-900 mb-2">No modules found</h4>
-                                <p className="text-gray-600 mb-4">This course doesn't have any modules yet</p>
-                                <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
+                                <h4 className="text-lg font-medium text-gray-900 mb-2">No modules found for this course</h4>
+                                <p className="text-gray-600 mb-4">This course doesn't have any modules yet. Start by adding your first module.</p>
+                                <button
+                                  onClick={() => handleAddModuleClick(course.id)}
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                >
                                   <Plus size={18} />
-                                  Add Module
+                                  Add Your First Module
                                 </button>
                               </div>
                             )}
