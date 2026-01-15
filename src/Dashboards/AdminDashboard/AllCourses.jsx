@@ -8,7 +8,7 @@ import { API_ORIGIN } from "../../api/index.js";
 
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
 
-// Module Form Component
+// Module Form Component (same as before)
 function AddModuleForm({ onClose, onSubmit, initialData, courseId, courses }) {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -211,7 +211,7 @@ function AddModuleForm({ onClose, onSubmit, initialData, courseId, courses }) {
   );
 }
 
-// Lesson Form Component
+// Lesson Form Component (same as before)
 function AddLessonForm({ onClose, onSubmit, initialData, moduleId }) {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -253,6 +253,8 @@ function AddLessonForm({ onClose, onSubmit, initialData, moduleId }) {
 
       const submitData = {
         ...formData,
+        type: formData.lesson_type, // Backend expects 'type'
+        content: formData.content || 'Video Lesson Content', // specific default content if empty
         order: formData.order ? parseInt(formData.order) : null,
         module_id: parseInt(formData.module_id),
         duration: formData.duration || null,
@@ -329,55 +331,8 @@ function AddLessonForm({ onClose, onSubmit, initialData, moduleId }) {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lesson Type *
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="lesson_type"
-                      value="video"
-                      checked={formData.lesson_type === 'video'}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex items-center">
-                      <Video className="w-4 h-4 mr-2" />
-                      <span>Video</span>
-                    </div>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="lesson_type"
-                      value="article"
-                      checked={formData.lesson_type === 'article'}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex items-center">
-                      <FileText className="w-4 h-4 mr-2" />
-                      <span>Article</span>
-                    </div>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="lesson_type"
-                      value="quiz"
-                      checked={formData.lesson_type === 'quiz'}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600"
-                    />
-                    <div className="flex items-center">
-                      <Link className="w-4 h-4 mr-2" />
-                      <span>Quiz</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
+              {/* Force Lesson Type to Video (Hidden) */}
+              <input type="hidden" name="lesson_type" value="video" />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -396,38 +351,33 @@ function AddLessonForm({ onClose, onSubmit, initialData, moduleId }) {
                 />
               </div>
 
-              {formData.lesson_type === 'video' && (
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Video URL (YouTube, Vimeo, etc.)
-                  </label>
-                  <input
-                    type="url"
-                    name="video_url"
-                    value={formData.video_url}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                  />
-                </div>
-              )}
-
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lesson Content *
+                  Video URL (YouTube, Vimeo, etc.) *
+                </label>
+                <input
+                  type="url"
+                  name="video_url"
+                  value={formData.video_url}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  required
+                />
+              </div>
+
+              {/* Simplified Content Field - Optional/Hidden if not needed but keeping for backend compatibility if required */}
+              <div className="col-span-2 hidden">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content
                 </label>
                 <textarea
                   name="content"
                   value={formData.content}
                   onChange={handleChange}
-                  rows="6"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                  placeholder="Enter your lesson content here..."
-                  required
+                  rows="2"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  For articles: Write your content. For quizzes: Enter quiz questions and answers in JSON format.
-                </p>
               </div>
 
               <div>
@@ -515,10 +465,16 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
+
+  // Enhanced state management for nested data
   const [expandedCourses, setExpandedCourses] = useState({});
-  const [courseModules, setCourseModules] = useState({});
-  const [loadingModules, setLoadingModules] = useState({});
   const [expandedModules, setExpandedModules] = useState({});
+  const [modulesByCourse, setModulesByCourse] = useState({});
+  const [lessonsByModule, setLessonsByModule] = useState({});
+  const [loadingStates, setLoadingStates] = useState({
+    modules: {},
+    lessons: {}
+  });
 
   // Module and Lesson Management States
   const [showModuleForm, setShowModuleForm] = useState(false);
@@ -550,11 +506,11 @@ export default function CoursesPage() {
       if (response && response.data) {
         setCourses(response.data);
         setPagination(response.meta || null);
-        // Reset expanded states when fetching new courses
+        // Reset expanded states and cached data
         setExpandedCourses({});
         setExpandedModules({});
-        // Clear course modules cache
-        setCourseModules({});
+        setModulesByCourse({});
+        setLessonsByModule({});
       } else {
         setCourses([]);
         setPagination(null);
@@ -575,6 +531,138 @@ export default function CoursesPage() {
     fetchCourses(currentPage, true);
   };
 
+  // Fetch modules for a specific course
+  const fetchModulesForCourse = async (courseId) => {
+    try {
+      setLoadingStates(prev => ({
+        ...prev,
+        modules: { ...prev.modules, [courseId]: true }
+      }));
+
+      const modulesResponse = await apiClient.getCourseModules({ course_id: courseId });
+      // Client-side filtering to ensure strict data integrity
+      const modules = (modulesResponse.data || []).filter(m => m.course_id == courseId);
+
+      console.log(`Fetched modules for course ${courseId}:`, modules);
+
+      // Store modules in state, initialize with empty lessons array
+      setModulesByCourse(prev => ({
+        ...prev,
+        [courseId]: modules.map(module => ({
+          ...module,
+          lessons: [] // Initialize empty lessons
+        }))
+      }));
+
+      // Clear lessons for these modules from cache
+      modules.forEach(module => {
+        setLessonsByModule(prev => {
+          const newLessons = { ...prev };
+          delete newLessons[module.id];
+          return newLessons;
+        });
+      });
+
+    } catch (error) {
+      console.error(`Error fetching modules for course ${courseId}:`, error);
+      setModulesByCourse(prev => ({
+        ...prev,
+        [courseId]: []
+      }));
+    } finally {
+      setLoadingStates(prev => ({
+        ...prev,
+        modules: { ...prev.modules, [courseId]: false }
+      }));
+    }
+  };
+
+  // Fetch lessons for a specific module
+  const fetchLessonsForModule = async (moduleId, courseId) => {
+    try {
+      setLoadingStates(prev => ({
+        ...prev,
+        lessons: { ...prev.lessons, [moduleId]: true }
+      }));
+
+      const lessonsResponse = await apiClient.getModuleLessons({ module_id: moduleId });
+      // Client-side filtering to ensure strict data integrity
+      const lessons = (lessonsResponse.data || []).filter(l => l.module_id == moduleId);
+
+      console.log(`Fetched lessons for module ${moduleId}:`, lessons);
+
+      // Store lessons in state
+      setLessonsByModule(prev => ({
+        ...prev,
+        [moduleId]: lessons
+      }));
+
+      // Update the module in modulesByCourse to have lessons
+      setModulesByCourse(prev => ({
+        ...prev,
+        [courseId]: prev[courseId]?.map(module => {
+          if (module.id === moduleId) {
+            return { ...module, lessons };
+          }
+          return module;
+        }) || []
+      }));
+
+    } catch (error) {
+      console.error(`Error fetching lessons for module ${moduleId}:`, error);
+      setLessonsByModule(prev => ({
+        ...prev,
+        [moduleId]: []
+      }));
+    } finally {
+      setLoadingStates(prev => ({
+        ...prev,
+        lessons: { ...prev.lessons, [moduleId]: false }
+      }));
+    }
+  };
+
+  // Toggle course expansion
+  const toggleCourseExpansion = async (courseId) => {
+    const isCurrentlyExpanded = expandedCourses[courseId];
+
+    // If expanding, fetch modules if not already loaded
+    if (!isCurrentlyExpanded && (!modulesByCourse[courseId] || modulesByCourse[courseId].length === 0)) {
+      await fetchModulesForCourse(courseId);
+    }
+
+    // Toggle course expansion
+    setExpandedCourses(prev => ({
+      ...prev,
+      [courseId]: !isCurrentlyExpanded
+    }));
+
+    // Clear module expansions when collapsing
+    if (isCurrentlyExpanded) {
+      setExpandedModules({});
+    }
+  };
+
+  // Toggle module expansion
+  const toggleModuleExpansion = async (moduleId, courseId) => {
+    const isCurrentlyExpanded = expandedModules[moduleId];
+
+    // If expanding and lessons aren't loaded yet, fetch them
+    if (!isCurrentlyExpanded && (!lessonsByModule[moduleId] || lessonsByModule[moduleId].length === 0)) {
+      await fetchLessonsForModule(moduleId, courseId);
+    }
+
+    setExpandedModules(prev => {
+      const newExpanded = {};
+      // Only expand the clicked module, collapse others
+      if (!prev[moduleId]) {
+        newExpanded[moduleId] = true;
+      }
+      return newExpanded;
+    });
+  };
+
+  // Course management functions (unchanged)
   const handleSubmitCourse = async (courseData) => {
     try {
       setLoading(true);
@@ -585,20 +673,11 @@ export default function CoursesPage() {
       let submitData;
 
       if (isFormData) {
-        console.log('Received FormData, using directly for API call');
         submitData = courseData;
 
-        // CRITICAL: Ensure all required fields are included in FormData
-        // Add numeric fields with default values if not present
-        if (!submitData.has('reviews_count')) {
-          submitData.append('reviews_count', '0');
-        }
-        if (!submitData.has('students_count')) {
-          submitData.append('students_count', '0');
-        }
-        if (!submitData.has('rating')) {
-          submitData.append('rating', '0');
-        }
+        if (!submitData.has('reviews_count')) submitData.append('reviews_count', '0');
+        if (!submitData.has('students_count')) submitData.append('students_count', '0');
+        if (!submitData.has('rating')) submitData.append('rating', '0');
         if (!submitData.has('is_featured')) submitData.append('is_featured', '0');
         if (!submitData.has('is_active')) submitData.append('is_active', '1');
         if (!submitData.has('features')) submitData.append('features', '[]');
@@ -624,36 +703,32 @@ export default function CoursesPage() {
         };
       }
 
-      console.log('Prepared data for API:', submitData);
-
       let response;
       if (editingCourse) {
-        console.log('Updating course:', editingCourse.id);
         response = await apiClient.updateCourse(editingCourse.id, submitData);
         setCourses(prevCourses =>
           prevCourses.map(course =>
-            course.id === editingCourse.id
-              ? response.data
-              : course
+            course.id === editingCourse.id ? response.data : course
           )
         );
-        // Clear expanded state for updated course
+        // Clear cached data for this course
+        setModulesByCourse(prev => {
+          const newModules = { ...prev };
+          delete newModules[editingCourse.id];
+          return newModules;
+        });
         setExpandedCourses(prev => ({ ...prev, [editingCourse.id]: false }));
         setExpandedModules({});
       } else {
-        if (!isAuthenticated) {
-          throw new Error('You must be logged in to create courses.');
-        }
-        if (user?.role !== 'admin') {
-          throw new Error('Only administrators can create courses.');
-        }
+        if (!isAuthenticated) throw new Error('You must be logged in to create courses.');
+        if (user?.role !== 'admin') throw new Error('Only administrators can create courses.');
 
         if (!isFormData) {
           const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
-          const missingFields = requiredFields.filter(field => !submitData[field] || submitData[field] === '' || submitData[field] === null || submitData[field] === undefined);
+          const missingFields = requiredFields.filter(field => !submitData[field]);
 
           if (missingFields.length > 0) {
-            throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please fill all required fields.`);
+            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
           }
 
           if (isNaN(submitData.instructor_id) || isNaN(submitData.category_id)) {
@@ -661,17 +736,13 @@ export default function CoursesPage() {
           }
         }
 
-        console.log('Creating new course with data:', submitData);
         response = await apiClient.createCourse(submitData);
-        console.log('Create response:', response);
 
         if (response.data) {
-          console.log('Adding new course to state:', response.data);
           setCourses(prevCourses => [response.data, ...prevCourses]);
         }
       }
 
-      console.log('API response:', response);
       setTimeout(() => fetchCourses(currentPage, false), 1000);
       setOpenForm(false);
       setEditingCourse(null);
@@ -699,19 +770,31 @@ export default function CoursesPage() {
         setIsOperationInProgress(true);
         await apiClient.deleteCourse(courseId);
         setCourses((prev) => prev.filter((course) => course.id !== courseId));
-        // Remove course from expanded states
+
+        // Remove all cached data for this course
+        setModulesByCourse(prev => {
+          const newModules = { ...prev };
+          delete newModules[courseId];
+          return newModules;
+        });
+
+        // Remove lessons for all modules of this course
+        const courseModules = modulesByCourse[courseId] || [];
+        setLessonsByModule(prev => {
+          const newLessons = { ...prev };
+          courseModules.forEach(module => {
+            delete newLessons[module.id];
+          });
+          return newLessons;
+        });
+
         setExpandedCourses(prev => {
           const newExpanded = { ...prev };
           delete newExpanded[courseId];
           return newExpanded;
         });
         setExpandedModules({});
-        // Remove course modules from cache
-        setCourseModules(prev => {
-          const newCourseModules = { ...prev };
-          delete newCourseModules[courseId];
-          return newCourseModules;
-        });
+
         setTimeout(() => fetchCourses(currentPage, false), 1000);
       } catch (error) {
         console.error('Error deleting course:', error);
@@ -722,11 +805,9 @@ export default function CoursesPage() {
     }
   };
 
-  // Module Management Functions - SINGLE DECLARATION
+  // Module management functions
   const handleAddModuleClick = (courseId = null) => {
-    if (courseId) {
-      setSelectedCourseForModule(courseId);
-    }
+    setSelectedCourseForModule(courseId);
     setEditingModule(null);
     setShowModuleForm(true);
   };
@@ -744,12 +825,19 @@ export default function CoursesPage() {
         await apiClient.deleteModule(moduleId);
 
         // Remove module from state
-        setCourseModules(prev => ({
+        setModulesByCourse(prev => ({
           ...prev,
           [courseId]: prev[courseId]?.filter(module => module.id !== moduleId) || []
         }));
 
-        // Clear expanded state for this module
+        // Remove lessons from cache
+        setLessonsByModule(prev => {
+          const newLessons = { ...prev };
+          delete newLessons[moduleId];
+          return newLessons;
+        });
+
+        // Clear expanded state
         setExpandedModules(prev => {
           const newExpanded = { ...prev };
           delete newExpanded[moduleId];
@@ -768,20 +856,13 @@ export default function CoursesPage() {
     try {
       setIsOperationInProgress(true);
 
-      // Get course_id from moduleData or selectedCourseForModule
       const courseId = moduleData.course_id || selectedCourseForModule;
+      if (!courseId) throw new Error('Course ID is required');
 
-      if (!courseId) {
-        throw new Error('Course ID is required');
-      }
-
-      // Prepare data for submission
       const dataToSubmit = {
         ...moduleData,
         course_id: parseInt(courseId),
       };
-
-      console.log('Submitting module:', dataToSubmit);
 
       let response;
       if (editingModule) {
@@ -789,7 +870,7 @@ export default function CoursesPage() {
 
         // Update module in state
         if (courseId) {
-          setCourseModules(prev => ({
+          setModulesByCourse(prev => ({
             ...prev,
             [courseId]: prev[courseId]?.map(module =>
               module.id === editingModule.id ? { ...module, ...response.data } : module
@@ -802,7 +883,7 @@ export default function CoursesPage() {
         // Add new module to state
         const newModule = response.data;
         if (courseId) {
-          setCourseModules(prev => ({
+          setModulesByCourse(prev => ({
             ...prev,
             [courseId]: [...(prev[courseId] || []), newModule]
           }));
@@ -821,7 +902,7 @@ export default function CoursesPage() {
     }
   };
 
-  // Lesson Management Functions
+  // Lesson management functions
   const handleAddLessonClick = (moduleId, courseId) => {
     setSelectedModuleForLesson({ moduleId, courseId });
     setEditingLesson(null);
@@ -841,7 +922,13 @@ export default function CoursesPage() {
         await apiClient.deleteLesson(lessonId);
 
         // Remove lesson from state
-        setCourseModules(prev => ({
+        setLessonsByModule(prev => ({
+          ...prev,
+          [moduleId]: prev[moduleId]?.filter(lesson => lesson.id !== lessonId) || []
+        }));
+
+        // Update module's lessons in modulesByCourse
+        setModulesByCourse(prev => ({
           ...prev,
           [courseId]: prev[courseId]?.map(module => {
             if (module.id === moduleId) {
@@ -871,14 +958,19 @@ export default function CoursesPage() {
         module_id: lessonData.module_id || selectedModuleForLesson.moduleId,
       };
 
-      console.log('Submitting lesson:', dataToSubmit);
-
       let response;
       if (editingLesson) {
         response = await apiClient.updateLesson(editingLesson.id, dataToSubmit);
 
-        // Update lesson in state
-        setCourseModules(prev => ({
+        // Update lesson in both caches
+        setLessonsByModule(prev => ({
+          ...prev,
+          [selectedModuleForLesson.moduleId]: prev[selectedModuleForLesson.moduleId]?.map(lesson =>
+            lesson.id === editingLesson.id ? { ...lesson, ...response.data } : lesson
+          ) || []
+        }));
+
+        setModulesByCourse(prev => ({
           ...prev,
           [selectedModuleForLesson.courseId]: prev[selectedModuleForLesson.courseId]?.map(module => {
             if (module.id === selectedModuleForLesson.moduleId) {
@@ -895,9 +987,14 @@ export default function CoursesPage() {
       } else {
         response = await apiClient.createLesson(dataToSubmit);
 
-        // Add new lesson to state
+        // Add new lesson to both caches
         const newLesson = response.data;
-        setCourseModules(prev => ({
+        setLessonsByModule(prev => ({
+          ...prev,
+          [selectedModuleForLesson.moduleId]: [...(prev[selectedModuleForLesson.moduleId] || []), newLesson]
+        }));
+
+        setModulesByCourse(prev => ({
           ...prev,
           [selectedModuleForLesson.courseId]: prev[selectedModuleForLesson.courseId]?.map(module => {
             if (module.id === selectedModuleForLesson.moduleId) {
@@ -923,117 +1020,16 @@ export default function CoursesPage() {
     }
   };
 
-  // Fetch modules for a specific course
-  const fetchCourseModules = async (courseId) => {
-    try {
-      setLoadingModules(prev => ({ ...prev, [courseId]: true }));
-
-      const modulesResponse = await apiClient.getCourseModules({ course_id: courseId });
-      const modules = modulesResponse.data || [];
-
-      console.log(`Fetched modules for course ${courseId}:`, modules);
-
-      // Create a cache of modules without lessons initially
-      const modulesCache = modules.map(module => ({
-        ...module,
-        lessons: [] // Initialize with empty lessons array
-      }));
-
-      setCourseModules(prev => ({
-        ...prev,
-        [courseId]: modulesCache
-      }));
-    } catch (error) {
-      console.error('Error fetching course modules:', error);
-      setCourseModules(prev => ({
-        ...prev,
-        [courseId]: []
-      }));
-    } finally {
-      setLoadingModules(prev => ({ ...prev, [courseId]: false }));
-    }
-  };
-
-  // Toggle course expansion
-  const toggleCourseExpansion = async (courseId) => {
-    const isCurrentlyExpanded = expandedCourses[courseId];
-
-    // If we're expanding, fetch modules if not already loaded
-    if (!isCurrentlyExpanded) {
-      // Always fetch fresh modules when expanding
-      await fetchCourseModules(courseId);
+  // Helper function to get lessons for a module
+  const getLessonsForModule = (moduleId, courseId) => {
+    // First check if lessons are directly cached for this module
+    if (lessonsByModule[moduleId]) {
+      return lessonsByModule[moduleId];
     }
 
-    // Toggle the course expansion
-    setExpandedCourses(prev => ({
-      ...prev,
-      [courseId]: !isCurrentlyExpanded
-    }));
-
-    // Clear all module expansions when collapsing the course
-    if (isCurrentlyExpanded) {
-      setExpandedModules({});
-    }
-  };
-
-  // Fetch lessons for a specific module
-  const fetchModuleLessons = async (moduleId, courseId) => {
-    try {
-      const lessonsResponse = await apiClient.getModuleLessons({ module_id: moduleId });
-      const lessons = lessonsResponse.data || [];
-
-      console.log(`Fetched lessons for module ${moduleId}:`, lessons);
-
-      // Update the specific module with its lessons
-      setCourseModules(prev => ({
-        ...prev,
-        [courseId]: prev[courseId]?.map(module => {
-          if (module.id === moduleId) {
-            return { ...module, lessons };
-          }
-          return module;
-        }) || []
-      }));
-    } catch (error) {
-      console.error(`Error fetching lessons for module ${moduleId}:`, error);
-      // Update with empty lessons on error
-      setCourseModules(prev => ({
-        ...prev,
-        [courseId]: prev[courseId]?.map(module => {
-          if (module.id === moduleId) {
-            return { ...module, lessons: [] };
-          }
-          return module;
-        }) || []
-      }));
-    }
-  };
-
-  // Toggle module expansion with on-demand lesson loading
-  const toggleModuleExpansion = async (moduleId, courseId) => {
-    const isCurrentlyExpanded = expandedModules[moduleId];
-
-    // If we're expanding and lessons aren't loaded yet, fetch them
-    if (!isCurrentlyExpanded) {
-      const module = courseModules[courseId]?.find(m => m.id === moduleId);
-      if (module && (!module.lessons || module.lessons.length === 0)) {
-        try {
-          setLoadingModules(prev => ({ ...prev, [courseId]: true }));
-          await fetchModuleLessons(moduleId, courseId);
-        } finally {
-          setLoadingModules(prev => ({ ...prev, [courseId]: false }));
-        }
-      }
-    }
-
-    setExpandedModules(prev => {
-      const newExpanded = {};
-      // Only expand the clicked module, collapse others
-      if (!prev[moduleId]) {
-        newExpanded[moduleId] = true;
-      }
-      return newExpanded;
-    });
+    // Otherwise, get from modulesByCourse
+    const module = modulesByCourse[courseId]?.find(m => m.id === moduleId);
+    return module?.lessons || [];
   };
 
   // Collapse all courses
@@ -1044,14 +1040,7 @@ export default function CoursesPage() {
 
   // Collapse all modules for a specific course
   const collapseAllModulesForCourse = (courseId) => {
-    setExpandedModules(prev => {
-      const newExpanded = { ...prev };
-      // Remove all module expansions
-      Object.keys(newExpanded).forEach(moduleId => {
-        delete newExpanded[moduleId];
-      });
-      return newExpanded;
-    });
+    setExpandedModules({});
   };
 
   const handlePageChange = (page) => {
@@ -1191,325 +1180,327 @@ export default function CoursesPage() {
               </thead>
 
               <tbody className="divide-y divide-gray-200">
-                {courses.map((course) => (
-                  <Fragment key={course.id}>
-                    {/* Main Course Row */}
-                    <tr className="hover:bg-gray-50 transition-colors duration-150">
-                      <td className="px-2 py-3">
-                        <button
-                          onClick={() => toggleCourseExpansion(course.id)}
-                          className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title={expandedCourses[course.id] ? "Collapse" : "Expand"}
-                        >
-                          {expandedCourses[course.id] ? (
-                            <ChevronDown className="w-4 h-4 text-gray-600" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-gray-600" />
-                          )}
-                        </button>
-                      </td>
+                {courses.map((course) => {
+                  const courseModules = modulesByCourse[course.id] || [];
+                  const isCourseExpanded = expandedCourses[course.id];
 
-                      <td className="px-2 py-3">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={resolveImageUrl(course.image) || PLACEHOLDER_IMAGE}
-                            alt={course.title}
-                            className="w-14 h-10 rounded-md object-cover border border-gray-200 shrink-0"
-                            onError={(e) => {
-                              if (e.target.src !== PLACEHOLDER_IMAGE) {
-                                e.target.onerror = null;
-                                e.target.src = PLACEHOLDER_IMAGE;
-                              }
-                            }}
-                          />
-                          <div className="min-w-0">
-                            <div className="font-semibold text-gray-900 truncate max-w-[16rem]">
-                              {course.title}
-                            </div>
-                            <div className="text-gray-500 text-xs truncate max-w-[16rem]">
-                              {course.slug}
+                  return (
+                    <Fragment key={course.id}>
+                      {/* Main Course Row */}
+                      <tr className="hover:bg-gray-50 transition-colors duration-150">
+                        <td className="px-2 py-3">
+                          <button
+                            onClick={() => toggleCourseExpansion(course.id)}
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            title={isCourseExpanded ? "Collapse" : "Expand"}
+                          >
+                            {isCourseExpanded ? (
+                              <ChevronDown className="w-4 h-4 text-gray-600" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-gray-600" />
+                            )}
+                          </button>
+                        </td>
+
+                        <td className="px-2 py-3">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={resolveImageUrl(course.image) || PLACEHOLDER_IMAGE}
+                              alt={course.title}
+                              className="w-14 h-10 rounded-md object-cover border border-gray-200 shrink-0"
+                              onError={(e) => {
+                                if (e.target.src !== PLACEHOLDER_IMAGE) {
+                                  e.target.onerror = null;
+                                  e.target.src = PLACEHOLDER_IMAGE;
+                                }
+                              }}
+                            />
+                            <div className="min-w-0">
+                              <div className="font-semibold text-gray-900 truncate max-w-[16rem]">
+                                {course.title}
+                              </div>
+                              <div className="text-gray-500 text-xs truncate max-w-[16rem]">
+                                {course.slug}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="px-4 py-3 text-gray-700">
-                        {course.category?.name || course.category || '-'}
-                      </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {course.category?.name || course.category || '-'}
+                        </td>
 
-                      <td className="px-4 py-3 text-gray-700">
-                        {course.instructor?.user?.name || course.instructor?.name || course.instructor?.title || course.instructor || '-'}
-                      </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {course.instructor?.user?.name || course.instructor?.name || course.instructor?.title || course.instructor || '-'}
+                        </td>
 
-                      <td className="px-4 py-3 text-gray-700 font-medium">
-                        ${Number(course.price || 0).toFixed(2)}
-                      </td>
+                        <td className="px-4 py-3 text-gray-700 font-medium">
+                          ${Number(course.price || 0).toFixed(2)}
+                        </td>
 
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                          {course.level || '-'}
-                        </span>
-                      </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                            {course.level || '-'}
+                          </span>
+                        </td>
 
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                          {course.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                            {course.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
 
-                      <td className="px-1 py-3">
-                        <div className="flex items-center justify-end ">
-                          <button
-                            type="button"
-                            onClick={() => handleEditCourse(course)}
-                            className="inline-flex items-center gap-1 p-2 text-blue-600 hover:text-blue-800 rounded-lg hover:bg-blue-50 transition-colors"
-                            title="Edit course"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCourse(course.id)}
-                            className="inline-flex items-center gap-1 p-2 text-red-600 hover:text-red-800 rounded-lg hover:bg-red-50 transition-colors"
-                            title="Delete course"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* Expanded Course Details Row */}
-                    {expandedCourses[course.id] && (
-                      <tr className="bg-gray-50">
-                        <td colSpan="8" className="px-4 py-6">
-                          <div className="pl-8 border-l-2 border-primary">
-                            <div className="flex justify-between items-center mb-4">
-                              <h3 className="font-bold text-gray-900 text-lg">Course Content</h3>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleAddModuleClick(course.id)}
-                                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                                >
-                                  <Plus size={18} />
-                                  Add Module
-                                </button>
-                                {Object.keys(expandedModules).length > 0 && (
-                                  <button
-                                    onClick={() => collapseAllModulesForCourse(course.id)}
-                                    className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-md transition-colors"
-                                  >
-                                    <Minus size={14} />
-                                    Collapse Modules
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-
-                            {loadingModules[course.id] ? (
-                              <div className="flex justify-center items-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                                <span className="ml-3 text-gray-600">Loading modules and lessons...</span>
-                              </div>
-                            ) : courseModules[course.id]?.length > 0 ? (
-                              <div className="space-y-4">
-                                {courseModules[course.id].map((module, moduleIndex) => (
-                                  <div key={module.id} className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
-                                    {/* Module Header */}
-                                    <div className="p-4 border-b border-gray-200 bg-gray-50">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                          <button
-                                            onClick={() => toggleModuleExpansion(module.id, course.id)}
-                                            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
-                                          >
-                                            {expandedModules[module.id] ? (
-                                              <ChevronDown className="w-4 h-4" />
-                                            ) : (
-                                              <ChevronRight className="w-4 h-4" />
-                                            )}
-                                            <div className="flex items-center gap-3">
-                                              <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-sm">
-                                                {moduleIndex + 1}
-                                              </div>
-                                              <div>
-                                                <h4 className="font-semibold text-gray-900">{module.title}</h4>
-                                                {module.description && (
-                                                  <p className="text-sm text-gray-600 mt-1">{module.description}</p>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </button>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-medium text-gray-500">
-                                            {module.lessons?.length || 0} lessons
-                                          </span>
-                                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                                            Module
-                                          </span>
-                                          {/* Module Action Buttons */}
-                                          <button
-                                            onClick={() => handleEditModule(module, course.id)}
-                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                            title="Edit module"
-                                          >
-                                            <Edit2 className="w-4 h-4" />
-                                          </button>
-                                          <button
-                                            onClick={() => handleAddLessonClick(module.id, course.id)}
-                                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
-                                            title="Add lesson"
-                                          >
-                                            <Plus className="w-4 h-4" />
-                                          </button>
-                                          <button
-                                            onClick={() => handleDeleteModule(module.id, course.id)}
-                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                            title="Delete module"
-                                          >
-                                            <Trash2 className="w-4 h-4" />
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Module Content (Lessons) - Only shown when expanded */}
-                                    {expandedModules[module.id] && module.lessons && module.lessons.length > 0 && (
-                                      <div className="p-4 bg-gray-50">
-                                        <div className="space-y-2">
-                                          {module.lessons.map((lesson, lessonIndex) => (
-                                            <div key={lesson.id} className="bg-white rounded border border-gray-200 p-3 hover:border-primary transition-colors">
-                                              <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                  <div className="flex-shrink-0">
-                                                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                                      <Video className="w-4 h-4 text-red-600" />
-                                                    </div>
-                                                    {/* {lesson.lesson_type === 'video' ? (
-                                                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                                        <Video className="w-4 h-4 text-red-600" />
-                                                      </div>
-                                                    ) : lesson.lesson_type === 'article' ? (
-                                                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                        <FileText className="w-4 h-4 text-blue-600" />
-                                                      </div>
-                                                    ) : (
-                                                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                                        <Link className="w-4 h-4 text-green-600" />
-                                                      </div>
-                                                    )} */}
-                                                  </div>
-                                                  <div>
-                                                    <h5 className="font-medium text-gray-900">{lesson.title}</h5>
-                                                    {lesson.description && (
-                                                      <p className="text-sm text-gray-600 mt-1">{lesson.description}</p>
-                                                    )}
-                                                    <div className="flex items-center gap-3 mt-2">
-                                                      <span className="text-xs text-gray-500">
-                                                        {moduleIndex + 1}.{lessonIndex + 1}
-                                                      </span>
-                                                      {lesson.duration && (
-                                                        <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                                                          {lesson.duration}
-                                                        </span>
-                                                      )}
-                                                      {lesson.lesson_type && (
-                                                        <span className={`text-xs px-2 py-1 rounded capitalize ${lesson.lesson_type === 'video' ? 'bg-red-100 text-red-800' :
-                                                          lesson.lesson_type === 'article' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-green-100 text-green-800'
-                                                          }`}>
-                                                          {lesson.lesson_type}
-                                                        </span>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                  {lesson.is_free && (
-                                                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
-                                                      Free
-                                                    </span>
-                                                  )}
-                                                  {lesson.is_preview && (
-                                                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                                                      Preview
-                                                    </span>
-                                                  )}
-                                                  {/* Lesson Action Buttons */}
-                                                  <button
-                                                    onClick={() => handleEditLesson(lesson, module.id, course.id)}
-                                                    className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                                    title="Edit lesson"
-                                                  >
-                                                    <Edit2 className="w-3 h-3" />
-                                                  </button>
-                                                  <button
-                                                    onClick={() => handleDeleteLesson(lesson.id, module.id, course.id)}
-                                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                                    title="Delete lesson"
-                                                  >
-                                                    <Trash2 className="w-3 h-3" />
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {/* Loading or Empty Lessons State */}
-                                    {expandedModules[module.id] && (
-                                      <div className="p-6 text-center bg-gray-50">
-                                        {loadingModules[course.id] ? (
-                                          <div className="flex flex-col items-center">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3"></div>
-                                            <p className="text-gray-600">Loading lessons...</p>
-                                          </div>
-                                        ) : (!module.lessons || module.lessons.length === 0) ? (
-                                          <>
-                                            <div className="text-gray-400 mb-2">
-                                              <Book className="w-12 h-12 mx-auto" />
-                                            </div>
-                                            <p className="text-gray-500 mb-4">No lessons added to this module yet</p>
-                                            <button
-                                              onClick={() => handleAddLessonClick(module.id, course.id)}
-                                              className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:text-primary-dark"
-                                            >
-                                              <Plus size={14} />
-                                              Add Lesson
-                                            </button>
-                                          </>
-                                        ) : null}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-                                <div className="text-gray-400 mb-3">
-                                  <Book className="w-16 h-16 mx-auto" />
-                                </div>
-                                <h4 className="text-lg font-medium text-gray-900 mb-2">No modules found for this course</h4>
-                                <p className="text-gray-600 mb-4">This course doesn't have any modules yet. Start by adding your first module.</p>
-                                <button
-                                  onClick={() => handleAddModuleClick(course.id)}
-                                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                                >
-                                  <Plus size={18} />
-                                  Add Your First Module
-                                </button>
-                              </div>
-                            )}
+                        <td className="px-1 py-3">
+                          <div className="flex items-center justify-end ">
+                            <button
+                              type="button"
+                              onClick={() => handleEditCourse(course)}
+                              className="inline-flex items-center gap-1 p-2 text-blue-600 hover:text-blue-800 rounded-lg hover:bg-blue-50 transition-colors"
+                              title="Edit course"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCourse(course.id)}
+                              className="inline-flex items-center gap-1 p-2 text-red-600 hover:text-red-800 rounded-lg hover:bg-red-50 transition-colors"
+                              title="Delete course"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))}
+
+                      {/* Expanded Course Details Row */}
+                      {isCourseExpanded && (
+                        <tr className="bg-gray-50">
+                          <td colSpan="8" className="px-4 py-6">
+                            <div className="pl-8 border-l-2 border-primary">
+                              <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-gray-900 text-lg">Course Content</h3>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleAddModuleClick(course.id)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                  >
+                                    <Plus size={18} />
+                                    Add Module
+                                  </button>
+                                  {Object.keys(expandedModules).length > 0 && (
+                                    <button
+                                      onClick={() => collapseAllModulesForCourse(course.id)}
+                                      className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-md transition-colors"
+                                    >
+                                      <Minus size={14} />
+                                      Collapse Modules
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {loadingStates.modules[course.id] ? (
+                                <div className="flex justify-center items-center py-8">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                  <span className="ml-3 text-gray-600">Loading modules...</span>
+                                </div>
+                              ) : courseModules.length > 0 ? (
+                                <div className="space-y-4">
+                                  {courseModules.map((module, moduleIndex) => {
+                                    const isModuleExpanded = expandedModules[module.id];
+                                    const moduleLessons = getLessonsForModule(module.id, course.id);
+
+                                    return (
+                                      <div key={module.id} className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
+                                        {/* Module Header */}
+                                        <div className="p-4 border-b border-gray-200 bg-gray-50">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                              <button
+                                                onClick={() => toggleModuleExpansion(module.id, course.id)}
+                                                className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+                                              >
+                                                {isModuleExpanded ? (
+                                                  <ChevronDown className="w-4 h-4" />
+                                                ) : (
+                                                  <ChevronRight className="w-4 h-4" />
+                                                )}
+                                                <div className="flex items-center gap-3">
+                                                  <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                                                    {moduleIndex + 1}
+                                                  </div>
+                                                  <div>
+                                                    <h4 className="font-semibold text-gray-900">{module.title}</h4>
+                                                    {module.description && (
+                                                      <p className="text-sm text-gray-600 mt-1">{module.description}</p>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </button>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs font-medium text-gray-500">
+                                                {moduleLessons.length} lessons
+                                              </span>
+                                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                                                Module
+                                              </span>
+                                              {/* Module Action Buttons */}
+                                              <button
+                                                onClick={() => handleEditModule(module, course.id)}
+                                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                title="Edit module"
+                                              >
+                                                <Edit2 className="w-4 h-4" />
+                                              </button>
+                                              <button
+                                                onClick={() => handleAddLessonClick(module.id, course.id)}
+                                                className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                                                title="Add lesson"
+                                              >
+                                                <Plus className="w-4 h-4" />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteModule(module.id, course.id)}
+                                                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                                title="Delete module"
+                                              >
+                                                <Trash2 className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Module Content (Lessons) - Only shown when expanded */}
+                                        {isModuleExpanded && (
+                                          <div className="p-4 bg-gray-50">
+                                            {loadingStates.lessons[module.id] ? (
+                                              <div className="flex justify-center items-center py-4">
+                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                                <span className="ml-3 text-gray-600">Loading lessons...</span>
+                                              </div>
+                                            ) : moduleLessons.length > 0 ? (
+                                              <div className="space-y-2">
+                                                {moduleLessons.map((lesson, lessonIndex) => (
+                                                  <div key={lesson.id} className="bg-white rounded border border-gray-200 p-3 hover:border-primary transition-colors">
+                                                    <div className="flex items-center justify-between">
+                                                      <div className="flex items-center gap-3">
+                                                        <div className="flex-shrink-0">
+                                                          {lesson.lesson_type === 'video' ? (
+                                                            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                                              <Video className="w-4 h-4 text-red-600" />
+                                                            </div>
+                                                          ) : lesson.lesson_type === 'article' ? (
+                                                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                              <FileText className="w-4 h-4 text-blue-600" />
+                                                            </div>
+                                                          ) : (
+                                                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                              <Link className="w-4 h-4 text-green-600" />
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                        <div>
+                                                          <h5 className="font-medium text-gray-900">{lesson.title}</h5>
+                                                          {lesson.description && (
+                                                            <p className="text-sm text-gray-600 mt-1">{lesson.description}</p>
+                                                          )}
+                                                          <div className="flex items-center gap-3 mt-2">
+                                                            <span className="text-xs text-gray-500">
+                                                              {moduleIndex + 1}.{lessonIndex + 1}
+                                                            </span>
+                                                            {lesson.duration && (
+                                                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                                                                {lesson.duration}
+                                                              </span>
+                                                            )}
+                                                            {lesson.lesson_type && (
+                                                              <span className={`text-xs px-2 py-1 rounded capitalize ${lesson.lesson_type === 'video' ? 'bg-red-100 text-red-800' :
+                                                                lesson.lesson_type === 'article' ? 'bg-blue-100 text-blue-800' :
+                                                                  'bg-green-100 text-green-800'
+                                                                }`}>
+                                                                {lesson.lesson_type}
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      <div className="flex items-center gap-2">
+                                                        {lesson.is_free && (
+                                                          <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
+                                                            Free
+                                                          </span>
+                                                        )}
+                                                        {lesson.is_preview && (
+                                                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                                            Preview
+                                                          </span>
+                                                        )}
+                                                        {/* Lesson Action Buttons */}
+                                                        <button
+                                                          onClick={() => handleEditLesson(lesson, module.id, course.id)}
+                                                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                          title="Edit lesson"
+                                                        >
+                                                          <Edit2 className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                          onClick={() => handleDeleteLesson(lesson.id, module.id, course.id)}
+                                                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                                          title="Delete lesson"
+                                                        >
+                                                          <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              <div className="text-center py-6">
+                                                <div className="text-gray-400 mb-2">
+                                                  <Book className="w-12 h-12 mx-auto" />
+                                                </div>
+                                                <p className="text-gray-500 mb-4">No lessons added to this module yet</p>
+                                                <button
+                                                  onClick={() => handleAddLessonClick(module.id, course.id)}
+                                                  className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:text-primary-dark"
+                                                >
+                                                  <Plus size={14} />
+                                                  Add Lesson
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                                  <div className="text-gray-400 mb-3">
+                                    <Book className="w-16 h-16 mx-auto" />
+                                  </div>
+                                  <h4 className="text-lg font-medium text-gray-900 mb-2">No modules found for this course</h4>
+                                  <p className="text-gray-600 mb-4">This course doesn't have any modules yet. Start by adding your first module.</p>
+                                  <button
+                                    onClick={() => handleAddModuleClick(course.id)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                                  >
+                                    <Plus size={18} />
+                                    Add Your First Module
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

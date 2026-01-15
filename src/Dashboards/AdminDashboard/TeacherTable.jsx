@@ -70,7 +70,7 @@ export default function TeachersTable() {
         }
     };
 
-    const pendingTeachers = teachers.filter((t) => !t.is_active);
+    const pendingTeachers = teachers.filter((t) => t.approval_status === 'submitted');
     const activeTeachers = teachers.filter((t) => t.is_active);
 
     return (
@@ -302,7 +302,7 @@ export default function TeachersTable() {
                         </div>
 
                         {/* Actions */}
-                        {!selectedTeacher.is_active && (
+                        {selectedTeacher.approval_status === 'submitted' && (
                             <div className="mt-6 flex gap-3">
                                 <button
                                     onClick={() => handleApprove(selectedTeacher.id)}

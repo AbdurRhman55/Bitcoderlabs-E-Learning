@@ -11,13 +11,15 @@ import {
   ChevronRight,
   LayoutDashboard,
   UserCheck,
-  UserPlus
+  UserPlus,
+  Layers
 } from "lucide-react";
 
 export default function Sidebar({ open, setOpen, active, setActive }) {
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard" },
     { icon: <BookOpen size={20} />, label: "Courses" },
+    { icon: <Layers size={20} />, label: "Course Categories" },
     { icon: <UserCheck size={20} />, label: "Course Requests" },
     { icon: <Users size={20} />, label: "Students" },
     { icon: <UserPlus size={20} />, label: "Enrolled Students" },
