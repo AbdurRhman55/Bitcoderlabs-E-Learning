@@ -495,6 +495,48 @@ class ApiClient {
     return this.request(`/categories${queryString ? `?${queryString}` : ""}`);
   }
 
+  async createCategory(categoryData) {
+    const isFormData = typeof FormData !== 'undefined' && categoryData instanceof FormData;
+    if (isFormData) {
+      if (!categoryData.has('_method')) {
+        categoryData.append('_method', 'POST');
+      }
+      return this.request("/categories", {
+        method: "POST",
+        body: categoryData,
+      });
+    }
+
+    return this.request("/categories", {
+      method: "POST",
+      body: JSON.stringify(categoryData),
+    });
+  }
+
+  async updateCategory(id, categoryData) {
+    const isFormData = typeof FormData !== 'undefined' && categoryData instanceof FormData;
+    if (isFormData) {
+      if (!categoryData.has('_method')) {
+        categoryData.append('_method', 'PUT');
+      }
+      return this.request(`/categories/${id}`, {
+        method: "POST",
+        body: categoryData,
+      });
+    }
+
+    return this.request(`/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(categoryData),
+    });
+  }
+
+  async deleteCategory(id) {
+    return this.request(`/categories/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Contact Messages
   async getContactMessages(params = {}) {
     const queryString = new URLSearchParams(params).toString();

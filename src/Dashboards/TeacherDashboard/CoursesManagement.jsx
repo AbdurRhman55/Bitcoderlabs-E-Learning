@@ -1,55 +1,40 @@
-// src/components/sections/CoursesManagement.jsx
+// src/Dashboards/TeacherDashboard/CoursesManagement.jsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaClock, FaUsers, FaStar, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaChevronDown, FaChevronUp, FaFileVideo, FaFileAlt, FaQuestionCircle } from 'react-icons/fa';
+import {
+    FaPlus, FaEdit, FaTrash, FaEye, FaClock, FaUsers,
+    FaStar, FaCheckCircle, FaHourglassHalf, FaTimesCircle,
+    FaChevronDown, FaChevronUp, FaFileVideo, FaFileAlt,
+    FaQuestionCircle, FaBook, FaChalkboardTeacher, FaSearch
+} from 'react-icons/fa';
 import { apiClient } from '../../api/index.js';
 
 const CoursesManagement = ({ showNotification }) => {
-    const [courses, setCourses] = useState([]);
-    const [availableCourses, setAvailableCourses] = useState([]);
-    const [myRequests, setMyRequests] = useState([]);
+    // ================= STATE =================
+    // 1. Approved Courses (My Courses)
+    const [myCourses, setMyCourses] = useState([]);
+
+    // 2. All Available Courses (For Request Dropdown)
+    const [allCatalogCourses, setAllCatalogCourses] = useState([]);
+
+    // 3. Request History (For Requests Table)
+    const [requestHistory, setRequestHistory] = useState([]);
+
     const [selectedCourseId, setSelectedCourseId] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
-    // New state for modules and lessons
+    // Expansion States
     const [expandedCourses, setExpandedCourses] = useState({});
     const [modules, setModules] = useState({});
     const [expandedModules, setExpandedModules] = useState({});
     const [lessons, setLessons] = useState({});
-    const [loadingModules, setLoadingModules] = useState({});
-    const [loadingLessons, setLoadingLessons] = useState({});
+    const [loadingContent, setLoadingContent] = useState({});
 
+    // HELPERS 
     const unwrapList = (res) => {
         const list = res?.data;
         return Array.isArray(list) ? list : [];
     };
-
-    const refreshData = async () => {
-        try {
-            setLoading(true);
-            const [myCoursesRes, availableRes, myRequestsRes] = await Promise.all([
-                apiClient.getMyCourses(),
-                apiClient.getAvailableCourses(),
-                apiClient.getMyCourseRequests(),
-            ]);
-
-            setCourses(unwrapList(myCoursesRes));
-            setAvailableCourses(unwrapList(availableRes));
-            setMyRequests(unwrapList(myRequestsRes));
-        } catch (e) {
-            console.error('Failed to load course requests data:', e);
-            showNotification?.(e?.message || 'Failed to load courses. Please refresh.', 'error');
-            setCourses([]);
-            setAvailableCourses([]);
-            setMyRequests([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        refreshData();
-    }, []);
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -69,18 +54,39 @@ const CoursesManagement = ({ showNotification }) => {
         }
     };
 
-    const handleCreateCourse = () => {
-        showNotification?.('Course creation is managed by admin. Please request a course instead.', 'info');
+    // ================= DATA FETCHING =================
+    const refreshData = async () => {
+        try {
+            setLoading(true);
+            const [myCoursesRes, catalogRes, requestsRes] = await Promise.all([
+                apiClient.getMyCourses(),      // ONLY Approved/Assigned courses
+                apiClient.getCourses(),        // ALL Courses for the dropdown
+                apiClient.getMyCourseRequests() // Request History
+            ]);
+
+            // Filter My Courses to ensure we ONLY show active/approved ones if API returns mix
+            // Assuming getMyCourses returns the teacher's active assignments
+            const fetchedMyCourses = unwrapList(myCoursesRes);
+            setMyCourses(fetchedMyCourses);
+
+            setAllCatalogCourses(unwrapList(catalogRes));
+            setRequestHistory(unwrapList(requestsRes));
+        } catch (e) {
+            console.error('Failed to load data:', e);
+            showNotification?.(e?.message || 'Failed to load data.', 'error');
+            setMyCourses([]);
+            setAllCatalogCourses([]);
+            setRequestHistory([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleEditCourse = (id) => {
-        showNotification?.(`Editing course #${id}`, 'info');
-    };
+    useEffect(() => {
+        refreshData();
+    }, []);
 
-    const handleDeleteCourse = (id) => {
-        showNotification?.(`Deleting course #${id}`, 'info');
-    };
-
+    // ================= ACTIONS =================
     const handleSubmitRequest = async () => {
         if (!selectedCourseId) {
             showNotification?.('Please select a course first.', 'warning');
@@ -90,431 +96,287 @@ const CoursesManagement = ({ showNotification }) => {
         try {
             setSubmitting(true);
             await apiClient.createCourseRequest(Number(selectedCourseId));
-            showNotification?.('Request submitted successfully.', 'success');
-            setSelectedCourseId('');
-            await refreshData();
+            showNotification?.('Request submitted successfully. Waiting for Admin approval.', 'success');
+            setSelectedCourseId(''); // Reset dropdown
+            await refreshData(); // Refresh to update lists
         } catch (e) {
-            console.error('Failed to submit course request:', e);
+            console.error('Failed to submit request:', e);
             showNotification?.(e?.message || 'Failed to submit request.', 'error');
         } finally {
             setSubmitting(false);
         }
     };
 
-    const stats = useMemo(() => {
-        const totalCourses = courses.length;
-        const published = courses.filter(c => c.is_active).length;
-        const totalStudents = courses.reduce((acc, c) => acc + (Number(c.students_count) || 0), 0);
-        const totalRevenue = courses
-            .filter(c => c.is_active)
-            .reduce((acc, c) => acc + ((Number(c.price) || 0) * (Number(c.students_count) || 0)), 0);
-
-        return { totalCourses, published, totalStudents, totalRevenue };
-    }, [courses]);
-
-    const getLessonIcon = (type) => {
-        switch (type) {
-            case 'video': return <FaFileVideo className="text-red-500" />;
-            case 'text': return <FaFileAlt className="text-blue-500" />;
-            case 'quiz': return <FaQuestionCircle className="text-purple-500" />;
-            default: return <FaFileAlt className="text-gray-500" />;
-        }
-    };
-
+    // ================= EXPANSION LOGIC =================
     const toggleCourseModules = async (courseId) => {
         setExpandedCourses(prev => ({ ...prev, [courseId]: !prev[courseId] }));
 
-        // Only fetch modules if not already loaded
         if (!expandedCourses[courseId] && !modules[courseId]) {
             try {
-                setLoadingModules(prev => ({ ...prev, [courseId]: true }));
+                setLoadingContent(prev => ({ ...prev, [`c_${courseId}`]: true }));
 
-                // Fetch modules from API
-                const res = await apiClient.getCourseModules(courseId);
-                const modulesData = unwrapList(res);
+                // Pass as object for query param: ?course_id=ID
+                const res = await apiClient.getCourseModules({ course_id: courseId });
 
-                // Sort modules by order_index
-                const sortedModules = modulesData.sort((a, b) => a.order_index - b.order_index);
+                // Unwarp and STRICTLY filter on client side (like Admin Dashboard)
+                const modulesData = unwrapList(res).filter(m => m.course_id == courseId);
 
-                setModules(prev => ({ ...prev, [courseId]: sortedModules }));
-
-                // If first module exists and has lessons_count > 0, auto-expand it
-                if (sortedModules.length > 0 && sortedModules[0].lessons_count > 0) {
-                    setExpandedModules(prev => ({ ...prev, [sortedModules[0].id]: true }));
-                }
-            } catch (e) {
-                console.error('Failed to load modules:', e);
-                showNotification?.('Failed to load modules.', 'error');
-                setModules(prev => ({ ...prev, [courseId]: [] }));
-            } finally {
-                setLoadingModules(prev => ({ ...prev, [courseId]: false }));
-            }
+                setModules(prev => ({
+                    ...prev,
+                    [courseId]: modulesData.sort((a, b) => a.order_index - b.order_index)
+                }));
+            } catch (e) { console.error(e); }
+            finally { setLoadingContent(prev => ({ ...prev, [`c_${courseId}`]: false })); }
         }
     };
 
-    const toggleModuleLessons = async (moduleId, courseId) => {
+    const toggleModuleLessons = async (moduleId) => {
         setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
 
-        // Only fetch lessons if not already loaded
         if (!expandedModules[moduleId] && !lessons[moduleId]) {
             try {
-                setLoadingLessons(prev => ({ ...prev, [moduleId]: true }));
+                setLoadingContent(prev => ({ ...prev, [`m_${moduleId}`]: true }));
 
-                // Fetch lessons from API
-                const res = await apiClient.getModuleLessons(moduleId);
-                const lessonsData = unwrapList(res);
+                // Pass as object for query param: ?module_id=ID
+                const res = await apiClient.getModuleLessons({ module_id: moduleId });
 
-                // Sort lessons by order_index
-                const sortedLessons = lessonsData.sort((a, b) => a.order_index - b.order_index);
+                // Unwarp and STRICTLY filter on client side (like Admin Dashboard)
+                const lessonsData = unwrapList(res).filter(l => l.module_id == moduleId);
 
-                setLessons(prev => ({ ...prev, [moduleId]: sortedLessons }));
-            } catch (e) {
-                console.error('Failed to load lessons:', e);
-                showNotification?.('Failed to load lessons.', 'error');
-                setLessons(prev => ({ ...prev, [moduleId]: [] }));
-            } finally {
-                setLoadingLessons(prev => ({ ...prev, [moduleId]: false }));
-            }
+                setLessons(prev => ({
+                    ...prev,
+                    [moduleId]: lessonsData.sort((a, b) => a.order_index - b.order_index)
+                }));
+            } catch (e) { console.error(e); }
+            finally { setLoadingContent(prev => ({ ...prev, [`m_${moduleId}`]: false })); }
         }
     };
 
-    const handleViewModule = (moduleId, courseId, e) => {
-        e.stopPropagation();
-        showNotification?.(`Viewing module #${moduleId} of course #${courseId}`, 'info');
-    };
+    // ================= STATS =================
+    const stats = useMemo(() => {
+        return {
+            totalCourses: myCourses.length,
+            totalStudents: myCourses.reduce((acc, c) => acc + (Number(c.students_count) || 0), 0),
+            pendingRequests: requestHistory.filter(r => r.status === 'pending').length
+        };
+    }, [myCourses, requestHistory]);
 
-    const handleEditModule = (moduleId, courseId, e) => {
-        e.stopPropagation();
-        showNotification?.(`Editing module #${moduleId} of course #${courseId}`, 'info');
-    };
-
-    const handleAddLesson = (moduleId, courseId, e) => {
-        e.stopPropagation();
-        showNotification?.(`Adding lesson to module #${moduleId} of course #${courseId}`, 'info');
-    };
-
-    const handleViewLesson = (lessonId, moduleId, e) => {
-        e.stopPropagation();
-        showNotification?.(`Viewing lesson #${lessonId} of module #${moduleId}`, 'info');
-    };
-
-    const handleEditLesson = (lessonId, moduleId, e) => {
-        e.stopPropagation();
-        showNotification?.(`Editing lesson #${lessonId} of module #${moduleId}`, 'info');
-    };
-
-    const handleDeleteLesson = (lessonId, moduleId, e) => {
-        e.stopPropagation();
-        showNotification?.(`Deleting lesson #${lessonId} of module #${moduleId}`, 'info');
-    };
-
+    // ================= RENDER =================
     return (
-        <div className="space-y-6 ">
-            {/* Top Section & Stats */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Courses Management</h1>
-                    <p className="text-gray-600">Manage your courses and track their performance</p>
-                </div>
-
+        <div className="space-y-8 p-6">
+            {/* Header */}
+            <div>
+                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <FaChalkboardTeacher className="text-primary" />
+                    Courses Management
+                </h1>
+                <p className="text-gray-600 mt-1">Request courses to teach and manage your approved curriculum.</p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{stats.totalCourses}</p>
-                    <p className="text-sm text-gray-600">Total Courses</p>
-                </div>
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{stats.published}</p>
-                    <p className="text-sm text-gray-600">Published</p>
-                </div>
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{stats.totalStudents}</p>
-                    <p className="text-sm text-gray-600">Total Students</p>
-                </div>
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">${Math.round(stats.totalRevenue)}</p>
-                    <p className="text-sm text-gray-600">Total Revenue</p>
-                </div>
-            </div>
-
-            {/* Request a course */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Request a Course to Teach</h3>
-                {loading ? (
-                    <div className="text-gray-600">Loading available courses...</div>
-                ) : (
-                    <div className="flex flex-col md:flex-row gap-3 md:items-center">
-                        <select
-                            value={selectedCourseId}
-                            onChange={(e) => setSelectedCourseId(e.target.value)}
-                            className="w-full md:flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        >
-                            <option value="">Select a course</option>
-                            {availableCourses.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.title}
-                                </option>
-                            ))}
-                        </select>
-
-                        <button
-                            onClick={handleSubmitRequest}
-                            disabled={submitting || !selectedCourseId}
-                            className="px-5 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-60"
-                        >
-                            {submitting ? 'Submitting...' : 'Send Request'}
-                        </button>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><FaBook size={24} /></div>
+                    <div>
+                        <p className="text-sm text-gray-500">My Approved Courses</p>
+                        <p className="text-2xl font-bold">{stats.totalCourses}</p>
                     </div>
-                )}
+                </div>
+                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                    <div className="p-3 bg-green-50 text-green-600 rounded-lg"><FaUsers size={24} /></div>
+                    <div>
+                        <p className="text-sm text-gray-500">Total Students</p>
+                        <p className="text-2xl font-bold">{stats.totalStudents}</p>
+                    </div>
+                </div>
+                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
+                    <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg"><FaHourglassHalf size={24} /></div>
+                    <div>
+                        <p className="text-sm text-gray-500">Pending Requests</p>
+                        <p className="text-2xl font-bold">{stats.pendingRequests}</p>
+                    </div>
+                </div>
             </div>
 
-            {/* Courses Table */}
+            {/* 1. Request Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <FaPlus className="text-primary" />
+                    Request New Course
+                </h3>
+                <div className="flex flex-col md:flex-row gap-4 items-end">
+                    <div className="w-full md:flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select a course from database</label>
+                        <div className="relative">
+                            <select
+                                value={selectedCourseId}
+                                onChange={(e) => setSelectedCourseId(e.target.value)}
+                                className="w-full p-3 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none bg-white"
+                            >
+                                <option value="">-- Select a course to request --</option>
+                                {allCatalogCourses.map(course => {
+                                    // Check status
+                                    const isAssigned = myCourses.some(my => my.id === course.id);
+                                    const pending = requestHistory.find(r => r.course_id === course.id && r.status === 'pending');
+
+                                    // Disable if assigned OR pending
+                                    const isDisabled = isAssigned || !!pending;
+
+                                    return (
+                                        <option key={course.id} value={course.id} disabled={isDisabled} className="py-2">
+                                            {course.title}
+                                            {isAssigned ? ' (Already Assigned)' : pending ? ' (Request Pending)' : ''}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                <FaChevronDown size={12} />
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleSubmitRequest}
+                        disabled={submitting || !selectedCourseId}
+                        className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]"
+                    >
+                        {submitting ? 'Sending...' : 'Send Request'}
+                    </button>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                    * Only unassigned courses are shown. Pending requests are disabled.
+                </p>
+            </div>
+
+            {/* 2. My Courses Table (APPROVED ONLY) */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-800">My Courses</h3>
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                        <FaBook className="text-gray-600" />
+                        My Approved Courses
+                    </h3>
+                    <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                        Strictly Approved Only
+                    </span>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-3 text-left">Course Name</th>
+                                <th className="px-6 py-3 text-left">Category</th>
+                                <th className="px-6 py-3 text-left">Students</th>
+                                <th className="px-6 py-3 text-left">Status</th>
+                                <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {courses.map((course) => {
-                                const status = course.is_active ? 'approved' : 'pending';
-                                const courseModules = modules[course.id] || [];
-                                const hasModules = courseModules.length > 0;
-
-                                return (
+                            {loading ? (
+                                <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">Loading your courses...</td></tr>
+                            ) : myCourses.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-500">
+                                            <FaChalkboardTeacher size={48} className="text-gray-300 mb-4" />
+                                            <p className="text-lg font-medium">No approved courses yet</p>
+                                            <p className="text-sm">Request a course above and wait for admin approval.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                myCourses.map(course => (
                                     <React.Fragment key={course.id}>
-                                        <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleCourseModules(course.id)}>
-                                            <td className="px-4 py-4 whitespace-nowrap flex items-center justify-between">
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-900 truncate max-w-[220px]">
-                                                        {course.title}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 truncate max-w-[220px]">
-                                                        {course.category?.name || '—'}
-                                                    </div>
-                                                </div>
-
-                                                <div className="ml-2">
+                                        <tr
+                                            className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                            onClick={() => toggleCourseModules(course.id)}
+                                        >
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium text-gray-900">{course.title}</div>
+                                                <div className="text-xs text-gray-500">ID: {course.id}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{course.category?.name || '—'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{course.students_count || 0}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <FaCheckCircle size={10} /> Approved
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button className="text-gray-400 hover:text-primary transition-colors">
                                                     {expandedCourses[course.id] ? <FaChevronUp /> : <FaChevronDown />}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <FaUsers className="mr-2 text-gray-400" />
-                                                    <span className="text-sm text-gray-900">{course.students_count ?? 0}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <FaStar className="mr-2 text-amber-500" />
-                                                    <span className="text-sm text-gray-900">{course.rating ?? 0}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <FaClock className="mr-2 text-gray-400" />
-                                                    <span className="text-sm text-gray-900">{course.duration || '—'}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                ${Number(course.price || 0)}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    {getStatusIcon(status)}
-                                                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
-                                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleEditCourse(course.id); }}
-                                                        className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg"
-                                                    >
-                                                        <FaEdit />
-                                                    </button>
-                                                    <button className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-50 rounded-lg">
-                                                        <FaEye />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }}
-                                                        className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg"
-                                                    >
-                                                        <FaTrash />
-                                                    </button>
-                                                </div>
+                                                </button>
                                             </td>
                                         </tr>
-
-                                        {/* Modules Section */}
+                                        {/* EXPANDED MODULES */}
                                         {expandedCourses[course.id] && (
                                             <tr>
-                                                <td colSpan={7} className="bg-gray-50 px-4 py-6">
-                                                    <div className="ml-8">
-                                                        <div className="flex justify-between items-center mb-4">
-                                                            <h4 className="font-medium text-gray-800">Modules ({courseModules.length})</h4>
-                                                            <div className="text-sm text-gray-500">
-                                                                {hasModules ? `Total Duration: ${courseModules.reduce((acc, mod) => acc + (parseInt(mod.duration) || 0), 0)}h` : ''}
+                                                <td colSpan="5" className="px-0 py-0 border-b border-gray-100">
+                                                    <div className="bg-gray-50 p-6 border-l-4 border-primary">
+                                                        <h4 className="text-sm font-bold text-gray-700 mb-3 ml-2 uppercase tracking-wide">Course Curriculum</h4>
+
+                                                        {loadingContent[`c_${course.id}`] ? (
+                                                            <div className="text-center py-4 text-gray-500 flex items-center justify-center gap-2">
+                                                                <FaHourglassHalf className="animate-spin text-primary" /> Loading modules...
                                                             </div>
-                                                        </div>
-
-                                                        {loadingModules[course.id] ? (
-                                                            <div className="text-center py-4">
-                                                                <div className="text-gray-500">Loading modules...</div>
-                                                            </div>
-                                                        ) : hasModules ? (
-                                                            <div className="space-y-4">
-                                                                {courseModules.map((module) => {
-                                                                    const moduleLessons = lessons[module.id] || [];
-                                                                    const isExpanded = expandedModules[module.id];
-
-                                                                    return (
-                                                                        <div key={module.id} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                                                                            {/* Module Header */}
-                                                                            <div
-                                                                                className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
-                                                                                onClick={() => toggleModuleLessons(module.id, course.id)}
-                                                                            >
-                                                                                <div className="flex-1">
-                                                                                    <div className="flex items-start">
-                                                                                        <div className="flex-shrink-0 pt-1">
-                                                                                            <div className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full">
-                                                                                                {module.order_index}
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <div className="ml-3 flex-1">
-                                                                                            <div className="flex items-center justify-between">
-                                                                                                <h5 className="font-medium text-gray-900">{module.title}</h5>
-                                                                                                <div className="flex items-center space-x-2">
-                                                                                                    <span className="text-xs text-gray-500">{module.duration}</span>
-                                                                                                    {isExpanded ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            {module.description && (
-                                                                                                <p className="text-sm text-gray-600 mt-1">{module.description}</p>
-                                                                                            )}
-                                                                                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                                                                                                <span>{module.lessons_count} lessons</span>
-                                                                                                <span>Order: {module.order_index}</span>
-                                                                                                <span>Progress: {module.progress_percentage}%</span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            {/* Lessons Section */}
-                                                                            {isExpanded && (
-                                                                                <div className="border-t border-gray-200 bg-gray-50">
-                                                                                    <div className="p-4">
-                                                                                        <div className="flex justify-between items-center mb-3">
-                                                                                            <h6 className="font-medium text-gray-700">Lessons ({moduleLessons.length})</h6>
-
-                                                                                        </div>
-
-                                                                                        {loadingLessons[module.id] ? (
-                                                                                            <div className="text-center py-2">
-                                                                                                <div className="text-gray-500">Loading lessons...</div>
-                                                                                            </div>
-                                                                                        ) : moduleLessons.length > 0 ? (
-                                                                                            <div className="space-y-2">
-                                                                                                {moduleLessons.map((lesson) => (
-                                                                                                    <div key={lesson.id} className="bg-white rounded border border-gray-200 p-3 hover:bg-gray-50">
-                                                                                                        <div className="flex items-start">
-                                                                                                            <div className="flex-shrink-0 pt-1">
-                                                                                                                {getLessonIcon(lesson.type)}
-                                                                                                            </div>
-                                                                                                            <div className="ml-3 flex-1">
-                                                                                                                <div className="flex justify-between items-start">
-                                                                                                                    <div>
-                                                                                                                        <div className="font-medium text-gray-900">{lesson.title}</div>
-                                                                                                                        {lesson.description && (
-                                                                                                                            <p className="text-sm text-gray-600 mt-1">{lesson.description}</p>
-                                                                                                                        )}
-                                                                                                                    </div>
-                                                                                                                    <div className="flex items-center space-x-2">
-                                                                                                                        <span className="text-xs text-gray-500">{lesson.duration}</span>
-                                                                                                                        <span className={`text-xs px-2 py-1 rounded-full ${lesson.type === 'video' ? 'bg-red-100 text-red-800' : lesson.type === 'text' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                                                                                                                            {lesson.type}
-                                                                                                                        </span>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                                <div className="flex items-center justify-between mt-2">
-                                                                                                                    <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                                                                                                        <span>Order: {lesson.order_index}</span>
-                                                                                                                        <span>•</span>
-                                                                                                                        <span>ID: {lesson.id}</span>
-                                                                                                                        {lesson.content_url && (
-                                                                                                                            <>
-                                                                                                                                <span>•</span>
-                                                                                                                                <span className="text-blue-600">Has Content</span>
-                                                                                                                            </>
-                                                                                                                        )}
-                                                                                                                    </div>
-                                                                                                                    <div className="flex items-center space-x-2">
-                                                                                                                        <button
-                                                                                                                            onClick={(e) => handleViewLesson(lesson.id, module.id, e)}
-                                                                                                                            className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                                                                                                                        >
-                                                                                                                            View
-                                                                                                                        </button>
-                                                                                                                        <button
-                                                                                                                            onClick={(e) => handleEditLesson(lesson.id, module.id, e)}
-                                                                                                                            className="text-xs px-2 py-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded"
-                                                                                                                        >
-                                                                                                                            Edit
-                                                                                                                        </button>
-                                                                                                                        <button
-                                                                                                                            onClick={(e) => handleDeleteLesson(lesson.id, module.id, e)}
-                                                                                                                            className="text-xs px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                                                                                                                        >
-                                                                                                                            Delete
-                                                                                                                        </button>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                ))}
-                                                                                            </div>
-                                                                                        ) : (
-                                                                                            <div className="text-center py-4 bg-white rounded border border-gray-200">
-                                                                                                <div className="text-gray-500">No lessons found</div>
-                                                                                                <button
-                                                                                                    onClick={(e) => handleAddLesson(module.id, course.id, e)}
-                                                                                                    className="mt-2 text-sm text-primary hover:text-primary-dark"
-                                                                                                >
-                                                                                                    Add your first lesson
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
+                                                        ) : (modules[course.id] || []).length === 0 ? (
+                                                            <div className="text-center py-4 text-gray-400 italic">No modules found.</div>
                                                         ) : (
-                                                            <div className="text-center py-6 bg-white rounded-lg border border-gray-200">
-                                                                <div className="text-gray-500">No modules found for this course</div>
-                                                                <div className="text-sm text-gray-400 mt-1">Modules will appear here once they are created</div>
+                                                            <div className="space-y-3">
+                                                                {(modules[course.id] || []).map((module) => (
+                                                                    <div key={module.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                                                                        {/* Module Header */}
+                                                                        <div
+                                                                            className="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                toggleModuleLessons(module.id);
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex items-center gap-3">
+                                                                                <span className="bg-blue-50 text-blue-600 text-xs font-bold w-6 h-6 flex items-center justify-center rounded">
+                                                                                    {module.order_index}
+                                                                                </span>
+                                                                                <span className="font-medium text-gray-800">{module.title}</span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2 text-gray-400 text-xs">
+                                                                                <span>{module.lessons_count || 0} Lessons</span>
+                                                                                {expandedModules[module.id] ? <FaChevronUp className="text-primary" /> : <FaChevronDown />}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Lessons List - Explicitly Dependent on Module ID */}
+                                                                        {expandedModules[module.id] && (
+                                                                            <div className="border-t border-gray-100 bg-gray-50/50">
+                                                                                {loadingContent[`m_${module.id}`] ? (
+                                                                                    <div className="p-4 text-center text-xs text-gray-500 flex justify-center gap-2">
+                                                                                        <FaHourglassHalf className="animate-spin text-primary" /> Loading lessons...
+                                                                                    </div>
+                                                                                ) : (lessons[module.id] || []).length === 0 ? (
+                                                                                    <div className="p-4 text-center text-xs text-gray-400 italic">No lessons in this module.</div>
+                                                                                ) : (
+                                                                                    <ul className="divide-y divide-gray-100">
+                                                                                        {(lessons[module.id] || []).map((lesson, idx) => (
+                                                                                            <li key={lesson.id || idx} className="p-3 pl-12 flex justify-between items-center hover:bg-white transition-colors">
+                                                                                                <div className="flex items-center gap-3">
+                                                                                                    <span className="text-gray-400 text-xs w-5">{idx + 1}.</span>
+                                                                                                    {lesson.type === 'video' ? <FaFileVideo className="text-red-400" /> : <FaFileAlt className="text-blue-400" />}
+                                                                                                    <div className='flex flex-col'>
+                                                                                                        <span className="text-sm font-medium text-gray-700">{lesson.title}</span>
+                                                                                                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">{lesson.type}</span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <button className="text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all">
+                                                                                                    View Content
+                                                                                                </button>
+                                                                                            </li>
+                                                                                        ))}
+                                                                                    </ul>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
                                                             </div>
                                                         )}
                                                     </div>
@@ -522,69 +384,51 @@ const CoursesManagement = ({ showNotification }) => {
                                             </tr>
                                         )}
                                     </React.Fragment>
-                                );
-                            })}
-
-                            {!loading && courses.length === 0 && (
-                                <tr>
-                                    <td className="px-4 py-6 text-sm text-gray-600" colSpan={7}>
-                                        No courses assigned yet.
-                                    </td>
-                                </tr>
+                                ))
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* Requests Table */}
+            {/* 3. My Requests History */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-800">My Course Requests</h3>
+                    <h3 className="font-bold text-gray-800">My Requests History</h3>
                 </div>
-
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                <th className="px-6 py-3 text-left">Course Name</th>
+                                <th className="px-6 py-3 text-left">Date Requested</th>
+                                <th className="px-6 py-3 text-left">Status</th>
+                                <th className="px-6 py-3 text-left">Admin Note</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {myRequests.map((req) => (
-                                <tr key={req.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div className="text-sm font-medium text-gray-900">{req.course?.title || '—'}</div>
-                                            <div className="text-sm text-gray-500">{req.course?.category?.name || '—'}</div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            {getStatusIcon(req.status)}
-                                            <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(req.status)}`}>
-                                                {req.status ? (req.status.charAt(0).toUpperCase() + req.status.slice(1)) : '—'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-4 whitespace-nowrap">
-                                        {req.status === 'rejected' ? (
-                                            <p className="text-sm text-red-700">{req.reason || '—'}</p>
-                                        ) : (
-                                            <span className="text-sm text-gray-500">—</span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-
-                            {!loading && myRequests.length === 0 && (
-                                <tr>
-                                    <td className="px-4 py-6 text-sm text-gray-600" colSpan={3}>
-                                        No course requests yet.
-                                    </td>
-                                </tr>
+                            {requestHistory.length === 0 ? (
+                                <tr><td colSpan="4" className="px-6 py-8 text-center text-gray-500">No request history found.</td></tr>
+                            ) : (
+                                requestHistory.map(req => (
+                                    <tr key={req.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 font-medium text-gray-900">{req.course?.title || 'Unknown Course'}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                            {req.created_at ? new Date(req.created_at).toLocaleDateString() : '—'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                {getStatusIcon(req.status)}
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(req.status)}`}>
+                                                    {req.status}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-gray-500 italic">
+                                            {req.reason || req.admin_note || '—'}
+                                        </td>
+                                    </tr>
+                                ))
                             )}
                         </tbody>
                     </table>

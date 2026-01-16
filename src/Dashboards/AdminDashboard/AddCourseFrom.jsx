@@ -355,7 +355,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         </div>
 
         {/* Instructor */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Instructor *
           </label>
@@ -373,7 +373,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* Duration */}
         <div>

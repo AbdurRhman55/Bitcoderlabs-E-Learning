@@ -32,6 +32,7 @@ import { logoutAsync } from '../../../slices/AuthSlice';
 import AllCourses from "./AllCourses";
 import TeachersTable from "./TeacherTable.jsx";
 import CourseRequests from "./CourseRequests";
+import CourseCategories from "./CourseCategories";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -473,6 +474,7 @@ export default function DashboardView() {
         <div className="space-y-6">
           {active === "Dashboard" && <DashboardCards />}
           {active === "Courses" && <AllCourses />}
+          {active === "Course Categories" && <CourseCategories />}
           {active === "Course Requests" && <CourseRequests />}
           {active === "Students" && <StudentTable />}
           {active === "Teachers" && <TeachersTable />}
