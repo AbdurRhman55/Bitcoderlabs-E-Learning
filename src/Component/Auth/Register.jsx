@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import AuthLayout from "./AuthLayout";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Button from "../UI/Button";
-import { FaGraduationCap, FaChalkboardTeacher, FaShieldAlt } from "react-icons/fa";
+import { FaGraduationCap, FaChalkboardTeacher } from "react-icons/fa";
 import { useDispatch, useSelector } from 'react-redux';
 import { register, clearError } from "../../../slices/AuthSlice";
 
 export default function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated, loading, error, user } = useSelector(state => state.auth);
+  const { loading, error } = useSelector(state => state.auth);
 
   const [form, setForm] = useState({
     name: "",
@@ -18,53 +18,62 @@ export default function Register() {
     password_confirmation: "",
     role: "",
   });
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      // Redirect based on role
-      const roleRoutes = {
-        admin: '/admindashboard',
-        instructor: '/teacherprofile',
-        moderator: '/admindashboard', // Moderators use admin dashboard for now
-        student: '/studentdashboard'
-      };
-      const redirectPath = roleRoutes[user.role] || '/';
-      navigate(redirectPath);
-    }
-  }, [isAuthenticated, user, navigate]);
-
-  useEffect(() => {
-    // Clear errors when component mounts
     dispatch(clearError());
+    setFormError("");
   }, [dispatch]);
+
+  useEffect(() => {
+    if (loading) {
+      setIsSubmitting(true);
+    } else {
+      setIsSubmitting(false);
+    }
+  }, [loading]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  console.log(form)
-  async function registerUser() {
-    const response = await fetch("http://127.0.0.1:8000/api/v1/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
-    const data = await response.json();
-    console.log(data);
-    return data.success;
-  }
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
+    setIsSubmitting(true);
+    dispatch(clearError());
 
     if (form.password !== form.password_confirmation) {
-      alert("Passwords don't match!");
+      setFormError("Passwords don't match!");
+      setIsSubmitting(false);
       return;
     }
 
-    dispatch(register(form));
+    if (!form.role) {
+      setFormError("Please select a role!");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const resultAction = await dispatch(register(form));
+
+      if (register.fulfilled.match(resultAction)) {
+        navigate("/email/verify", { 
+          state: { 
+            email: form.email, 
+            showResend: true, 
+            message: resultAction.payload?.message || "Registration successful! Please verify your email."
+          } 
+        });
+      } else if (register.rejected.match(resultAction)) {
+        setFormError(resultAction.payload || "Registration failed. Please try again.");
+      }
+    } catch (err) {
+      setFormError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const roles = [
@@ -82,15 +91,19 @@ export default function Register() {
     },
   ];
 
-
-
   return (
     <AuthLayout
       title="Create account"
       subtitle="Sign up to get access to the platform"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
+        {formError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {formError}
+          </div>
+        )}
+
+        {error && !formError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             {error}
           </div>
@@ -104,7 +117,7 @@ export default function Register() {
           placeholder="Full name"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
-          disabled={loading}
+          disabled={isSubmitting}
         />
         <input
           name="email"
@@ -114,7 +127,7 @@ export default function Register() {
           placeholder="Email address"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
-          disabled={loading}
+          disabled={isSubmitting}
         />
 
         <div className="space-y-3">
@@ -138,7 +151,7 @@ export default function Register() {
                   checked={form.role === role.value}
                   onChange={handleChange}
                   className="sr-only"
-                  disabled={loading}
+                  disabled={isSubmitting}
                 />
                 <div className="flex items-start space-x-3">
                   <span className="text-2xl">{role.icon}</span>
@@ -174,7 +187,7 @@ export default function Register() {
           placeholder="Password (min 8 chars)"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
-          disabled={loading}
+          disabled={isSubmitting}
           minLength={8}
         />
         <input
@@ -185,14 +198,14 @@ export default function Register() {
           placeholder="Confirm password"
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
           required
-          disabled={loading}
+          disabled={isSubmitting}
         />
 
         <Button
           type="submit"
-          text={loading ? "Creating Account..." : "Create Account"}
+          text={isSubmitting ? "Creating Account..." : "Create Account"}
           className="w-full bg-primary text-white hover:bg-primary-dark transition-colors duration-200"
-          disabled={loading}
+          disabled={isSubmitting}
         />
 
         <p className="text-center text-sm text-gray-500">

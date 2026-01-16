@@ -15,6 +15,7 @@ import Blog from "./Pages/Blog";
 import ScrollToTop from "./Component/ScrollToTop";
 import ForgotPassword from "./Component/Auth/ForgotPassword";
 import ResetPassword from "./Component/Auth/ResetPassword";
+import EmailVerification from "./Component/Auth/EmailVerification";
 import BlogDetail from "./Pages/BlogDetail";
 import AdminDashboard from "./Pages/AdminDashboard";
 // import UserProfile from "./UserProfile/UserProfile";
@@ -36,6 +37,7 @@ function Layout() {
     "/register",
     "/forgotpassword",
     "/resetpassword",
+    "/email/verify",
     "/admindashboard",
     "/teacherprofile",
     "/teachermaindashboard"
@@ -60,6 +62,7 @@ function Layout() {
         <Route path="/course/:id" element={<CourseDetailPage />} />
         <Route path="/enroll/:id" element={<Enroll />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/email/verify" element={<EmailVerification />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/resetpassword" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />

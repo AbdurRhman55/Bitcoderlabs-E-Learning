@@ -1,41 +1,145 @@
-// src/Component/Auth/ResetPassword.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthLayout from "./AuthLayout";
-// import { useAuth } from "./AuthLogic";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Button from "../UI/Button";
-import { Link } from "react-router-dom";
+import { apiClient } from "../../api/index.js";
 
 export default function ResetPassword() {
-  // If no auth implementation is wired, provide a lightweight mock to avoid runtime errors
-  // Replace with: const { resetPassword } = useAuth(); when AuthLogic is available
-  const resetPassword = ({ token, newPassword, confirmPassword }) => {
-    console.log("Mock resetPassword", { token, newPassword, confirmPassword });
-    if (!newPassword || newPassword !== confirmPassword) return false;
-    return true;
-  };
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [form, setForm] = useState({ token: "", newPassword: "", confirmPassword: "" });
+  const [tempToken, setTempToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => {
+    const state = location.state || {};
+    if (state.tempToken) {
+      setTempToken(state.tempToken);
+    } else {
+      setError("Invalid reset session. Please start the password reset process again.");
+    }
+  }, [location.state]);
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setError("");
+    if (e.target.name === "newPassword") {
+      setNewPassword(e.target.value);
+    } else if (e.target.name === "confirmPassword") {
+      setConfirmPassword(e.target.value);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const ok = resetPassword({
-      token: form.token.trim(),
-      newPassword: form.newPassword,
-      confirmPassword: form.confirmPassword,
-    });
-    if (ok) navigate("/login");
+    setError("");
+    setSuccess("");
+
+    if (!tempToken) {
+      setError("Invalid reset session. Please start the password reset process again.");
+      return;
+    }
+
+    if (!newPassword) {
+      setError("Please enter a new password");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const data = await apiClient.resetPassword(tempToken, newPassword, confirmPassword);
+      setSuccess(data.message || "Password reset successfully! Redirecting to login...");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    } catch (err) {
+      setError(err.message || "Failed to reset password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthLayout title="Reset password" subtitle="Enter the reset token and your new password">
+    <AuthLayout
+      title="Reset Password"
+      subtitle="Enter your new password"
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="newpassword" value={form.newPassword} onChange={handleChange} type="password" placeholder="New password" className="w-full border p-3 rounded-lg" required />
-        <input name="confirmpassword" value={form.confirmPassword} onChange={handleChange} type="password" placeholder="Confirm new password" className="w-full border p-3 rounded-lg" required />
-        <Link to="/login" ><Button type="submit" text="Reset password" className="w-full bg-primary text-white" /></Link>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+            {success}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            New Password
+          </label>
+          <input
+            type="password"
+            name="newPassword"
+            id="newPassword"
+            value={newPassword}
+            onChange={handleChange}
+            placeholder="Enter new password (min 8 chars)"
+            className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
+            required
+            disabled={loading || !tempToken}
+            minLength={8}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            Confirm New Password
+          </label>
+          <input
+            type="password"
+            name="confirmPassword"
+            id="confirmPassword"
+            value={confirmPassword}
+            onChange={handleChange}
+            placeholder="Confirm new password"
+            className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors duration-200"
+            required
+            disabled={loading || !tempToken}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          text={loading ? "Resetting..." : "Reset Password"}
+          className="w-full bg-primary text-white hover:bg-primary-dark"
+          disabled={loading || !tempToken}
+        />
+
+        <p className="text-sm text-gray-500 text-center">
+          Remembered your password?{" "}
+          <Link to="/login" className="text-primary-dark hover:underline">
+            Login
+          </Link>
+        </p>
       </form>
     </AuthLayout>
   );

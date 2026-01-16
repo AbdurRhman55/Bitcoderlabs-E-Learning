@@ -6,61 +6,58 @@ import { useSelector, useDispatch } from 'react-redux';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, error, loading } = useSelector(state => state.auth);
   const dispatch = useDispatch();
+  const { isAuthenticated, user, error, loading } = useSelector(state => state.auth);
 
-
-  const [formData, setFormData] = useState({ email: "", password: "" })
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (loading) {
+      setIsSubmitting(true);
+    } else {
+      setIsSubmitting(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (isAuthenticated && user && user.role && !loading) {
       let redirectPath = '/';
       if (user.role === 'admin') {
         redirectPath = '/admindashboard';
       } else if (user.role === 'instructor') {
-        // If instructor is approved, go to main dashboard, else to profile creation
         redirectPath = user.instructor_approved ? '/teachermaindashboard' : '/teacherprofile';
-      } else if (user.role === 'moderator') {
-        redirectPath = '/admindashboard'; // Moderators use admin dashboard for now
       } else if (user.role === 'student') {
         redirectPath = '/studentdashboard';
       }
-      navigate(redirectPath);
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, user, navigate]);
-
-  useEffect(() => {
-    // Clear errors when component mounts
-    dispatch(clearError());
-  }, [dispatch]);
+  }, [isAuthenticated, user, loading, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submit
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    dispatch(clearError());
     dispatch(login(formData));
   };
 
-  // Redirect based on role
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === "admin") {
-        navigate("/admindashboard"); // Admin
-      } else if (user.is_active && user.role === "instructor") {
-        navigate("/teachermaindashboard"); // Instructor
-      } else {
-        navigate("/");
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
-
+  const isEmailNotVerified = error && (
+    error.toLowerCase().includes('verify') ||
+    error.toLowerCase().includes('email') ||
+    error.toLowerCase().includes('not verified') ||
+    error.toLowerCase().includes('activate')
+  );
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side image */}
       <div
         className="hidden lg:flex lg:flex-1 relative items-center justify-center bg-gradient-to-br from-[#3baee9] to-[#2a9fd8] overflow-hidden"
         style={{
@@ -102,6 +99,17 @@ const LoginPage = () => {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
+                {isEmailNotVerified && (
+                  <div className="mt-2">
+                    <Link 
+                      to="/email/verify" 
+                      state={{ email: formData.email, showResend: true }}
+                      className="text-red-700 font-medium hover:underline"
+                    >
+                      Click here to verify your email
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 
@@ -122,7 +130,7 @@ const LoginPage = () => {
                   placeholder="Enter your email"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all duration-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   required
-                  disabled={loading}
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -142,20 +150,19 @@ const LoginPage = () => {
                   placeholder="Enter your password"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#3baee9] focus:border-transparent transition-all duration-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   required
-                  disabled={loading}
+                  disabled={isSubmitting}
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full bg-[#3baee9] hover:bg-[#2a9fd8] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#3baee9] focus:ring-opacity-50"
               >
-                {loading ? 'Signing In...' : 'Log In'}
+                {isSubmitting ? 'Signing In...' : 'Log In'}
               </button>
             </form>
 
-            {/* Links */}
             <div className="mt-6 flex items-center justify-between text-sm">
               <Link to="/ForgotPassword" className="text-[#3baee9] hover:text-[#2a9fd8] font-medium">
                 Forgot Password?

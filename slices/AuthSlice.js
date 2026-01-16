@@ -1,12 +1,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiClient } from '../src/api/index.js';
 
+const getInitialUser = () => {
+  try {
+    const userData = localStorage.getItem('userData');
+    const token = localStorage.getItem('token');
+    if (token && userData) {
+      return JSON.parse(userData);
+    }
+  } catch (e) {
+    console.warn('Error parsing user data from localStorage:', e);
+  }
+  return null;
+};
+
 const initialState = {
-    isAuthenticated: false,
-    user: JSON.parse(localStorage.getItem('userData')) || null,
-    token: localStorage.getItem('token') || '',
-    loading: !!localStorage.getItem('token'),
-    error: null,
+  isAuthenticated: false,
+  user: getInitialUser(),
+  token: localStorage.getItem('token') || null,
+  loading: false,
+  error: null,
 }
 
 export const login = createAsyncThunk(
@@ -103,15 +116,13 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.loading = false;
-                state.token = action.payload.token;
-                state.user = action.payload.user;
-                const savedAvatar = localStorage.getItem(`avatar_${action.payload.user.id}`);
-                if (savedAvatar) {
-                    state.user.avatar = savedAvatar;
-                }
+                const { user, token } = action.payload;
+                state.token = token;
+                state.user = user;
                 state.isAuthenticated = true;
-                localStorage.setItem('token', action.payload.token);
-                localStorage.setItem('userData', JSON.stringify(state.user));
+                state.error = null;
+                localStorage.setItem('token', token);
+                localStorage.setItem('userData', JSON.stringify(user));
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false;
@@ -125,13 +136,10 @@ const authSlice = createSlice({
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.loading = false;
-                if (action.payload.token) {
-                    state.token = action.payload.token;
-                    state.user = action.payload.user;
-                    state.isAuthenticated = true;
-                    localStorage.setItem('token', action.payload.token);
-                    localStorage.setItem('userData', JSON.stringify(state.user));
-                }
+                // Registration never returns a token - user must verify email first
+                // Store user data temporarily if needed, but don't set isAuthenticated
+                state.user = action.payload.user;
+                state.error = null;
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false;
@@ -154,9 +162,10 @@ const authSlice = createSlice({
             })
             .addCase(checkAuth.rejected, (state) => {
                 state.loading = false;
-                state.token = '';
+                state.token = null;
                 state.isAuthenticated = false;
                 state.user = null;
+                state.error = null;
                 localStorage.removeItem('token');
                 localStorage.removeItem('userData');
             })
@@ -168,7 +177,7 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(logoutAsync.fulfilled, (state) => {
-                state.token = '';
+                state.token = null;
                 state.isAuthenticated = false;
                 state.user = null;
                 state.error = null;

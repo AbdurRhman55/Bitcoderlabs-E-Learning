@@ -37,7 +37,7 @@ class ApiClient {
     if (!contentType || !contentType.includes("application/json")) {
       if (response.status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login";
+        localStorage.removeItem("userData");
         throw new Error("Authentication failed. Please log in again.");
       }
       if (!response.ok) {
@@ -51,8 +51,8 @@ class ApiClient {
     if (!response.ok) {
       if (response.status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login";
-        throw new Error("Authentication failed. Please log in again.");
+        localStorage.removeItem("userData");
+        throw new Error(data.message || "Authentication failed. Please log in again.");
       }
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
@@ -85,6 +85,45 @@ class ApiClient {
 
   async getCurrentUser() {
     return this.request("/me");
+  }
+
+  async verifyEmail(id, hash) {
+    return this.request("/email/verify", {
+      method: "POST",
+      body: JSON.stringify({ id, hash }),
+    });
+  }
+
+  async resendVerificationEmail(email) {
+    return this.request("/email/resend", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async requestPasswordReset(email) {
+    return this.request("/security/send-otp", {
+      method: "POST",
+      body: JSON.stringify({ type: "password_change", email }),
+    });
+  }
+
+  async verifyPasswordResetOtp(otp) {
+    return this.request("/security/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ otp, type: "password_change" }),
+    });
+  }
+
+  async resetPassword(tempToken, newPassword, passwordConfirmation) {
+    return this.request("/students/my/password", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tempToken}` },
+      body: JSON.stringify({
+        password: newPassword,
+        password_confirmation: passwordConfirmation
+      }),
+    });
   }
 
   async updateMyProfile(id, userData) {
