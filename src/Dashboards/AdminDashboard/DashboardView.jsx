@@ -33,6 +33,8 @@ import AllCourses from "./AllCourses";
 import TeachersTable from "./TeacherTable.jsx";
 import CourseRequests from "./CourseRequests";
 import CourseCategories from "./CourseCategories";
+import Contacts from "./Contacts";
+import Orders from "./Orders";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -415,7 +417,9 @@ export default function DashboardView() {
             </button>
 
             {/* Messages */}
-            <button className="relative p-2 bg-white rounded-lg shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors">
+            <button
+               onClick={() => setActive("Contacts")}
+               className="relative p-2 bg-white rounded-lg shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors">
               <Mail size={18} className="text-gray-700" />
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-dark rounded-full flex items-center justify-center">
                 <span className="text-[10px] text-white font-medium">3</span>
@@ -479,6 +483,8 @@ export default function DashboardView() {
           {active === "Students" && <StudentTable />}
           {active === "Teachers" && <TeachersTable />}
           {active === "Enrolled Students" && <EnrolledStudentsTable />}
+          {active === "Contacts" && <Contacts />}
+          {active === "Orders" && <Orders />}
           {/* {active === "Pending Approvals" && <PendingApprovals />} */}
 
 
