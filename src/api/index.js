@@ -213,6 +213,12 @@ class ApiClient {
     });
   }
 
+  async rejectUser(userId) {
+    return this.request(`/users/${userId}/reject`, {
+      method: "POST",
+    });
+  }
+
   // Courses Management
   async getCourses(params = {}) {
     const queryString = new URLSearchParams(params).toString();

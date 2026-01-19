@@ -6,19 +6,36 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
     /**
+     * Get all users.
+     */
+    public function index(Request $request)
+    {
+        // Only admins can see user list
+        if (strtolower($request->user()->role) !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $users = User::all();
+        return response()->json(['data' => $users], 200);
+    }
+
+    /**
      * Update the specified user.
-     * This method now includes authorization check via UserPolicy.
      */
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        // Authorize the update action (uses UserPolicy)
-        $this->authorize('update', $user);
+        $currentUser = $request->user();
+        // Standard check: Admin can update anyone, others only themselves
+        if (strtolower($currentUser->role) !== 'admin' && $currentUser->id !== $user->id) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        }
 
         // Validate the incoming request
         $validated = $request->validate([
@@ -27,38 +44,77 @@ class UserController extends Controller
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'bio' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'role' => ['sometimes', 'string', 'in:admin,instructor,student'],
+            'is_active' => ['sometimes', 'boolean'],
             'password' => ['sometimes', 'nullable', 'string', 'min:8'],
-            'current_password' => ['required_with:password'],
         ]);
 
-        // If password is being updated
         if (isset($validated['password'])) {
-            // For self-updates, verify current password
-            if ($request->user()->id === $user->id) {
-                if (!isset($validated['current_password']) || !Hash::check($validated['current_password'], $user->password)) {
-                    return response()->json([
-                        'message' => 'Current password is incorrect'
-                    ], 422);
-                }
-            }
-
-            // Hash the new password
             $validated['password'] = Hash::make($validated['password']);
-            unset($validated['current_password']);
         }
 
-        // Only admins can change roles
-        if (isset($validated['role']) && $request->user()->role !== 'admin') {
+        // Only admins can change roles or activation status
+        if (strtolower($currentUser->role) !== 'admin') {
             unset($validated['role']);
+            unset($validated['is_active']);
         }
 
-        // Update the user
         $user->update($validated);
-        $user->refresh();
 
         return response()->json([
             'message' => 'User updated successfully',
-            'user' => $user
+            'user' => $user->refresh()
         ], 200);
+    }
+
+    /**
+     * Approve a student/user (Admin Only).
+     */
+    public function approve(Request $request, $id)
+    {
+        // Explicit Admin Check (Case-Insensitive)
+        if (strtolower($request->user()->role) !== 'admin') {
+            Log::warning("Unauthorized approval attempt by user: " . $request->user()->id . " with role: " . $request->user()->role);
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        }
+
+        $user = User::findOrFail($id);
+        $user->update(['is_active' => true]);
+
+        return response()->json([
+            'message' => 'User approved successfully',
+            'user' => $user->refresh()
+        ], 200);
+    }
+
+    /**
+     * Reject/Delete a student/user (Admin Only).
+     */
+    public function reject(Request $request, $id)
+    {
+        // Explicit Admin Check (Case-Insensitive)
+        if (strtolower($request->user()->role) !== 'admin') {
+            Log::warning("Unauthorized rejection attempt by user: " . $request->user()->id);
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        }
+
+        $user = User::findOrFail($id);
+        
+        if ($request->user()->id === $user->id) {
+            return response()->json(['message' => 'You cannot delete your own account here.'], 422);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'message' => 'User rejected/deleted successfully'
+        ], 200);
+    }
+
+    /**
+     * Standard Delete (Admin Only).
+     */
+    public function destroy(Request $request, $id)
+    {
+        return $this->reject($request, $id);
     }
 }

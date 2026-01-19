@@ -35,8 +35,12 @@ export default function StudentsTable() {
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, is_active: true } : u))
       );
+
+      // Refresh to be sure
+      fetchUsers();
     } catch (err) {
-      alert("Approval failed");
+      console.error("Approval failed:", err);
+      alert(err.message || "Approval failed");
     } finally {
       setLoadingIds((prev) => prev.filter((id) => id !== userId));
     }
@@ -48,12 +52,15 @@ export default function StudentsTable() {
 
     setLoadingIds((prev) => [...prev, userId]);
     try {
-      await apiClient.deleteUser(userId);
+      await apiClient.rejectUser(userId);
 
       // Optimistic removal
       setUsers((prev) => prev.filter((u) => u.id !== userId));
+      fetchUsers();
+
     } catch (err) {
-      alert("Rejection failed");
+      console.error("Rejection failed:", err);
+      alert(err.message || "Rejection failed");
     } finally {
       setLoadingIds((prev) => prev.filter((id) => id !== userId));
     }
@@ -69,8 +76,11 @@ export default function StudentsTable() {
 
       // Optimistic removal
       setUsers((prev) => prev.filter((u) => u.id !== userId));
+      fetchUsers();
+
     } catch (err) {
-      alert("Delete failed");
+      console.error("Delete failed:", err);
+      alert(err.message || "Delete failed");
     } finally {
       setLoadingIds((prev) => prev.filter((id) => id !== userId));
     }
@@ -79,8 +89,8 @@ export default function StudentsTable() {
   // ================= FILTER =================
   const filteredUsers = users.filter(
     (u) =>
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
