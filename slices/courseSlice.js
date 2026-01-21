@@ -43,10 +43,26 @@ export const fetchMyCourses = createAsyncThunk(
           // Unwrap nested course data if it follows the { data: { ... } } pattern
           const courseData = courseRes.data?.data || courseRes.data || courseRes;
 
+          const getDisplayStatus = (enrollment) => {
+            if (enrollment.status) {
+              switch (enrollment.status) {
+                case 'approved':
+                  return enrollment.is_active ? 'active' : 'pending';
+                case 'rejected':
+                  return 'rejected';
+                case 'pending':
+                default:
+                  return 'pending';
+              }
+            }
+            return enrollment.is_active ? 'active' : 'pending';
+          };
+
           return {
             ...courseData,
             progress: enrollment.progress_percentage || 0,
-            status: enrollment.is_active ? 'active' : 'pending',
+            status: getDisplayStatus(enrollment),
+            enrollmentStatus: enrollment.status,
             enrollmentId: enrollment.id
           };
         } catch (err) {

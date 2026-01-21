@@ -48,6 +48,11 @@ const MyCourses = () => {
     (course) => activeFilter === 'all' || (course.status === activeFilter)
   );
 
+  const getFilterCount = (filterId) => {
+    if (filterId === 'all') return fetchedCourses.length;
+    return fetchedCourses.filter(c => c.status === filterId).length;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -84,6 +89,13 @@ const MyCourses = () => {
             `}
           >
             {filter.label}
+            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+              activeFilter === filter.id
+                ? 'bg-white/20 text-white'
+                : 'bg-gray-200 text-gray-600'
+            }`}>
+              {getFilterCount(filter.id)}
+            </span>
           </button>
         ))}
       </div>
@@ -120,10 +132,12 @@ const MyCourses = () => {
                       ? 'bg-green-100 text-green-800'
                       : course.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-blue-100 text-blue-800'}
+                        : course.status === 'rejected'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'}
                   `}
                 >
-                  {course.status}
+                  {course.status === 'rejected' ? 'Enrollment Rejected' : course.status}
                 </span>
               </div>
 
@@ -132,6 +146,13 @@ const MyCourses = () => {
 
               {/* Progress */}
               <div className="space-y-3">
+                {course.status === 'pending' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-xs text-yellow-700">
+                      ⏳ Your enrollment is pending approval. You'll be able to access the course once an admin approves it.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Progress</span>
@@ -162,10 +183,21 @@ const MyCourses = () => {
                   w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors duration-200
                   ${course.status === 'completed'
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    : 'bg-primary text-white hover:bg-primary-dark'}
+                    : course.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 cursor-not-allowed'
+                      : course.status === 'rejected'
+                        ? 'bg-red-100 text-red-800 hover:bg-red-200 cursor-not-allowed'
+                        : 'bg-primary text-white hover:bg-primary-dark'}
                 `}
+                disabled={course.status === 'rejected' || course.status === 'pending'}
               >
-                {course.status === 'completed' ? 'View Certificate' : 'Continue Learning'}
+                {course.status === 'completed' 
+                  ? 'View Certificate' 
+                  : course.status === 'pending'
+                    ? '⌛ Waiting for Approval'
+                    : course.status === 'rejected'
+                      ? 'Enrollment Rejected'
+                      : 'Continue Learning'}
               </button>
             </div>
           </div>

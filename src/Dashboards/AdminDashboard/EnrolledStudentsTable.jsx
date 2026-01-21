@@ -516,19 +516,10 @@ export default function EnrolledStudentsTable() {
                     Course
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Payment Method
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
                     Payment Proof
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Amount
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
                     Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Date
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold">
                     Actions
@@ -553,9 +544,6 @@ export default function EnrolledStudentsTable() {
                           <div className="text-sm text-gray-500">
                             {enrollment.user?.email || enrollment.email || "-"}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {getStudentPhone(enrollment)}
-                          </div>
                         </div>
                       </div>
                     </td>
@@ -563,19 +551,6 @@ export default function EnrolledStudentsTable() {
                       <div className="font-medium text-gray-900">
                         {getCourseTitle(enrollment)}
                       </div>
-                      <div className="text-sm text-gray-500">
-                        ID: {enrollment.course_id}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="capitalize text-gray-700">
-                        {getPaymentMethod(enrollment)}
-                      </span>
-                      {getPaymentNumber(enrollment) && (
-                        <div className="text-sm text-gray-500 mt-1">
-                          {getPaymentNumber(enrollment)}
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-4">
                       {getPaymentProofUrl(enrollment) ? (
@@ -614,11 +589,6 @@ export default function EnrolledStudentsTable() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-green-600">
-                        Rs {enrollment.amount || 0}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(
                           enrollment.status,
@@ -626,11 +596,6 @@ export default function EnrolledStudentsTable() {
                       >
                         {enrollment.status?.toUpperCase() || "UNKNOWN"}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {enrollment.created_at
-                        ? new Date(enrollment.created_at).toLocaleDateString()
-                        : "N/A"}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
