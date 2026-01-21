@@ -555,10 +555,57 @@ class ApiClient {
     return this.request(`/enrollments${queryString ? `?${queryString}` : ""}`);
   }
 
+  async getEnrollmentById(id) {
+    return this.request(`/enrollments/${id}`);
+  }
+
   async enrollCourse(enrollmentData) {
+    const isFormData = typeof FormData !== 'undefined' && enrollmentData instanceof FormData;
+    if (isFormData) {
+      return this.request("/enrollments", {
+        method: "POST",
+        body: enrollmentData,
+      });
+    }
+
     return this.request("/enrollments", {
       method: "POST",
       body: JSON.stringify(enrollmentData),
+    });
+  }
+
+  async getPendingEnrollments() {
+    return this.request("/enrollments/pending");
+  }
+
+  async approveEnrollment(enrollmentId, adminNotes = null) {
+    return this.request(`/enrollments/${enrollmentId}/approve`, {
+      method: "POST",
+      body: JSON.stringify({ admin_notes: adminNotes }),
+    });
+  }
+
+  async rejectEnrollment(enrollmentId, adminNotes) {
+    return this.request(`/enrollments/${enrollmentId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ admin_notes: adminNotes }),
+    });
+  }
+
+  // Reviews & Ratings
+  async getCourseReviews(courseId) {
+    return this.request(`/courses/${courseId}/reviews`);
+  }
+
+  async createReview(courseId, reviewData) {
+    return this.request(`/courses/${courseId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({
+        rating: reviewData.rating,
+        review: reviewData.comment, // Alias common field names
+        comment: reviewData.comment,
+        course_id: courseId,
+      }),
     });
   }
 }

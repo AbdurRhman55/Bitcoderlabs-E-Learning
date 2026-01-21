@@ -1,342 +1,1001 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Eye } from "lucide-react";
-import { apiClient } from "../../../src/api/index.js";
+import React, { useEffect, useState } from "react";
+import {
+  FaEye,
+  FaCheck,
+  FaTimes,
+  FaSpinner,
+  FaDownload,
+  FaUser,
+  FaBook,
+  FaClock,
+} from "react-icons/fa";
+import { apiClient, API_ORIGIN } from "../../api/index.js";
 
 export default function EnrolledStudentsTable() {
-    const [enrollments, setEnrollments] = useState([]);
-    const [users, setUsers] = useState({}); // { userId: userData }
-    const [courses, setCourses] = useState({}); // { courseId: courseData }
-    const [loading, setLoading] = useState(true);
-    const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [enrollments, setEnrollments] = useState([]);
+  const [allEnrollments, setAllEnrollments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [filter, setFilter] = useState("pending");
 
-    // ================= FETCH STUDENT BY ID =================
-    const fetchStudentById = async (userId) => {
-        if (!userId) return null;
-        try {
-            const res = await apiClient.getUserById(userId);
-            return res.data || null;
-        } catch (err) {
-            console.error(`Failed to fetch student ${userId}`, err);
-            return null;
-        }
-    };
+  // Helper function to normalize API response
+  const normalizeData = (data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data.data) {
+      if (Array.isArray(data.data)) return data.data;
+      if (data.data.data && Array.isArray(data.data.data))
+        return data.data.data;
+      if (typeof data.data === "object") return [data.data];
+      return [];
+    }
+    return [data];
+  };
 
+  // Fetch enrollments with all related data
+  const fetchEnrollments = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.getEnrollments();
+      let enrollmentsData = normalizeData(response);
 
-    // ================= FETCH COURSE BY ID =================
-    const fetchCourseById = async (courseId) => {
-        if (!courseId) return null;
+      // Enrich each enrollment with user and course data
+      const enrichedEnrollments = await Promise.all(
+        enrollmentsData.map(async (enrollment) => {
+          const enriched = { ...enrollment };
 
-        try {
-            const res = await apiClient.getCourseById(courseId);
-            const course =
-                Array.isArray(res?.data?.data)
-                    ? res.data.data[0]          // first course object
-                    : res?.data?.data || res?.data;
-            return course || null;
-        } catch (err) {
-            console.error(`Failed to fetch course ${courseId}`, err);
-            return null;
-        }
-    };
+          // Fetch user data if not present
+          if (!enriched.user && enriched.user_id) {
+            try {
+              const userRes = await apiClient.getUserById(enriched.user_id);
+              enriched.user = normalizeData(userRes)[0] || {};
+            } catch (error) {
+              console.error("Error fetching user:", error);
+              enriched.user = {};
+            }
+          }
 
+          // Fetch course data if not present
+          if (!enriched.course && enriched.course_id) {
+            try {
+              const courseRes = await apiClient.getCourseById(
+                enriched.course_id,
+              );
+              enriched.course = normalizeData(courseRes)[0] || {};
+            } catch (error) {
+              console.error("Error fetching course:", error);
+              enriched.course = {};
+            }
+          }
 
+          // Ensure payment_proof is properly handled
+          if (enriched.payment_details) {
+            try {
+              const paymentDetails =
+                typeof enriched.payment_details === "string"
+                  ? JSON.parse(enriched.payment_details)
+                  : enriched.payment_details;
 
-    // ================= FETCH ALL ENROLLMENTS =================
-    const fetchEnrollments = useCallback(async () => {
-        try {
-            setLoading(true);
-            const res = await apiClient.getEnrollments();
-            const enrollmentsData = res.data ? (Array.isArray(res.data) ? res.data : [res.data]) : [];
-            setEnrollments(enrollmentsData);
+              if (paymentDetails.payment_proof) {
+                enriched.payment_proof = paymentDetails.payment_proof;
+              }
 
-            // Collect unique user IDs and course IDs
-            const userIds = [...new Set(enrollmentsData.map(e => e.user_id).filter(Boolean))];
-            const courseIds = [...new Set(enrollmentsData.map(e => e.course_id).filter(Boolean))];
+              // Copy other payment details for easy access
+              enriched.paymentMethod = paymentDetails.method;
+              enriched.transactionId = paymentDetails.transaction_id;
+              enriched.paymentNumber =
+                paymentDetails.easypaisa_number ||
+                paymentDetails.jazzcash_number ||
+                paymentDetails.bank_account_number;
+            } catch (error) {
+              console.error("Error parsing payment details:", error);
+            }
+          }
 
-            // Fetch all users
-            const usersPromises = userIds.map(async (userId) => {
-                const userData = await fetchStudentById(userId);
-                return { userId, userData };
-            });
+          return enriched;
+        }),
+      );
 
-            // Fetch all courses
-            const coursesPromises = courseIds.map(async (courseId) => {
-                const courseData = await fetchCourseById(courseId);
-                return { courseId, courseData };
-            });
+      setAllEnrollments(enrichedEnrollments);
 
-            const usersResults = await Promise.all(usersPromises);
-            const coursesResults = await Promise.all(coursesPromises);
+      // Apply filter
+      if (filter === "all") {
+        setEnrollments(enrichedEnrollments);
+      } else {
+        const filtered = enrichedEnrollments.filter((e) => e.status === filter);
+        setEnrollments(filtered);
+      }
+    } catch (err) {
+      console.error("Failed to fetch enrollments:", err);
+      alert("Failed to load enrollments. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            // Convert to objects for easy lookup
-            const usersMap = {};
-            usersResults.forEach(({ userId, userData }) => {
-                if (userData) {
-                    usersMap[userId] = userData;
-                }
-            });
+  useEffect(() => {
+    fetchEnrollments();
+  }, [filter]);
 
-            const coursesMap = {};
-            coursesResults.forEach(({ courseId, courseData }) => {
-                if (courseData) {
-                    coursesMap[courseId] = courseData;
-                }
-            });
-
-            setUsers(usersMap);
-            setCourses(coursesMap);
-        } catch (err) {
-            console.error("Failed to fetch enrollments:", err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchEnrollments();
-    }, [fetchEnrollments]);
-
-    // ================= GET STUDENT NAME =================
-    const getStudentName = (userId) => {
-        if (!userId) return "—";
-        const user = users[userId];
-        return user?.name || user?.username || user?.email || "—";
-    };
-
-    // ================= GET STUDENT EMAIL =================
-    const getStudentEmail = (userId) => {
-        if (!userId) return "—";
-        const user = users[userId];
-        return user?.email || "—";
-    };
-
-    // ================= GET COURSE TITLE =================
-    const getCourseTitle = (courseId) => {
-        if (!courseId) return "—";
-        const course = courses[courseId];
-        return course?.title || course?.name || "—";
-    };
-
-    // ================= FILTER =================
-    const pendingEnrollments = enrollments.filter(e => !e.is_active);
-    const activeEnrollments = enrollments.filter(e => e.is_active);
-
-    // ================= VIEW =================
-    const handleView = (enrollment) => {
-        const enrichedEnrollment = {
-            ...enrollment,
-            user: users[enrollment.user_id] || null,
-            course: courses[enrollment.course_id] || null
-        };
-        setSelectedEnrollment(enrichedEnrollment);
-    };
-
-    // ================= REFRESH =================
-    const handleRefresh = () => {
-        fetchEnrollments();
-    };
-
+  // Get enrollment ID from various possible fields
+  const getEnrollmentId = (enrollment) => {
     return (
-        <div className="space-y-10">
-            {/* Header with Refresh Button */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Enrolled Students</h1>
-                    <p className="text-gray-600">Manage student enrollments and track progress</p>
-                </div>
+      enrollment?.id || enrollment?.enrollment_id || enrollment?._id || null
+    );
+  };
+
+  // Handle approve enrollment
+  const handleApprove = async (enrollment) => {
+    if (!window.confirm("Are you sure you want to approve this enrollment?"))
+      return;
+
+    const id = getEnrollmentId(enrollment);
+    if (!id) {
+      alert("Cannot determine enrollment ID to approve.");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await apiClient.approveEnrollment(id, "Approved by admin");
+      alert("Enrollment approved successfully!");
+      await fetchEnrollments();
+      setShowModal(false);
+    } catch (err) {
+      console.error("Failed to approve enrollment:", err);
+      alert(err.message || "Failed to approve enrollment");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle reject enrollment
+  const handleReject = async (enrollmentId) => {
+    if (!rejectReason.trim()) {
+      alert("Please provide a reason for rejection");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to reject this enrollment?"))
+      return;
+
+    const id = enrollmentId || getEnrollmentId(selectedEnrollment);
+    if (!id) {
+      alert("Cannot determine enrollment ID to reject.");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      await apiClient.rejectEnrollment(id, rejectReason);
+      alert("Enrollment rejected successfully!");
+      await fetchEnrollments();
+      setShowModal(false);
+      setRejectReason("");
+    } catch (err) {
+      console.error("Failed to reject enrollment:", err);
+      alert(err.message || "Failed to reject enrollment");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Inline reject from table
+  const handleRejectInline = async (enrollment) => {
+    const reason = window.prompt("Enter rejection reason:");
+    if (!reason || !reason.trim()) {
+      alert("Rejection reason is required.");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to reject this enrollment?"))
+      return;
+
+    const id = getEnrollmentId(enrollment);
+    if (!id) return alert("Cannot determine enrollment ID to reject.");
+
+    try {
+      setActionLoading(true);
+      await apiClient.rejectEnrollment(id, reason);
+      alert("Enrollment rejected successfully!");
+      await fetchEnrollments();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to reject enrollment");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // View enrollment details
+  const viewDetails = async (enrollment) => {
+    setLoading(true);
+
+    try {
+      // Fetch complete data for the selected enrollment
+      const id = getEnrollmentId(enrollment);
+      if (id) {
+        const res = await apiClient.getEnrollmentById(id);
+        let enrollmentData = normalizeData(res)[0] || {};
+
+        // Resolve user: by user_id first, otherwise try phone lookup
+        let resolvedUser = null;
+        if (enrollmentData.user_id) {
+          try {
+            const userRes = await apiClient.getUserById(enrollmentData.user_id);
+            resolvedUser = normalizeData(userRes)[0] || null;
+          } catch (e) {
+            console.error("Error fetching user by id:", e);
+          }
+        }
+
+        // If still no user, attempt to look up by phone inside enrollment or payment details
+        if (!resolvedUser) {
+          let phone = enrollmentData.phone || null;
+          if (!phone && enrollmentData.payment_details) {
+            try {
+              const pd =
+                typeof enrollmentData.payment_details === "string"
+                  ? JSON.parse(enrollmentData.payment_details)
+                  : enrollmentData.payment_details;
+              phone =
+                pd.phone || pd.easypaisa_number || pd.jazzcash_number || null;
+            } catch (e) {
+              phone = null;
+            }
+          }
+
+          if (phone) {
+            try {
+              const usersRes = await apiClient.getUsers({ phone });
+              const users = normalizeData(usersRes);
+              if (users.length) resolvedUser = users[0];
+            } catch (e) {
+              console.error("Error fetching user by phone:", e);
+            }
+          }
+        }
+
+        if (resolvedUser) enrollmentData.user = resolvedUser;
+
+        // Fetch course data if present
+        if (enrollmentData.course_id) {
+          try {
+            const courseRes = await apiClient.getCourseById(
+              enrollmentData.course_id,
+            );
+            enrollmentData.course = normalizeData(courseRes)[0] || {};
+          } catch (error) {
+            console.error("Error fetching course:", error);
+            enrollmentData.course = {};
+          }
+        }
+
+        setSelectedEnrollment(enrollmentData);
+      } else {
+        setSelectedEnrollment(enrollment);
+      }
+
+      setShowModal(true);
+      setRejectReason("");
+    } catch (error) {
+      console.error("Error fetching enrollment details:", error);
+      setSelectedEnrollment(enrollment);
+      setShowModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Open lightbox for image viewing
+  const openLightbox = (url) => {
+    if (!url) return;
+    setLightboxImage(resolveImageUrl(url));
+  };
+
+  const closeLightbox = () => setLightboxImage(null);
+
+  // Get status badge styling
+  const getStatusBadge = (status) => {
+    const badges = {
+      pending: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      approved: "bg-green-100 text-green-800 border-green-300",
+      rejected: "bg-red-100 text-red-800 border-red-300",
+    };
+    return badges[status] || "bg-gray-100 text-gray-800 border-gray-300";
+  };
+
+  // Resolve image URL
+  const resolveImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("/")) return `${API_ORIGIN}${url}`;
+    return `${API_ORIGIN}/storage/${url}`;
+  };
+
+  // Get student name
+  const getStudentName = (enrollment) => {
+    if (enrollment.user) {
+      return (
+        `${enrollment.user.first_name || ""} ${enrollment.user.last_name || ""}`.trim() ||
+        enrollment.user.name ||
+        "Unknown Student"
+      );
+    }
+    return (
+      `${enrollment.first_name || ""} ${enrollment.last_name || ""}`.trim() ||
+      enrollment.name ||
+      "Unknown Student"
+    );
+  };
+
+  // Get payment proof URL
+  const getPaymentProofUrl = (enrollment) => {
+    // Check multiple possible locations for payment proof
+    const proof =
+      enrollment.payment_proof ||
+      enrollment.payment_details?.payment_proof ||
+      (enrollment.payment_details &&
+        typeof enrollment.payment_details === "string" &&
+        JSON.parse(enrollment.payment_details)?.payment_proof);
+
+    return proof ? resolveImageUrl(proof) : null;
+  };
+
+  // Get student phone
+  const getStudentPhone = (enrollment) => {
+    if (enrollment.user?.phone) return enrollment.user.phone;
+    if (enrollment.phone) return enrollment.phone;
+    if (enrollment.payment_details) {
+      try {
+        const pd =
+          typeof enrollment.payment_details === "string"
+            ? JSON.parse(enrollment.payment_details)
+            : enrollment.payment_details;
+        return pd.easypaisa_number || pd.jazzcash_number || pd.phone || "-";
+      } catch (e) {
+        return "-";
+      }
+    }
+    return "-";
+  };
+
+  // Get student id (resolved from user object or left as phone if no user found)
+  const getStudentId = (enrollment) => {
+    if (!enrollment) return "-";
+    if (enrollment.user)
+      return (
+        enrollment.user.id ||
+        enrollment.user.user_id ||
+        enrollment.user._id ||
+        "-"
+      );
+    if (enrollment.user_id) return enrollment.user_id;
+    // fallback to phone-based identifier
+    const phone = getStudentPhone(enrollment);
+    return phone && phone !== "-" ? `phone:${phone}` : "-";
+  };
+
+  // Get course title
+  const getCourseTitle = (enrollment) => {
+    return (
+      enrollment.course?.title || enrollment.course_name || "Course Not Found"
+    );
+  };
+
+  // Get payment method
+  const getPaymentMethod = (enrollment) => {
+    if (enrollment.payment_method) return enrollment.payment_method;
+    if (enrollment.payment_details) {
+      try {
+        const pd =
+          typeof enrollment.payment_details === "string"
+            ? JSON.parse(enrollment.payment_details)
+            : enrollment.payment_details;
+        return pd.method || "N/A";
+      } catch (e) {
+        return "N/A";
+      }
+    }
+    return "N/A";
+  };
+
+  // Get payment number
+  const getPaymentNumber = (enrollment) => {
+    if (enrollment.paymentNumber) return enrollment.paymentNumber;
+    if (enrollment.payment_details) {
+      try {
+        const pd =
+          typeof enrollment.payment_details === "string"
+            ? JSON.parse(enrollment.payment_details)
+            : enrollment.payment_details;
+        return (
+          pd.easypaisa_number ||
+          pd.jazzcash_number ||
+          pd.bank_account_number ||
+          ""
+        );
+      } catch (e) {
+        return "";
+      }
+    }
+    return "";
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <FaSpinner className="animate-spin text-4xl text-primary" />
+        <span className="ml-3 text-lg">Loading enrollments...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Filters */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Enrollment Requests
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Manage student enrollment applications
+            </p>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+            {[
+              {
+                value: "pending",
+                label: "Pending",
+                count: allEnrollments.filter((e) => e.status === "pending")
+                  .length,
+              },
+              {
+                value: "approved",
+                label: "Approved",
+                count: allEnrollments.filter((e) => e.status === "approved")
+                  .length,
+              },
+              {
+                value: "rejected",
+                label: "Rejected",
+                count: allEnrollments.filter((e) => e.status === "rejected")
+                  .length,
+              },
+              {
+                value: "all",
+                label: "All",
+                count: allEnrollments.length,
+              },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setFilter(tab.value)}
+                className={`px-4 py-2 rounded-md font-medium transition-all ${
+                  filter === tab.value
+                    ? "bg-white text-primary shadow-md"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Enrollments Table */}
+      {enrollments.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          <div className="text-gray-400 text-6xl mb-4">📋</div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            No Enrollments Found
+          </h3>
+          <p className="text-gray-500">
+            There are no {filter} enrollment requests at the moment.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-primary to-primary-dark text-white">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Student
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Course
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Payment Method
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Payment Proof
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Amount
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Date
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {enrollments.map((enrollment) => (
+                  <tr
+                    key={getEnrollmentId(enrollment)}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-primary font-semibold">
+                          {getStudentName(enrollment).charAt(0) || "U"}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">
+                            {getStudentName(enrollment)}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {enrollment.user?.email || enrollment.email || "-"}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {getStudentPhone(enrollment)}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gray-900">
+                        {getCourseTitle(enrollment)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        ID: {enrollment.course_id}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="capitalize text-gray-700">
+                        {getPaymentMethod(enrollment)}
+                      </span>
+                      {getPaymentNumber(enrollment) && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          {getPaymentNumber(enrollment)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {getPaymentProofUrl(enrollment) ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openLightbox(getPaymentProofUrl(enrollment))
+                            }
+                            className="inline-block"
+                            title="View proof"
+                          >
+                            <img
+                              src={getPaymentProofUrl(enrollment)}
+                              alt="Payment proof"
+                              className="w-16 h-12 object-cover rounded-md border"
+                              onError={(e) => {
+                                e.target.src =
+                                  "https://via.placeholder.com/64x48?text=No+Image";
+                              }}
+                            />
+                          </button>
+                          <a
+                            href={getPaymentProofUrl(enrollment)}
+                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Download proof"
+                            className="p-2 bg-white rounded-md border text-primary hover:bg-gray-50"
+                          >
+                            <FaDownload />
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">N/A</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-semibold text-green-600">
+                        Rs {enrollment.amount || 0}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(
+                          enrollment.status,
+                        )}`}
+                      >
+                        {enrollment.status?.toUpperCase() || "UNKNOWN"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {enrollment.created_at
+                        ? new Date(enrollment.created_at).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => viewDetails(enrollment)}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                          title="View Details"
+                        >
+                          <FaEye />
+                        </button>
+                        {enrollment.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(enrollment)}
+                              className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                              title="Approve"
+                              disabled={actionLoading}
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              onClick={() => handleRejectInline(enrollment)}
+                              className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                              title="Reject"
+                              disabled={actionLoading}
+                            >
+                              <FaTimes />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Overlay */}
+      {lightboxImage && (
+        <div className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full">
+            <button
+              onClick={closeLightbox}
+              className="absolute top-2 right-2 bg-white rounded-full p-2 z-10"
+              title="Close"
+            >
+              ✕
+            </button>
+            <img
+              src={lightboxImage}
+              alt="Payment proof large"
+              className="w-full max-h-[80vh] object-contain rounded-md"
+              onError={(e) => {
+                e.target.src =
+                  "https://via.placeholder.com/800x600?text=Image+Not+Found";
+              }}
+            />
+            <div className="mt-2 text-right">
+              <a
+                href={lightboxImage}
+                download
+                className="px-4 py-2 bg-white rounded-md shadow"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enrollment Details Modal */}
+      {showModal && selectedEnrollment && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-6 sticky top-0 z-10">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold">
+                  Enrollment Request Details
+                </h3>
                 <button
-                    onClick={handleRefresh}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-                    disabled={loading}
+                  onClick={() => setShowModal(false)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
                 >
-                    {loading ? "Loading..." : "Refresh"}
+                  <FaTimes size={20} />
                 </button>
+              </div>
             </div>
 
-            {loading ? (
-                <div className="text-center py-10">
-                    <div className="text-gray-500">Loading enrollments...</div>
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Student Information */}
+              <div className="bg-blue-50 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <FaUser className="text-primary" />
+                  Student Information
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-gray-600">Full Name:</span>
+                    <p className="font-semibold text-gray-900">
+                      {getStudentName(selectedEnrollment)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Email:</span>
+                    <p className="font-semibold text-gray-900">
+                      {selectedEnrollment.user?.email ||
+                        selectedEnrollment.email ||
+                        "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-sm text-gray-600">Student ID:</span>
+                    <p className="font-semibold text-gray-900">
+                      {getStudentId(selectedEnrollment)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Enrollment ID:
+                    </span>
+                    <p className="font-semibold text-gray-900">
+                      {getEnrollmentId(selectedEnrollment) || "-"}
+                    </p>
+                  </div>
                 </div>
-            ) : (
-                <>
-                    {/* ================= PENDING ENROLLMENT REQUESTS ================= */}
-                    {pendingEnrollments.length > 0 && (
-                        <section>
-                            <h2 className="text-xl font-bold text-[#2a9fd8] mb-4">
-                                Pending Enrollment Requests ({pendingEnrollments.length})
-                            </h2>
+              </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {pendingEnrollments.map((enrollment) => (
-                                    <div
-                                        key={enrollment.id}
-                                        className="bg-white border border-[#3baee9]/30 rounded-xl p-4 shadow-sm hover:shadow-md transition"
-                                    >
-                                        <p className="text-lg font-semibold">
-                                            {getStudentName(enrollment.user_id)}
-                                        </p>
+              {/* Course Information */}
+              <div className="bg-green-50 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <FaBook className="text-green-600" />
+                  Course Information
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-gray-600">Course Title:</span>
+                    <p className="font-semibold text-gray-900">
+                      {getCourseTitle(selectedEnrollment)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Course ID:</span>
+                    <p className="font-semibold text-gray-900">
+                      {selectedEnrollment.course_id || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Course Price:</span>
+                    <p className="font-semibold text-gray-900">
+                      Rs{" "}
+                      {selectedEnrollment.course?.price ||
+                        selectedEnrollment.amount ||
+                        "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Course Duration:
+                    </span>
+                    <p className="font-semibold text-gray-900">
+                      {selectedEnrollment.course?.duration || "N/A"}
+                    </p>
+                  </div>
+                  {selectedEnrollment.course?.description && (
+                    <div className="md:col-span-2">
+                      <span className="text-sm text-gray-600">
+                        Description:
+                      </span>
+                      <p className="font-semibold text-gray-900 mt-1">
+                        {selectedEnrollment.course.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-                                        <p className="text-xs text-gray-500">
-                                            {getStudentEmail(enrollment.user_id)}
-                                        </p>
+              {/* Payment Information */}
+              <div className="bg-yellow-50 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <FaClock className="text-yellow-600" />
+                  Payment Information
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Payment Method:
+                    </span>
+                    <p className="font-semibold text-gray-900 capitalize">
+                      {getPaymentMethod(selectedEnrollment)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">Amount Paid:</span>
+                    <p className="font-semibold text-green-600 text-xl">
+                      Rs {selectedEnrollment.amount || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Transaction ID:
+                    </span>
+                    <p className="font-semibold text-gray-900">
+                      {selectedEnrollment.transaction_id ||
+                        selectedEnrollment.transactionId ||
+                        "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Submission Date:
+                    </span>
+                    <p className="font-semibold text-gray-900">
+                      {selectedEnrollment.created_at
+                        ? new Date(
+                            selectedEnrollment.created_at,
+                          ).toLocaleString()
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
 
-                                        <div className="mt-3 bg-[#e8f7ff] rounded-lg p-2 text-xs text-gray-700 space-y-1">
-                                            <p><b>Course:</b> {getCourseTitle(enrollment.course_id)}</p>
-                                            <p><b>Progress:</b> {enrollment.progress_percentage ?? 0}%</p>
-                                            <p><b>Enrollment ID:</b> {enrollment.id}</p>
-                                        </div>
+                {/* Payment Proof */}
+                {getPaymentProofUrl(selectedEnrollment) ? (
+                  <div className="mt-4">
+                    <span className="text-sm text-gray-600 block mb-2">
+                      Payment Proof Screenshot:
+                    </span>
+                    <div className="relative group">
+                      <img
+                        src={getPaymentProofUrl(selectedEnrollment)}
+                        alt="Payment Proof"
+                        className="w-full max-h-96 object-contain bg-gray-100 rounded-lg border-2 border-gray-300"
+                        onError={(e) => {
+                          e.target.src =
+                            "https://via.placeholder.com/800x600?text=Image+Not+Found";
+                        }}
+                      />
+                      <a
+                        href={getPaymentProofUrl(selectedEnrollment)}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute top-2 right-2 bg-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <FaDownload className="text-primary" />
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">
+                    No payment proof uploaded.
+                  </div>
+                )}
+              </div>
 
-                                        <button
-                                            onClick={() => handleView(enrollment)}
-                                            className="mt-3 w-full text-xs py-2 border rounded-lg text-[#3baee9] flex items-center justify-center gap-1 hover:bg-[#e8f7ff]"
-                                            disabled={loading}
-                                        >
-                                            <Eye size={14} /> View Details
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
+              {/* Status and Admin Notes */}
+              <div className="bg-gray-50 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-gray-900 mb-4">
+                  Status & Notes
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-600">
+                      Current Status:
+                    </span>
+                    <p
+                      className={`inline-block ml-2 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusBadge(
+                        selectedEnrollment.status,
+                      )}`}
+                    >
+                      {selectedEnrollment.status?.toUpperCase() || "UNKNOWN"}
+                    </p>
+                  </div>
 
-                    {/* ================= ACTIVE ENROLLED STUDENTS ================= */}
-                    <section className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                        <div className="px-6 py-4 border-b border-gray-200 bg-primary rounded-t-xl">
-                            <h2 className="text-3xl font-bold text-white">Enrolled Students</h2>
-                            <p className="text-sm text-white">
-                                {activeEnrollments.length} active enrollments
-                            </p>
-                        </div>
+                  {selectedEnrollment.admin_notes && (
+                    <div>
+                      <span className="text-sm text-gray-600">
+                        Admin Notes:
+                      </span>
+                      <p className="font-medium text-gray-900 mt-1">
+                        {selectedEnrollment.admin_notes}
+                      </p>
+                    </div>
+                  )}
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50">
-                                    <tr className="border-gray-200 border-b">
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Student ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Course</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Progress</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">View</th>
-                                    </tr>
-                                </thead>
+                  {selectedEnrollment.approved_at && (
+                    <div>
+                      <span className="text-sm text-gray-600">
+                        Approved At:
+                      </span>
+                      <p className="font-medium text-gray-900">
+                        {new Date(
+                          selectedEnrollment.approved_at,
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-                                <tbody className="divide-y">
-                                    {activeEnrollments.length > 0 ? (
-                                        activeEnrollments.map((enrollment) => (
-                                            <tr key={enrollment.id} className="hover:bg-gray-50 border-gray-200 border-b">
-                                                <td className="px-6 py-4">
-                                                    <span className="text-xs text-gray-500">#{enrollment.user_id}</span>
-                                                </td>
-                                                <td className="px-6 py-4 font-medium">
-                                                    {getStudentName(enrollment.user_id)}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {getStudentEmail(enrollment.user_id)}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {getCourseTitle(enrollment.course_id)}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center">
-                                                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                                            <div
-                                                                className="bg-green-500 h-2 rounded-full"
-                                                                style={{ width: `${enrollment.progress_percentage || 0}%` }}
-                                                            ></div>
-                                                        </div>
-                                                        <span>{enrollment.progress_percentage ?? 0}%</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="px-2 py-1 text-xs rounded-full bg-primary text-white">
-                                                        Enrolled
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <button
-                                                        onClick={() => handleView(enrollment)}
-                                                        className="text-[#3baee9] cursor-pointer flex items-center gap-1 hover:text-primary-dark"
-                                                        disabled={loading}
-                                                    >
-                                                        <Eye size={16} /> View
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                                                No active enrollments found.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+              {/* Rejection Reason Input (only for pending) */}
+              {selectedEnrollment.status === "pending" && (
+                <div className="bg-red-50 rounded-xl p-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Rejection Reason (required for rejection):
+                  </label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                    rows={3}
+                    placeholder="Provide a detailed reason for rejecting this enrollment..."
+                    required
+                  />
+                </div>
+              )}
+            </div>
 
-                    {/* ================= VIEW MODAL ================= */}
-                    {selectedEnrollment && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-white w-full max-w-lg  rounded-2xl shadow-lg p-6 relative">
-                                <button
-                                    onClick={() => setSelectedEnrollment(null)}
-                                    className="absolute top-4 right-4  text-gray-400 hover:text-black cursor-pointer text-lg"
-                                >
-                                    ✕
-                                </button>
-
-                                <h3 className="text-2xl font-bold">
-                                    {selectedEnrollment.user?.name || getStudentName(selectedEnrollment.user_id)}
-                                </h3>
-
-                                <p className="text-sm text-gray-500">
-                                    {selectedEnrollment.user?.email || getStudentEmail(selectedEnrollment.user_id)}
-                                </p>
-
-                                <div className="mt-3 space-y-3">
-                                    <div className="bg-primary rounded-lg p-4">
-                                        <h4 className="font-medium text-white mb-2">Student Information</h4>
-                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                            <div>
-                                                <p className="text-white">Student ID</p>
-                                                <p className="font-medium text-white">#{selectedEnrollment.user_id}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-white">User ID</p>
-                                                <p className="font-medium text-white " >#{selectedEnrollment.user?.id || "N/A"}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-gray-50 rounded-lg p-3">
-                                        <h4 className="font-medium font-bold text-gray-800 mb-2">Course Information</h4>
-                                        <div className="text-xs space-y-2">
-                                            <p><b>Course:</b> {selectedEnrollment.course?.title || getCourseTitle(selectedEnrollment.course_id)}</p>
-                                            <p><b>Course ID:</b> #{selectedEnrollment.course_id}</p>
-                                            {selectedEnrollment.course?.description && (
-                                                <p><b>Description:</b> {selectedEnrollment.course.description}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-gray-50 rounded-lg p-3">
-                                        <h4 className="font-medium text-gray-800 mb-2">Enrollment Details</h4>
-                                        <div className="text-xs space-y-2">
-                                            <p><b>Progress:</b> {selectedEnrollment.progress_percentage ?? 0}%</p>
-                                            <p><b>Enrollment ID:</b> #{selectedEnrollment.id}</p>
-                                            <p><b>Status:</b> {selectedEnrollment.is_active ? "Active" : "Pending"}</p>
-                                            <p><b>Enrolled At:</b> {selectedEnrollment.enrolled_at || "Not available"}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </>
+            {/* Modal Actions */}
+            {selectedEnrollment.status === "pending" && (
+              <div className="bg-gray-50 p-6 flex gap-4 justify-end sticky bottom-0">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-colors"
+                  disabled={actionLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() =>
+                    handleReject(getEnrollmentId(selectedEnrollment))
+                  }
+                  className="px-6 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2"
+                  disabled={actionLoading || !rejectReason.trim()}
+                >
+                  {actionLoading ? (
+                    <FaSpinner className="animate-spin" />
+                  ) : (
+                    <FaTimes />
+                  )}
+                  Reject
+                </button>
+                <button
+                  onClick={() => handleApprove(selectedEnrollment)}
+                  className="px-6 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? (
+                    <FaSpinner className="animate-spin" />
+                  ) : (
+                    <FaCheck />
+                  )}
+                  Approve
+                </button>
+              </div>
             )}
+          </div>
         </div>
-    );
+      )}
+    </div>
+  );
 }

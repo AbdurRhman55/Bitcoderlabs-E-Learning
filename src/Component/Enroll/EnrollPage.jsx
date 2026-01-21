@@ -14,9 +14,11 @@ import {
 } from "react-icons/fa";
 import InformationForm from "./InformationForm";
 import PaymentMethod from "./PaymentMethod";
+import PaymentProofUpload from "./PaymentProofUpload";
 import { apiClient, API_ORIGIN } from "../../api/index";
 
-const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
 
 export default function EnrollPage() {
   const { id } = useParams();
@@ -34,7 +36,7 @@ export default function EnrollPage() {
     last_name: "",
     email: user?.email || "",
     phone: "",
-    payment_method: "card",
+    payment_method: "easypaisa",
     // card fields
     card_number: "",
     card_expiry: "",
@@ -58,7 +60,8 @@ export default function EnrollPage() {
         setLoading(true);
         const data = await apiClient.getCourseById(id);
         // Unwrap nested data if necessary (consistent with CourseDetailPage)
-        const courseData = data.data && data.data.data ? data.data.data : (data.data || data);
+        const courseData =
+          data.data && data.data.data ? data.data.data : data.data || data;
         setCourse(courseData);
       } catch (err) {
         console.error("Failed to fetch course for enrollment:", err);
@@ -82,23 +85,80 @@ export default function EnrollPage() {
       return;
     }
 
+    if (!formData.payment_proof) {
+      alert("Please upload payment proof screenshot.");
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const enrollmentPayload = {
-        course_id: id,
-        user_id: user.id,
-        ...formData,
-        amount: course.price,
-        status: 'pending' // Admin will approve later
-      };
 
-      await apiClient.enrollCourse(enrollmentPayload);
+      // Create FormData for file upload
+      const enrollmentData = new FormData();
+      enrollmentData.append("course_id", id);
+      enrollmentData.append("user_id", user.id);
+      enrollmentData.append("first_name", formData.first_name);
+      enrollmentData.append("last_name", formData.last_name);
+      enrollmentData.append("email", formData.email);
+      enrollmentData.append("phone", formData.phone);
+      enrollmentData.append("payment_method", formData.payment_method);
+      enrollmentData.append("amount", course.price);
+      enrollmentData.append("status", "pending");
 
-      alert("Enrollment submitted successfully! Please wait for admin approval.");
-      navigate("/courses"); // Or a success page
+      // Add payment proof file
+      if (formData.payment_proof instanceof File) {
+        enrollmentData.append("payment_proof", formData.payment_proof);
+      }
+
+      // Add payment details based on method
+      const paymentDetails = {};
+      if (formData.payment_method === "card") {
+        paymentDetails.card_number = formData.card_number;
+        paymentDetails.card_holder_name = formData.card_holder_name;
+      } else if (formData.payment_method === "jazzcash") {
+        paymentDetails.jazzcash_number = formData.jazzcash_number;
+        paymentDetails.jazzcash_account_name = formData.jazzcash_account_name;
+      } else if (formData.payment_method === "easypaisa") {
+        paymentDetails.easypaisa_number = formData.easypaisa_number;
+        paymentDetails.easypaisa_account_name = formData.easypaisa_account_name;
+      } else if (formData.payment_method === "bank") {
+        paymentDetails.bank_name = formData.bank_name;
+        paymentDetails.bank_account_number = formData.bank_account_number;
+        paymentDetails.bank_account_holder_name =
+          formData.bank_account_holder_name;
+      }
+
+      // Record which payment method was used so admin table can display it
+      paymentDetails.method = formData.payment_method;
+
+      enrollmentData.append("payment_details", JSON.stringify(paymentDetails));
+
+      const res = await apiClient.enrollCourse(enrollmentData);
+
+      // inspect response for status (some backends may auto-approve)
+      const created = (res && res.data) || res;
+      const createdStatus =
+        (created && created.status) ||
+        (created && created[0] && created[0].status);
+
+      if (createdStatus && createdStatus.toLowerCase() !== "pending") {
+        // If backend auto-approved, warn user and do not assume pending
+        alert(
+          `Enrollment submitted. Server returned status: ${createdStatus}. Admin will review if required.`,
+        );
+      } else {
+        alert(
+          "Enrollment request submitted successfully! Please wait for admin approval.",
+        );
+      }
+
+      navigate("/student-dashboard");
     } catch (err) {
       console.error("Enrollment submission failed:", err);
-      alert(err.message || "Failed to submit enrollment. Please check your information and try again.");
+      alert(
+        err.message ||
+          "Failed to submit enrollment. Please check your information and try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +169,9 @@ export default function EnrollPage() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#3baee9] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 font-medium">Loading course information...</p>
+          <p className="text-gray-600 font-medium">
+            Loading course information...
+          </p>
         </div>
       </div>
     );
@@ -122,7 +184,9 @@ export default function EnrollPage() {
           <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto text-2xl">
             ⚠️
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Oops! Something went wrong</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Oops! Something went wrong
+          </h2>
           <p className="text-gray-600">{error || "Course not found."}</p>
           <button
             onClick={() => navigate("/courses")}
@@ -136,15 +200,18 @@ export default function EnrollPage() {
   }
 
   const courseImage = course.thumbnail
-    ? (course.thumbnail.startsWith('http') ? course.thumbnail : `${API_ORIGIN}/storage/${course.thumbnail.startsWith('/') ? course.thumbnail.substring(1) : course.thumbnail}`)
+    ? course.thumbnail.startsWith("http")
+      ? course.thumbnail
+      : `${API_ORIGIN}/storage/${course.thumbnail.startsWith("/") ? course.thumbnail.substring(1) : course.thumbnail}`
     : PLACEHOLDER_IMAGE;
 
-  const discount = course.original_price && course.price
-    ? Math.round(((course.original_price - course.price) / course.original_price) * 100)
-    : 40;
-
-
-
+  const discount =
+    course.original_price && course.price
+      ? Math.round(
+          ((course.original_price - course.price) / course.original_price) *
+            100,
+        )
+      : 40;
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/50 py-8">
@@ -161,12 +228,21 @@ export default function EnrollPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* --- Left: Enrollment Form --- */}
-          <form onSubmit={handleCompleteEnrollment} className="lg:col-span-2 space-y-6">
+          <form
+            onSubmit={handleCompleteEnrollment}
+            className="lg:col-span-2 space-y-6"
+          >
             {/* Personal Information Card */}
             <InformationForm formData={formData} updateFormData={setFormData} />
 
             {/* Payment Method Card */}
             <PaymentMethod formData={formData} updateFormData={setFormData} />
+
+            {/* Payment Proof Upload */}
+            <PaymentProofUpload
+              formData={formData}
+              updateFormData={setFormData}
+            />
 
             {/* Action Buttons */}
             <div className="flex gap-4">
@@ -218,21 +294,28 @@ export default function EnrollPage() {
                 <h3 className="text-xl font-bold text-gray-900 leading-tight">
                   {course.title}
                 </h3>
-                <p className="text-sm text-gray-600">by {course.instructor?.name || "Instructor"}</p>
+                <p className="text-sm text-gray-600">
+                  by {course.instructor?.name || "Instructor"}
+                </p>
 
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {course.tagline || course.short_description || "Start your learning journey today."}
+                  {course.tagline ||
+                    course.short_description ||
+                    "Start your learning journey today."}
                 </p>
 
                 <div className="flex flex-wrap gap-3 text-sm text-gray-700">
                   <div className="flex items-center gap-2 bg-[#e8f7ff] px-3 py-1 rounded-full">
-                    <FaClock className="text-[#3baee9]" /> {course.duration || "Self-paced"}
+                    <FaClock className="text-[#3baee9]" />{" "}
+                    {course.duration || "Self-paced"}
                   </div>
                   <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
-                    <FaUser className="text-green-500" /> {course.students_count || 0}
+                    <FaUser className="text-green-500" />{" "}
+                    {course.students_count || 0}
                   </div>
                   <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
-                    <FaStar className="text-yellow-500" /> {Number(course.rating || 4.8).toFixed(1)}
+                    <FaStar className="text-yellow-500" />{" "}
+                    {Number(course.rating || 4.8).toFixed(1)}
                   </div>
                 </div>
 
@@ -240,7 +323,9 @@ export default function EnrollPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Original Price:</span>
                     <span className="text-gray-500 line-through">
-                      Rs {course.original_price || (Number(course.price || 0) * 1.5).toFixed(0)}
+                      Rs{" "}
+                      {course.original_price ||
+                        (Number(course.price || 0) * 1.5).toFixed(0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -274,7 +359,8 @@ export default function EnrollPage() {
                 <span className="font-semibold">Secure Payment</span>
               </div>
               <p className="text-xs text-gray-600">
-                Your payment information is encrypted and secure. We never share your details with third parties.
+                Your payment information is encrypted and secure. We never share
+                your details with third parties.
               </p>
             </div>
           </div>

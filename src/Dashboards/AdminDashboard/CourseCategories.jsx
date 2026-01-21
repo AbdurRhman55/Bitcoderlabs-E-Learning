@@ -129,7 +129,7 @@ function AddCategoryForm({ onClose, onSubmit, initialData }) {
                             </button>
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                className="px-4 py-2 bg-primary cursor-pointer text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2 disabled:opacity-50"
                                 disabled={loading}
                             >
                                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -198,14 +198,14 @@ export default function CourseCategories() {
     );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 ">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Course Categories</h1>
                     <p className="text-gray-500 mt-1">Manage your course categories and topics</p>
                 </div>
-                <Button
+                <Button className="rounded-md"
                     onClick={() => {
                         setEditingCategory(null);
                         setIsModalOpen(true);
@@ -238,7 +238,7 @@ export default function CourseCategories() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-6 py-4 font-semibold text-gray-700 w-16">#</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 w-8">#</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Name</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Slug</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Description</th>
@@ -275,8 +275,8 @@ export default function CourseCategories() {
                                         <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
                                             {category.description || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <td className="px-3 py-4 text-right">
+                                            <div className="flex items-center justify-end  ">
                                                 <button
                                                     onClick={() => {
                                                         setEditingCategory(category);

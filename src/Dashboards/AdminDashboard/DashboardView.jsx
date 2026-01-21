@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import StudentTable from "./StudentsTable";
 import EnrolledStudentsTable from "./EnrolledStudentsTable.jsx";
-import { apiClient } from '../../../src/api/index.js';
+import { apiClient } from "../../../src/api/index.js";
 
 import {
   X,
@@ -27,8 +27,8 @@ import {
   MoreVertical,
   LogOut,
 } from "lucide-react";
-import { useDispatch } from 'react-redux';
-import { logoutAsync } from '../../../slices/AuthSlice';
+import { useDispatch } from "react-redux";
+import { logoutAsync } from "../../../slices/AuthSlice";
 import AllCourses from "./AllCourses";
 import TeachersTable from "./TeacherTable.jsx";
 import CourseRequests from "./CourseRequests";
@@ -45,48 +45,158 @@ const Card = ({ children, className = "", hover = false }) => (
   </div>
 );
 
-function NotificationSidebar({ isOpen, onClose, pendingRequests, onApprove, onReject }) {
+// Helper to getting full image URL
+const getImageUrl = (path) => {
+  if (!path) return null;
+  // console.log("Processing image path:", path);
+  if (path.startsWith("http")) return path;
+  const cleanPath = path.replace(/^\/+/, "").replace(/^public\//, "");
+  return `http://127.0.0.1:8000/storage/${cleanPath}`;
+};
+
+// Image component with robust fallback
+const NotificationImage = ({ notif }) => {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (notif.image && !imgError) {
+    return (
+      <img
+        src={getImageUrl(notif.image)}
+        alt=""
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          // console.warn("Image failed to load, falling back to icon:", notif.image);
+          setImgError(true);
+        }}
+      />
+    );
+  }
+
+  // Fallback Icon
+  return (
+    <div
+      className={`w-full h-full flex items-center justify-center ${
+        notif.type === "teacher"
+          ? "bg-primary/10 text-primary"
+          : "bg-primary/10 text-primary"
+      }`}
+    >
+      {notif.type === "teacher" ? (
+        <UserPlus size={18} />
+      ) : (
+        <BookOpen size={18} />
+      )}
+    </div>
+  );
+};
+
+function NotificationSidebar({
+  isOpen,
+  onClose,
+  notifications = [],
+  onNotificationClick,
+}) {
+  if (!isOpen) return null;
+
   return (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ease-out"
-          onClick={onClose}
-        />
-      )}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-xl z-50 transform transition-all duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+        className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40"
+        onClick={onClose}
+      />
+      <div
+        className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        {/* Sidebar content same as your original code */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-5">
-          <div className="flex items-center justify-between">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Bell className="text-blue-600" size={22} />
-                </div>
-                {pendingRequests.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-sm">
-                    {pendingRequests.length}
-                  </span>
+                <Bell className="text-gray-700" size={20} />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white" />
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {pendingRequests.length} pending requests
+                <h2 className="text-lg font-bold text-gray-900">
+                  Notifications
+                </h2>
+                <p className="text-xs text-gray-500">
+                  {notifications.length} unread updates
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+              className="p-2 hover:bg-gray-100 cursor-pointer rounded-full transition-colors text-gray-400 hover:text-gray-600"
             >
               <X size={20} />
             </button>
           </div>
-          {/* Tabs and content same as your original code */}
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
+            {notifications.length > 0 ? (
+              notifications.map((notif, index) => (
+                <div
+                  key={`${notif.type}-${notif.id}-${index}`}
+                  onClick={() => onNotificationClick(notif)}
+                  className="group bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all cursor-pointer relative overflow-hidden"
+                >
+                  <div
+                    className={`absolute left-0 top-0 bottom-0 w-1 ${notif.type === "teacher" ? "bg-primary" : "bg-primary"}`}
+                  />
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-100">
+                      <NotificationImage notif={notif} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate pr-2">
+                          {notif.title}
+                        </h3>
+                        <span className="text-[10px] text-gray-400 whitespace-nowrap bg-gray-50 px-1.5 py-0.5 rounded">
+                          {new Date(notif.time).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                        {notif.message}
+                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                            notif.type === "teacher"
+                              ? "bg-primary/10 text-primary"
+                              : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {notif.type === "teacher"
+                            ? "Instructor Request"
+                            : "Course Request"}
+                        </span>
+                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                          <Clock size={10} />
+                          Pending
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+                  <Bell size={24} />
+                </div>
+                <h3 className="text-gray-900 font-medium mb-1">
+                  No new notifications
+                </h3>
+                <p className="text-gray-500 text-sm px-6">
+                  You're all caught up! Check back later for new requests.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
@@ -111,62 +221,104 @@ function DashboardCards() {
             title: "Total Courses",
             value: response.total_courses?.toString() || "0",
             change: "+12%",
-            icon: <BookOpen />
+            icon: <BookOpen />,
           },
           {
             title: "Active Students",
             value: response.total_students?.toString() || "0",
             change: "+8%",
-            icon: <Users />
+            icon: <Users />,
           },
           {
             title: "Total Enrollments",
             value: response.total_enrollments?.toString() || "0",
             change: "+23%",
-            icon: <ShoppingBag />
+            icon: <ShoppingBag />,
           },
           {
             title: "Pending Instructors",
             value: response.pending_instructors_count?.toString() || "0",
             change: "0",
-            icon: <UserPlus />
+            icon: <UserPlus />,
           },
           {
             title: "Pending Students",
             value: response.pending_requests_count?.toString() || "0",
             change: "+5%",
-            icon: <Clock />
-          }
+            icon: <Clock />,
+          },
         ];
 
-
         // Transform recent activities
-        const transformedActivities = response.recent_activities?.map(activity => ({
-          user: activity.user?.name || "Unknown User",
-          action: "enrolled in",
-          course: activity.course?.title || "Unknown Course",
-          time: activity.created_at ? new Date(activity.created_at).toLocaleString() : "Recently"
-        })) || [];
+        const transformedActivities =
+          response.recent_activities?.map((activity) => ({
+            user: activity.user?.name || "Unknown User",
+            action: "enrolled in",
+            course: activity.course?.title || "Unknown Course",
+            time: activity.created_at
+              ? new Date(activity.created_at).toLocaleString()
+              : "Recently",
+          })) || [];
 
         setStats(transformedStats);
         setRecentActivities(transformedActivities);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-        console.error('Error details:', err.message);
+        console.error("Failed to fetch dashboard data:", err);
+        console.error("Error details:", err.message);
         setError(`Failed to load dashboard data: ${err.message}`);
         // Fallback to mock data if API fails
         setStats([
-          { title: "Total Courses", value: "82", change: "+12%", icon: <BookOpen /> },
-          { title: "Active Students", value: "1,240", change: "+8%", icon: <Users /> },
-          { title: "Total Orders", value: "350", change: "+23%", icon: <ShoppingBag /> },
-          { title: "Course Rating", value: "4.8/5", change: "+0.2", icon: <TrendingUp /> }
+          {
+            title: "Total Courses",
+            value: "82",
+            change: "+12%",
+            icon: <BookOpen />,
+          },
+          {
+            title: "Active Students",
+            value: "1,240",
+            change: "+8%",
+            icon: <Users />,
+          },
+          {
+            title: "Total Orders",
+            value: "350",
+            change: "+23%",
+            icon: <ShoppingBag />,
+          },
+          {
+            title: "Course Rating",
+            value: "4.8/5",
+            change: "+0.2",
+            icon: <TrendingUp />,
+          },
         ]);
         setRecentActivities([
-          { user: "John Doe", action: "purchased", course: "Web Dev Bootcamp", time: "2 min ago" },
-          { user: "Sarah Smith", action: "completed", course: "React Mastery", time: "1 hour ago" },
-          { user: "Mike Johnson", action: "enrolled in", course: "JS Advanced", time: "3 hours ago" },
-          { user: "Emily Davis", action: "rated", course: "React Mastery", time: "5 hours ago" }
+          {
+            user: "John Doe",
+            action: "purchased",
+            course: "Web Dev Bootcamp",
+            time: "2 min ago",
+          },
+          {
+            user: "Sarah Smith",
+            action: "completed",
+            course: "React Mastery",
+            time: "1 hour ago",
+          },
+          {
+            user: "Mike Johnson",
+            action: "enrolled in",
+            course: "JS Advanced",
+            time: "3 hours ago",
+          },
+          {
+            user: "Emily Davis",
+            action: "rated",
+            course: "React Mastery",
+            time: "5 hours ago",
+          },
         ]);
       } finally {
         setLoading(false);
@@ -220,9 +372,13 @@ function DashboardCards() {
               <div>
                 <p className="text-gray-500 text-sm">{stat.title}</p>
                 <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                <p className="text-primary-dark text-sm mt-2 font-medium">{stat.change}</p>
+                <p className="text-primary-dark text-sm mt-2 font-medium">
+                  {stat.change}
+                </p>
               </div>
-              <div className="p-2 bg-primary rounded-xl text-white">{stat.icon}</div>
+              <div className="p-2 bg-primary rounded-xl text-white">
+                {stat.icon}
+              </div>
             </div>
           </Card>
         ))}
@@ -232,7 +388,9 @@ function DashboardCards() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <Card className="xl:col-span-2">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-lg text-gray-900">Revenue Overview</h3>
+            <h3 className="font-bold text-lg text-gray-900">
+              Revenue Overview
+            </h3>
             <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark cursor-pointer transition-colors">
               <Download size={16} />
               Export
@@ -242,12 +400,16 @@ function DashboardCards() {
             <BarChart3 size={48} className="text-primary-dark mb-3" />
             <p className="text-gray-600">Revenue chart visualization</p>
             <h2 className="text-2xl font-bold mt-2 text-gray-900">$24,580</h2>
-            <p className="text-primary-dark text-sm font-medium mt-1">+18% from last month</p>
+            <p className="text-primary-dark text-sm font-medium mt-1">
+              +18% from last month
+            </p>
           </div>
         </Card>
 
         <Card>
-          <h3 className="font-bold text-lg text-gray-900 mb-4">Recent Activities</h3>
+          <h3 className="font-bold text-lg text-gray-900 mb-4">
+            Recent Activities
+          </h3>
 
           <div className="space-y-4">
             {recentActivities.length > 0 ? (
@@ -264,18 +426,21 @@ function DashboardCards() {
                     <p className="text-sm text-gray-800">
                       <span className="font-medium">{act.user}</span>{" "}
                       {act.action}{" "}
-                      <span className="font-semibold text-gray-900">{act.course}</span>
+                      <span className="font-semibold text-gray-900">
+                        {act.course}
+                      </span>
                     </p>
                     <p className="text-xs text-gray-500 mt-1">{act.time}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-4">No recent activities</p>
+              <p className="text-gray-500 text-center py-4">
+                No recent activities
+              </p>
             )}
           </div>
         </Card>
-
       </div>
     </div>
   );
@@ -289,7 +454,7 @@ export default function DashboardView() {
   const dropdownRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, loading } = useSelector(state => state.auth);
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
     dispatch(logoutAsync());
@@ -297,136 +462,122 @@ export default function DashboardView() {
 
   useEffect(() => {
     if (!isAuthenticated && !loading) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [isAuthenticated, loading, navigate]);
 
-  // Fetch pending instructor requests
+  const [notifications, setNotifications] = useState([]);
+
   useEffect(() => {
-    const fetchPendingRequests = async () => {
+    const fetchNotifications = async () => {
       try {
-        const response = await apiClient.getInstructors({ approval_status: 'submitted' });
-        const instructors = response.data || [];
-        const formattedRequests = instructors.map(instructor => ({
-          id: instructor.id,
-          name: instructor.name,
-          email: instructor.email || 'N/A', // Assuming email is included
-          time: instructor.created_at ? new Date(instructor.created_at).toLocaleString() : 'Recently',
-          subject: instructor.specialization ? instructor.specialization.join(', ') : 'General',
-          experience: instructor.experience ? `${instructor.experience.length} items` : 'N/A',
+        // 1. Fetch Instructor Requests
+        const instRes = await apiClient.getInstructors({
+          approval_status: "submitted",
+        });
+        const instData = instRes.data || [];
+
+        const instNotifs = instData.map((i) => ({
+          id: i.id,
+          type: "teacher",
+          title: i.name,
+          image: i.image || i.profile_image || i.avatar,
+          message: `Specialization: ${Array.isArray(i.specialization) ? i.specialization.join(", ") : i.specialization || "General"}`,
+          time: i.created_at || new Date().toISOString(),
+          targetTab: "Teachers",
         }));
-        setPendingRequests(formattedRequests);
+
+        // 2. Fetch Course Requests
+        const courseRes = await apiClient.getCourseRequests({
+          status: "pending",
+        });
+        const courseData = Array.isArray(courseRes?.data)
+          ? courseRes.data
+          : Array.isArray(courseRes?.data?.data)
+            ? courseRes.data.data
+            : [];
+        const courseNotifs = courseData.map((c) => {
+          const courseTitle =
+            c.course?.title || c.title || c.course_title || "Untitled Course";
+
+          return {
+            id: c.id,
+            type: "course",
+            title:
+              c.instructor?.name ||
+              c.instructor?.user?.name ||
+              "Unknown Instructor",
+            image: c.instructor?.image || c.instructor?.user?.image,
+            message: `Requesting approval for course: "${courseTitle}"`,
+            time: c.created_at || new Date().toISOString(),
+            targetTab: "Course Requests",
+          };
+        });
+
+        const allNotifs = [...instNotifs, ...courseNotifs].sort(
+          (a, b) => new Date(b.time) - new Date(a.time),
+        );
+        setNotifications(allNotifs);
       } catch (error) {
-        console.error('Error fetching pending requests:', error);
+        console.error("Error fetching notifications:", error);
       }
     };
 
-    fetchPendingRequests();
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setProfileDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // State for pending instructor requests
-  const [pendingRequests, setPendingRequests] = useState([]);
-
-  const [pendingCourseRequestsCount, setPendingCourseRequestsCount] = useState(0);
-
-  useEffect(() => {
-    const fetchPendingCourseRequestsCount = async () => {
-      try {
-        const response = await apiClient.getCourseRequests({ status: 'pending', per_page: 1 });
-        const meta = response?.meta;
-        const total = typeof meta?.total === 'number' ? meta.total : undefined;
-
-        if (typeof total === 'number') {
-          setPendingCourseRequestsCount(total);
-          return;
-        }
-
-        const data = response?.data;
-        const items = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-        setPendingCourseRequestsCount(items.length);
-      } catch (error) {
-        console.error('Error fetching pending course requests count:', error);
-        setPendingCourseRequestsCount(0);
-      }
-    };
-
-    fetchPendingCourseRequestsCount();
-  }, []);
-
-  const handleApprove = async (id) => {
-    try {
-      await apiClient.approveInstructor(id);
-      setPendingRequests((prev) =>
-        prev.filter((request) => request.id !== id)
-      );
-    } catch (error) {
-      console.error('Error approving instructor:', error);
-      alert('Failed to approve instructor.');
+    if (isAuthenticated) {
+      fetchNotifications();
+      // Optional: Poll every 30s
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
     }
+  }, [isAuthenticated]);
+
+  const handleNotificationClick = (notification) => {
+    setActive(notification.targetTab);
+    setNotificationOpen(false);
   };
 
   const handleReject = async (id) => {
     try {
       await apiClient.rejectInstructor(id);
-      setPendingRequests((prev) =>
-        prev.filter((request) => request.id !== id)
-      );
+      setPendingRequests((prev) => prev.filter((request) => request.id !== id));
     } catch (error) {
-      console.error('Error rejecting instructor:', error);
-      alert('Failed to reject instructor.');
+      console.error("Error rejecting instructor:", error);
+      alert("Failed to reject instructor.");
     }
   };
 
   return (
     <div className="flex bg-gray-50 min-h-screen">
-      <Sidebar open={open} setOpen={setOpen} active={active} setActive={setActive} />
+      <Sidebar
+        open={open}
+        setOpen={setOpen}
+        active={active}
+        setActive={setActive}
+      />
 
-      <main className={`flex-1 p-4 sm:p-6 ml-20 lg:ml-0 transition-all duration-500`}>
-        {/* Top Bar */}
+      <main
+        className={`flex-1 p-4 sm:p-6 ml-20 lg:ml-0 transition-all duration-500`}
+      >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{active}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {active}
+          </h1>
 
-          {/* Right Actions */}
           <div className="hidden sm:flex items-center gap-4">
-
-            {/* Notification */}
             <button
-              className="relative p-2 bg-white rounded-lg shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors"
+              className="relative p-2 bg-white rounded-lg cursor-pointer shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors"
               onClick={() => setNotificationOpen(true)}
             >
               <Bell size={18} className="text-gray-700" />
-              {(pendingRequests.length + pendingCourseRequestsCount) > 0 && (
+              {notifications.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-[10px] text-white font-medium">{pendingRequests.length + pendingCourseRequestsCount}</span>
+                  <span className="text-[10px] text-white font-medium">
+                    {notifications.length}
+                  </span>
                 </span>
               )}
             </button>
 
-            {/* Messages */}
-            <button
-               onClick={() => setActive("Contacts")}
-               className="relative p-2 bg-white rounded-lg shadow-sm border border-gray-300 hover:bg-gray-50 transition-colors">
-              <Mail size={18} className="text-gray-700" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-dark rounded-full flex items-center justify-center">
-                <span className="text-[10px] text-white font-medium">3</span>
-              </span>
-            </button>
-
-            {/* User Profile */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setProfileDropdown(!profileDropdown)}
@@ -486,8 +637,6 @@ export default function DashboardView() {
           {active === "Contacts" && <Contacts />}
           {active === "Orders" && <Orders />}
           {/* {active === "Pending Approvals" && <PendingApprovals />} */}
-
-
         </div>
       </main>
 
@@ -495,9 +644,8 @@ export default function DashboardView() {
       <NotificationSidebar
         isOpen={notificationOpen}
         onClose={() => setNotificationOpen(false)}
-        pendingRequests={pendingRequests}
-        onApprove={handleApprove}
-        onReject={handleReject}
+        notifications={notifications}
+        onNotificationClick={handleNotificationClick}
       />
     </div>
   );

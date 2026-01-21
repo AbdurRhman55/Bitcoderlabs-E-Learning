@@ -2,24 +2,24 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiClient } from '../src/api/index.js';
 
 const getInitialUser = () => {
-  try {
-    const userData = localStorage.getItem('userData');
-    const token = localStorage.getItem('token');
-    if (token && userData) {
-      return JSON.parse(userData);
+    try {
+        const userData = localStorage.getItem('userData');
+        const token = localStorage.getItem('token');
+        if (token && userData) {
+            return JSON.parse(userData);
+        }
+    } catch (e) {
+        console.warn('Error parsing user data from localStorage:', e);
     }
-  } catch (e) {
-    console.warn('Error parsing user data from localStorage:', e);
-  }
-  return null;
+    return null;
 };
 
 const initialState = {
-  isAuthenticated: false,
-  user: getInitialUser(),
-  token: localStorage.getItem('token') || null,
-  loading: false,
-  error: null,
+    isAuthenticated: false,
+    user: getInitialUser(),
+    token: localStorage.getItem('token') || null,
+    loading: !!localStorage.getItem('token'),
+    error: null,
 }
 
 export const login = createAsyncThunk(

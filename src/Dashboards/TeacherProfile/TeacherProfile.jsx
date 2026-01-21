@@ -68,7 +68,9 @@ const TeacherDashboard = () => {
                         address: '', // Address field not implemented in database
                         bio: instructor.bio || '',
                         profileImage: null,
-                        profileImageUrl: (instructor.image && typeof instructor.image === 'string') ? `http://127.0.0.1:8000/storage/${instructor.image}` : '',
+                        profileImageUrl: (instructor.image && typeof instructor.image === 'string')
+                            ? `http://127.0.0.1:8000/storage/${instructor.image.replace(/^\/+/, '').replace(/^public\//, '')}`
+                            : '',
                         status: instructor.approval_status || 'pending',
                     });
 
@@ -217,7 +219,7 @@ const TeacherDashboard = () => {
                 setProfile(prev => ({
                     ...prev,
                     profileImageUrl: (instructor.image && typeof instructor.image === 'string' && !instructor.image.includes('C:'))
-                        ? `http://127.0.0.1:8000/storage/${instructor.image}`
+                        ? `http://127.0.0.1:8000/storage/${instructor.image.replace(/^\/+/, '').replace(/^public\//, '')}`
                         : prev.profileImageUrl
                 }));
             }

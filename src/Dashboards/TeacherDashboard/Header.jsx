@@ -175,7 +175,11 @@ const DashboardHeader = ({ profile, notifications, setActiveTab }) => {
                 <img
                   src={profile.profileImage}
                   alt={profile.name}
-                  className="w-9 h-9 rounded-full border-2 border-white shadow-sm"
+                  className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200";
+                  }}
                 />
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-gray-800">

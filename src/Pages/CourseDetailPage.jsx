@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import CourseHero from '../Component/CourseDetailPage/HeroSection/Hero';
 import CurriculumSection from '../Component/CourseDetailPage/CurriculumSection/CurriculumSection';
 import CourseVideo from '../Component/CourseDetailPage/SampleVideoSection/CourseVideo';
+import ReviewSection from '../Component/CourseDetailPage/ReviewSection/ReviewSection';
 import CTASection from '../Component/Home/CTASection';
 import { apiClient } from '../api/index'; // Adjust path if needed
 import { useSelector } from 'react-redux';
@@ -74,6 +75,7 @@ export default function CourseDetailPage() {
       <CourseHero course={course} />
       <CurriculumSection course={course} />
       <CourseVideo course={course} />
+      <ReviewSection courseId={id} courseData={course} />
       <CTASection />
     </div>
   );

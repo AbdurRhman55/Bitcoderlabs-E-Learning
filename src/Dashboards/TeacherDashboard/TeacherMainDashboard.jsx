@@ -130,12 +130,17 @@ const TeacherMainDashboard = () => {
           // Try API profile image first, then Redux user avatar/image
           const rawImage = profileData.image || user?.avatar || user?.image;
 
+          console.log("Teacher Dashboard - Raw Image:", rawImage);
+
           if (rawImage && typeof rawImage === 'string' && rawImage !== "null") {
             if (rawImage.startsWith('http://') || rawImage.startsWith('https://')) {
               imageUrl = rawImage;
             } else {
-              // Ensure no double slash if rawImage starts with /
-              const cleanPath = rawImage.startsWith('/') ? rawImage.substring(1) : rawImage;
+              // Standardize path: remove leading / and 'public/' prefix if present
+              let cleanPath = rawImage.replace(/^\/+/, '');
+              if (cleanPath.startsWith('public/')) {
+                cleanPath = cleanPath.substring(7);
+              }
               imageUrl = `http://127.0.0.1:8000/storage/${cleanPath}`;
             }
           } else if (rawImage && typeof rawImage === 'object') {

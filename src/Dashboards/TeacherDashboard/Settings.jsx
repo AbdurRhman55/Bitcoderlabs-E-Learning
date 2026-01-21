@@ -535,11 +535,18 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                   <div className="relative">
                     <img
                       src={
-                        profile?.profileImage ||
-                        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200"
+                        (profile?.profileImage)
+                          ? (profile.profileImage.startsWith('http')
+                            ? profile.profileImage
+                            : `http://127.0.0.1:8000/storage/${profile.profileImage.replace(/^\/+/, '').replace(/^public\//, '')}`)
+                          : "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200"
                       }
                       alt={profile?.name || "Profile"}
                       className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200";
+                      }}
                     />
                     {isEditing && (
                       <label className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary-dark transition-colors">

@@ -30,7 +30,7 @@ export default function ModuleCard({
                 <div
                   className={`w-8 h-8  rounded-lg flex items-center justify-center font-bold text-white text-xl shadow-lg bg-gradient-to-br from-primary to-primary-dark`}
                 >
-                  {module.id}
+                  {index + 1}
                 </div>
               </div>
 

@@ -126,7 +126,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
     setLoading(true);
     try {
       // Prepare data for submission
-      let submitData = course;
+      let submitData;
 
       // If there's an image file, use FormData
       if (course.image && course.image instanceof File) {
@@ -144,14 +144,16 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
             // JSON stringify arrays - ensure empty arrays if null/undefined
             formData.append(key, JSON.stringify(value || []));
           } else if (key === 'image') {
-            // Handle file upload
-            formData.append('image', value);
+            // Only append if it's a File
+            if (value instanceof File) {
+              formData.append('image', value);
+            }
           } else if (key === 'is_featured' || key === 'is_active') {
             // Convert boolean to integer for Laravel validation
             formData.append(key, value ? '1' : '0');
           } else if (value !== null && value !== undefined && (value !== '' || isRequiredField)) {
             // For numeric fields, ensure they have a value even if 0
-            if (key === 'reviews_count' || key === 'students_count' || key === 'rating') {
+            if (key === 'reviews_count' || key === 'students_count' || key === 'rating' || key === 'price' || key === 'original_price') {
               formData.append(key, value.toString()); // Convert to string
             } else {
               formData.append(key, value || '');
@@ -159,47 +161,38 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           }
         });
 
-        // CRITICAL FIX: Ensure all required numeric fields are present
-        if (!formData.has('reviews_count')) {
-          formData.append('reviews_count', course.reviews_count?.toString() || '0');
-        }
-        if (!formData.has('students_count')) {
-          formData.append('students_count', course.students_count?.toString() || '0');
-        }
-        if (!formData.has('rating')) {
-          formData.append('rating', course.rating?.toString() || '0');
-        }
-        if (!formData.has('price')) {
-          formData.append('price', course.price?.toString() || '0');
-        }
-
-        // Ensure boolean fields are included
-        if (!formData.has('is_featured')) {
-          formData.append('is_featured', course.is_featured ? '1' : '0');
-        }
-        if (!formData.has('is_active')) {
-          formData.append('is_active', course.is_active ? '1' : '0');
+        // Add method spoofing for PUT if editing
+        if (initialData) {
+          formData.append('_method', 'PUT');
         }
 
         submitData = formData;
       } else {
-        // For non-FormData submission (without image)
+        // For non-File image (either existing URL string or empty)
+        const cleanCourse = { ...course };
+
+        // If image is a string, it means it hasn't changed. 
+        // Laravel validation will fail if we send a string for an 'image' validated field.
+        if (typeof cleanCourse.image === 'string') {
+          delete cleanCourse.image;
+        }
+
         submitData = {
-          ...course,
-          short_description: course.short_description || null,
-          video_url: course.video_url || null,
-          duration: course.duration || null,
-          original_price: course.original_price ? parseFloat(course.original_price) : null,
-          features: course.features ? JSON.stringify(course.features) : "[]",
-          tags: course.tags ? JSON.stringify(course.tags) : "[]",
-          price: parseFloat(course.price) || 0,
-          rating: course.rating ? parseFloat(course.rating) : 0,
-          reviews_count: course.reviews_count ? parseInt(course.reviews_count) : 0,
-          students_count: course.students_count ? parseInt(course.students_count) : 0,
-          instructor_id: course.instructor_id ? parseInt(course.instructor_id) : undefined,
-          category_id: course.category_id ? parseInt(course.category_id) : undefined,
-          is_featured: Boolean(course.is_featured),
-          is_active: Boolean(course.is_active),
+          ...cleanCourse,
+          short_description: cleanCourse.short_description || null,
+          video_url: cleanCourse.video_url || null,
+          duration: cleanCourse.duration || null,
+          original_price: cleanCourse.original_price ? parseFloat(cleanCourse.original_price) : null,
+          features: cleanCourse.features ? (typeof cleanCourse.features === 'string' ? cleanCourse.features : JSON.stringify(cleanCourse.features)) : "[]",
+          tags: cleanCourse.tags ? (typeof cleanCourse.tags === 'string' ? cleanCourse.tags : JSON.stringify(cleanCourse.tags)) : "[]",
+          price: parseFloat(cleanCourse.price) || 0,
+          rating: cleanCourse.rating ? parseFloat(cleanCourse.rating) : 0,
+          reviews_count: cleanCourse.reviews_count ? parseInt(cleanCourse.reviews_count) : 0,
+          students_count: cleanCourse.students_count ? parseInt(cleanCourse.students_count) : 0,
+          instructor_id: cleanCourse.instructor_id ? parseInt(cleanCourse.instructor_id) : undefined,
+          category_id: cleanCourse.category_id ? parseInt(cleanCourse.category_id) : undefined,
+          is_featured: Boolean(cleanCourse.is_featured),
+          is_active: Boolean(cleanCourse.is_active),
         };
       }
 
@@ -354,26 +347,6 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           </select>
         </div>
 
-        {/* Instructor */}
-        {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Instructor *
-          </label>
-          <select
-            name="instructor_id"
-            value={course.instructor_id}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            required
-          >
-            <option value="">Select an instructor</option>
-            {instructors.map(instructor => (
-              <option key={instructor.id} value={instructor.id}>
-                {instructor.user?.name || instructor.name}
-              </option>
-            ))}
-          </select>
-        </div> */}
 
         {/* Duration */}
         <div>
@@ -474,65 +447,8 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         />
       </div>
 
-      {/* Statistics Section */}
-      <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Course Statistics
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Students */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Students
-            </label>
-            <input
-              type="number"
-              name="students_count"
-              value={course.students_count}
-              onChange={handleChange}
-              min="0"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            />
-          </div>
-
-
-
-          {/* Rating */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rating (0-5)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="5"
-              name="rating"
-              value={course.rating}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            />
-          </div>
-
-          {/* Reviews */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reviews
-            </label>
-            <input
-              type="number"
-              name="reviews_count"
-              value={course.reviews_count}
-              onChange={handleChange}
-              min="0"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Pricing Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200">
         {/* Current Price */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
