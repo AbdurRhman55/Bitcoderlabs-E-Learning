@@ -555,6 +555,11 @@ class ApiClient {
     return this.request(`/enrollments${queryString ? `?${queryString}` : ""}`);
   }
 
+  async getMyEnrollments(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/enrollments/my${queryString ? `?${queryString}` : ""}`);
+  }
+
   async getEnrollmentById(id) {
     return this.request(`/enrollments/${id}`);
   }

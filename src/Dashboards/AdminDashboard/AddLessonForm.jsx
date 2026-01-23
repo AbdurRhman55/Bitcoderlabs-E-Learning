@@ -7,7 +7,7 @@ export default function AddLessonForm({ onClose, onSubmit, initialData, moduleId
         title: initialData?.title || '',
         description: initialData?.description || '',
         type: 'video',
-        video_url: initialData?.video_url || '',
+        content_url: initialData?.content_url || '',
         duration: initialData?.duration || '',
         order: initialData?.order || '',
         module_id: moduleId || initialData?.module_id || '',
@@ -126,8 +126,8 @@ export default function AddLessonForm({ onClose, onSubmit, initialData, moduleId
                                 </label>
                                 <input
                                     type="url"
-                                    name="video_url"
-                                    value={formData.video_url}
+                                    name="content_url"
+                                    value={formData.content_url}
                                     onChange={handleChange}
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white outline-none transition-all font-medium text-slate-900"
                                     placeholder="https://www.youtube.com/watch?v=..."
