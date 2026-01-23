@@ -1,10 +1,10 @@
 import React from 'react';
 import { FaClock, FaCalendarCheck, FaFire, FaBookOpen } from "react-icons/fa";
 import { useSelector } from 'react-redux';
-import { selectCourses } from '../../../slices/courseSlice';
+import { selectMyCourses } from '../../../slices/courseSlice';
 
 const Progress = () => {
-  const enrolledCourses = useSelector(selectCourses);
+  const enrolledCourses = useSelector(selectMyCourses);
 
   // Map enrolled courses to recent activity/progress cards
   const activeLearning = enrolledCourses.map(course => ({

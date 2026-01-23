@@ -13,6 +13,8 @@ import { apiClient, API_ORIGIN } from "../../api/index.js";
 
 export default function EnrolledStudentsTable() {
   const [enrollments, setEnrollments] = useState([]);
+  console.log(enrollments);
+
   const [allEnrollments, setAllEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
@@ -21,6 +23,7 @@ export default function EnrolledStudentsTable() {
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [filter, setFilter] = useState("pending");
+  const [coursesCache, setCoursesCache] = useState({});
 
   // Helper function to normalize API response
   const normalizeData = (data) => {
@@ -120,6 +123,30 @@ export default function EnrolledStudentsTable() {
   useEffect(() => {
     fetchEnrollments();
   }, [filter]);
+
+  // Ensure we have course data for enrollments: fetch missing courses by id and cache them
+  useEffect(() => {
+    const missing = new Set();
+    allEnrollments.forEach((e) => {
+      const cid = e?.course_id || e?.courseId || e?.course?._id || null;
+      if (cid && !e.course && !coursesCache[String(cid)]) missing.add(cid);
+    });
+
+    if (missing.size === 0) return;
+
+    (async () => {
+      for (const cid of Array.from(missing)) {
+        try {
+          const res = await apiClient.getCourseById(cid);
+          const course = normalizeData(res)[0] || {};
+          setCoursesCache((prev) => ({ ...prev, [String(cid)]: course }));
+        } catch (err) {
+          console.error("Failed to fetch course:", cid, err);
+          setCoursesCache((prev) => ({ ...prev, [String(cid)]: {} }));
+        }
+      }
+    })();
+  }, [allEnrollments]);
 
   // Get enrollment ID from various possible fields
   const getEnrollmentId = (enrollment) => {
@@ -382,8 +409,17 @@ export default function EnrolledStudentsTable() {
 
   // Get course title
   const getCourseTitle = (enrollment) => {
+    const courseId =
+      enrollment?.course_id ||
+      enrollment?.courseId ||
+      enrollment?.course?._id ||
+      null;
+
     return (
-      enrollment.course?.title || enrollment.course_name || "Course Not Found"
+      enrollment.course?.title ||
+      (courseId && coursesCache[String(courseId)]?.title) ||
+      enrollment.course.data.title ||
+      "Course Not Found"
     );
   };
 
@@ -829,11 +865,11 @@ export default function EnrolledStudentsTable() {
                     <span className="text-sm text-gray-600 block mb-2">
                       Payment Proof Screenshot:
                     </span>
-                    <div className="relative group">
+                    <div className="relative group p">
                       <img
                         src={getPaymentProofUrl(selectedEnrollment)}
                         alt="Payment Proof"
-                        className="w-full max-h-96 object-contain bg-gray-100 rounded-lg border-2 border-gray-300"
+                        className="w-full max-h-96 object-contain bg-gray-100 rounded-lg border-2 py-5 border-gray-300"
                         onError={(e) => {
                           e.target.src =
                             "https://via.placeholder.com/800x600?text=Image+Not+Found";
@@ -924,17 +960,10 @@ export default function EnrolledStudentsTable() {
             {selectedEnrollment.status === "pending" && (
               <div className="bg-gray-50 p-6 flex gap-4 justify-end sticky bottom-0">
                 <button
-                  onClick={() => setShowModal(false)}
-                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-colors"
-                  disabled={actionLoading}
-                >
-                  Cancel
-                </button>
-                <button
                   onClick={() =>
                     handleReject(getEnrollmentId(selectedEnrollment))
                   }
-                  className="px-6 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 cursor-pointer bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2"
                   disabled={actionLoading || !rejectReason.trim()}
                 >
                   {actionLoading ? (
@@ -946,7 +975,7 @@ export default function EnrolledStudentsTable() {
                 </button>
                 <button
                   onClick={() => handleApprove(selectedEnrollment)}
-                  className="px-6 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 cursor-pointer bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
                   disabled={actionLoading}
                 >
                   {actionLoading ? (

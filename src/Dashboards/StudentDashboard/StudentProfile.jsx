@@ -10,7 +10,7 @@ import Settings from './Settings';
 import Certificates from './Certificates';
 import { FiLogOut } from 'react-icons/fi';
 import { logoutAsync } from '../../../slices/AuthSlice';
-import { fetchMyCourses, selectCourses } from '../../../slices/courseSlice';
+import { fetchMyCourses, selectMyCourses } from '../../../slices/courseSlice';
 
 const UserDashboard = () => {
   const [activeSection, setActiveSection] = useState('overview');
@@ -30,11 +30,13 @@ const UserDashboard = () => {
     }
   }, [isAuthenticated, loading, navigate]);
 
-  const enrolledCoursesList = useSelector(selectCourses);
+  const enrolledCoursesList = useSelector(selectMyCourses);
 
   useEffect(() => {
-    dispatch(fetchMyCourses());
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(fetchMyCourses());
+    }
+  }, [dispatch, user?.id]);
 
   const completedCount = enrolledCoursesList.filter(c => c.status === 'completed' || c.progress === 100).length;
   const totalEnrolled = enrolledCoursesList.length;

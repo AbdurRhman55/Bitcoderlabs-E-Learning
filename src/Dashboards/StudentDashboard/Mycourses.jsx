@@ -2,24 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { FaPaintBrush, FaBolt, FaBullseye, FaScroll, FaBook } from "react-icons/fa";
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchMyCourses, selectCourses } from '../../../slices/courseSlice';
+import { fetchMyCourses, selectMyCourses } from '../../../slices/courseSlice';
 import { API_ORIGIN } from '../../api/index.js';
+
 const MyCourses = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const dispatch = useDispatch();
-  const fetchedCourses = useSelector(selectCourses);
-  const { loading } = useSelector((state) => state.courses);
+
+  const fetchedCourses = useSelector(selectMyCourses) || [];
+  const loading = useSelector((state) => state.courses.myCoursesLoading);
+  const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(fetchMyCourses());
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(fetchMyCourses());
+    }
+  }, [dispatch, user?.id]);
 
   const resolveImageUrl = (image) => {
     if (!image) return null;
     if (typeof image !== "string") return null;
     if (image.startsWith("http://") || image.startsWith("https://")) return image;
     if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
-    // If it looks like a relative storage path, prepend API_ORIGIN/storage/
     return `${API_ORIGIN}/storage/${image}`;
   };
 
@@ -89,11 +93,10 @@ const MyCourses = () => {
             `}
           >
             {filter.label}
-            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-              activeFilter === filter.id
-                ? 'bg-white/20 text-white'
-                : 'bg-gray-200 text-gray-600'
-            }`}>
+            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeFilter === filter.id
+              ? 'bg-white/20 text-white'
+              : 'bg-gray-200 text-gray-600'
+              }`}>
               {getFilterCount(filter.id)}
             </span>
           </button>
@@ -191,8 +194,8 @@ const MyCourses = () => {
                 `}
                 disabled={course.status === 'rejected' || course.status === 'pending'}
               >
-                {course.status === 'completed' 
-                  ? 'View Certificate' 
+                {course.status === 'completed'
+                  ? 'View Certificate'
                   : course.status === 'pending'
                     ? '⌛ Waiting for Approval'
                     : course.status === 'rejected'

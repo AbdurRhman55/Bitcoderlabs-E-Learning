@@ -226,7 +226,7 @@ export default function TeachersTable() {
                       {getTeacherCourses(t.id).map((c) => (
                         <span
                           key={c.id}
-                          className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md border border-blue-100"
+                          className="inline-block bg-primary text-white text-xs px-2 py-1 rounded-md border border-blue-100"
                         >
                           {c.title}
                         </span>

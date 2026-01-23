@@ -31,3 +31,17 @@ export default {
 };
 
 
+
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#3b82f6', // Add your primary color
+      }
+    },
+  },
+  plugins: [],
+}

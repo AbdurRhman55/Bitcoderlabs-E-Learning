@@ -1,15 +1,30 @@
 import React, { useState, useEffect, Fragment } from "react";
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 import AddCourseForm from "./AddCourseFrom";
 import AddModuleForm from "./AddModuleForm";
 import AddLessonForm from "./AddLessonForm";
 import Button from "../../Component/UI/Button";
-import { Edit2, RefreshCw, Trash2, ChevronDown, ChevronRight, Book, PlayCircle, Plus, Minus, FileText, Video, Link, X, Clock } from "lucide-react";
-import { apiClient } from '../../../src/api/index.js';
+import {
+  Edit2,
+  RefreshCw,
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  Book,
+  PlayCircle,
+  Plus,
+  Minus,
+  FileText,
+  Video,
+  Link,
+  X,
+  Clock,
+} from "lucide-react";
+import { apiClient } from "../../../src/api/index.js";
 import { API_ORIGIN } from "../../api/index.js";
 
-const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
-
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
@@ -29,7 +44,7 @@ export default function CoursesPage() {
   const [lessonsByModule, setLessonsByModule] = useState({});
   const [loadingStates, setLoadingStates] = useState({
     modules: {},
-    lessons: {}
+    lessons: {},
   });
 
   // Module and Lesson Management States
@@ -40,12 +55,13 @@ export default function CoursesPage() {
   const [editingModule, setEditingModule] = useState(null);
   const [editingLesson, setEditingLesson] = useState(null);
 
-  const { user, isAuthenticated } = useSelector(state => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const resolveImageUrl = (image) => {
     if (!image) return null;
     if (typeof image !== "string") return null;
-    if (image.startsWith("http://") || image.startsWith("https://")) return image;
+    if (image.startsWith("http://") || image.startsWith("https://"))
+      return image;
     if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
     return `${API_ORIGIN}/${image}`;
   };
@@ -56,7 +72,7 @@ export default function CoursesPage() {
     try {
       const response = await apiClient.getCourses({
         page: page,
-        per_page: perPage
+        per_page: perPage,
       });
 
       if (response && response.data) {
@@ -73,7 +89,7 @@ export default function CoursesPage() {
       }
       setLastUpdate(Date.now());
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error("Error fetching courses:", error);
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -90,45 +106,48 @@ export default function CoursesPage() {
   // Fetch modules for a specific course
   const fetchModulesForCourse = async (courseId) => {
     try {
-      setLoadingStates(prev => ({
+      setLoadingStates((prev) => ({
         ...prev,
-        modules: { ...prev.modules, [courseId]: true }
+        modules: { ...prev.modules, [courseId]: true },
       }));
 
-      const modulesResponse = await apiClient.getCourseModules({ course_id: courseId });
+      const modulesResponse = await apiClient.getCourseModules({
+        course_id: courseId,
+      });
       // Client-side filtering to ensure strict data integrity
-      const modules = (modulesResponse.data || []).filter(m => m.course_id == courseId);
+      const modules = (modulesResponse.data || []).filter(
+        (m) => m.course_id == courseId,
+      );
 
       console.log(`Fetched modules for course ${courseId}:`, modules);
 
       // Store modules in state, initialize with empty lessons array
-      setModulesByCourse(prev => ({
+      setModulesByCourse((prev) => ({
         ...prev,
-        [courseId]: modules.map(module => ({
+        [courseId]: modules.map((module) => ({
           ...module,
-          lessons: [] // Initialize empty lessons
-        }))
+          lessons: [], // Initialize empty lessons
+        })),
       }));
 
       // Clear lessons for these modules from cache
-      modules.forEach(module => {
-        setLessonsByModule(prev => {
+      modules.forEach((module) => {
+        setLessonsByModule((prev) => {
           const newLessons = { ...prev };
           delete newLessons[module.id];
           return newLessons;
         });
       });
-
     } catch (error) {
       console.error(`Error fetching modules for course ${courseId}:`, error);
-      setModulesByCourse(prev => ({
+      setModulesByCourse((prev) => ({
         ...prev,
-        [courseId]: []
+        [courseId]: [],
       }));
     } finally {
-      setLoadingStates(prev => ({
+      setLoadingStates((prev) => ({
         ...prev,
-        modules: { ...prev.modules, [courseId]: false }
+        modules: { ...prev.modules, [courseId]: false },
       }));
     }
   };
@@ -136,44 +155,48 @@ export default function CoursesPage() {
   // Fetch lessons for a specific module
   const fetchLessonsForModule = async (moduleId, courseId) => {
     try {
-      setLoadingStates(prev => ({
+      setLoadingStates((prev) => ({
         ...prev,
-        lessons: { ...prev.lessons, [moduleId]: true }
+        lessons: { ...prev.lessons, [moduleId]: true },
       }));
 
-      const lessonsResponse = await apiClient.getModuleLessons({ module_id: moduleId });
+      const lessonsResponse = await apiClient.getModuleLessons({
+        module_id: moduleId,
+      });
       // Client-side filtering to ensure strict data integrity
-      const lessons = (lessonsResponse.data || []).filter(l => l.module_id == moduleId);
+      const lessons = (lessonsResponse.data || []).filter(
+        (l) => l.module_id == moduleId,
+      );
 
       console.log(`Fetched lessons for module ${moduleId}:`, lessons);
 
       // Store lessons in state
-      setLessonsByModule(prev => ({
+      setLessonsByModule((prev) => ({
         ...prev,
-        [moduleId]: lessons
+        [moduleId]: lessons,
       }));
 
       // Update the module in modulesByCourse to have lessons
-      setModulesByCourse(prev => ({
+      setModulesByCourse((prev) => ({
         ...prev,
-        [courseId]: prev[courseId]?.map(module => {
-          if (module.id === moduleId) {
-            return { ...module, lessons };
-          }
-          return module;
-        }) || []
+        [courseId]:
+          prev[courseId]?.map((module) => {
+            if (module.id === moduleId) {
+              return { ...module, lessons };
+            }
+            return module;
+          }) || [],
       }));
-
     } catch (error) {
       console.error(`Error fetching lessons for module ${moduleId}:`, error);
-      setLessonsByModule(prev => ({
+      setLessonsByModule((prev) => ({
         ...prev,
-        [moduleId]: []
+        [moduleId]: [],
       }));
     } finally {
-      setLoadingStates(prev => ({
+      setLoadingStates((prev) => ({
         ...prev,
-        lessons: { ...prev.lessons, [moduleId]: false }
+        lessons: { ...prev.lessons, [moduleId]: false },
       }));
     }
   };
@@ -183,14 +206,17 @@ export default function CoursesPage() {
     const isCurrentlyExpanded = expandedCourses[courseId];
 
     // If expanding, fetch modules if not already loaded
-    if (!isCurrentlyExpanded && (!modulesByCourse[courseId] || modulesByCourse[courseId].length === 0)) {
+    if (
+      !isCurrentlyExpanded &&
+      (!modulesByCourse[courseId] || modulesByCourse[courseId].length === 0)
+    ) {
       await fetchModulesForCourse(courseId);
     }
 
     // Toggle course expansion
-    setExpandedCourses(prev => ({
+    setExpandedCourses((prev) => ({
       ...prev,
-      [courseId]: !isCurrentlyExpanded
+      [courseId]: !isCurrentlyExpanded,
     }));
 
     // Clear module expansions when collapsing
@@ -209,11 +235,14 @@ export default function CoursesPage() {
     const isCurrentlyExpanded = expandedModules[moduleId];
 
     // If expanding and lessons aren't loaded yet, fetch them
-    if (!isCurrentlyExpanded && (!lessonsByModule[moduleId] || lessonsByModule[moduleId].length === 0)) {
+    if (
+      !isCurrentlyExpanded &&
+      (!lessonsByModule[moduleId] || lessonsByModule[moduleId].length === 0)
+    ) {
       await fetchLessonsForModule(moduleId, courseId);
     }
 
-    setExpandedModules(prev => {
+    setExpandedModules((prev) => {
       const newExpanded = {};
       // Only expand the clicked module, collapse others
       if (!prev[moduleId]) {
@@ -228,7 +257,7 @@ export default function CoursesPage() {
     try {
       setLoading(true);
       setIsOperationInProgress(true);
-      console.log('Submitting course data:', courseData);
+      console.log("Submitting course data:", courseData);
 
       const isFormData = courseData instanceof FormData;
       let submitData;
@@ -236,13 +265,16 @@ export default function CoursesPage() {
       if (isFormData) {
         submitData = courseData;
 
-        if (!submitData.has('reviews_count')) submitData.append('reviews_count', '0');
-        if (!submitData.has('students_count')) submitData.append('students_count', '0');
-        if (!submitData.has('rating')) submitData.append('rating', '0');
-        if (!submitData.has('is_featured')) submitData.append('is_featured', '0');
-        if (!submitData.has('is_active')) submitData.append('is_active', '1');
-        if (!submitData.has('features')) submitData.append('features', '[]');
-        if (!submitData.has('tags')) submitData.append('tags', '[]');
+        if (!submitData.has("reviews_count"))
+          submitData.append("reviews_count", "0");
+        if (!submitData.has("students_count"))
+          submitData.append("students_count", "0");
+        if (!submitData.has("rating")) submitData.append("rating", "0");
+        if (!submitData.has("is_featured"))
+          submitData.append("is_featured", "0");
+        if (!submitData.has("is_active")) submitData.append("is_active", "1");
+        if (!submitData.has("features")) submitData.append("features", "[]");
+        if (!submitData.has("tags")) submitData.append("tags", "[]");
       } else {
         submitData = {
           ...courseData,
@@ -250,15 +282,27 @@ export default function CoursesPage() {
           image: courseData.image || null,
           video_url: courseData.video_url || null,
           duration: courseData.duration || null,
-          original_price: courseData.original_price ? parseFloat(courseData.original_price) : null,
-          features: courseData.features ? JSON.stringify(courseData.features) : "[]",
+          original_price: courseData.original_price
+            ? parseFloat(courseData.original_price)
+            : null,
+          features: courseData.features
+            ? JSON.stringify(courseData.features)
+            : "[]",
           tags: courseData.tags ? JSON.stringify(courseData.tags) : "[]",
           price: parseFloat(courseData.price) || 0,
           rating: courseData.rating ? parseFloat(courseData.rating) : 0,
-          reviews_count: courseData.reviews_count ? parseInt(courseData.reviews_count) : 0,
-          students_count: courseData.students_count ? parseInt(courseData.students_count) : 0,
-          instructor_id: courseData.instructor_id ? parseInt(courseData.instructor_id) : undefined,
-          category_id: courseData.category_id ? parseInt(courseData.category_id) : undefined,
+          reviews_count: courseData.reviews_count
+            ? parseInt(courseData.reviews_count)
+            : 0,
+          students_count: courseData.students_count
+            ? parseInt(courseData.students_count)
+            : 0,
+          instructor_id: courseData.instructor_id
+            ? parseInt(courseData.instructor_id)
+            : undefined,
+          category_id: courseData.category_id
+            ? parseInt(courseData.category_id)
+            : undefined,
           is_featured: Boolean(courseData.is_featured),
           is_active: Boolean(courseData.is_active),
         };
@@ -267,40 +311,58 @@ export default function CoursesPage() {
       let response;
       if (editingCourse) {
         response = await apiClient.updateCourse(editingCourse.id, submitData);
-        setCourses(prevCourses =>
-          prevCourses.map(course =>
-            course.id === editingCourse.id ? response.data : course
-          )
+        setCourses((prevCourses) =>
+          prevCourses.map((course) =>
+            course.id === editingCourse.id ? response.data : course,
+          ),
         );
         // Clear cached data for this course
-        setModulesByCourse(prev => {
+        setModulesByCourse((prev) => {
           const newModules = { ...prev };
           delete newModules[editingCourse.id];
           return newModules;
         });
-        setExpandedCourses(prev => ({ ...prev, [editingCourse.id]: false }));
+        setExpandedCourses((prev) => ({ ...prev, [editingCourse.id]: false }));
         setExpandedModules({});
       } else {
-        if (!isAuthenticated) throw new Error('You must be logged in to create courses.');
-        if (user?.role !== 'admin') throw new Error('Only administrators can create courses.');
+        if (!isAuthenticated)
+          throw new Error("You must be logged in to create courses.");
+        if (user?.role !== "admin")
+          throw new Error("Only administrators can create courses.");
 
         if (!isFormData) {
-          const requiredFields = ['title', 'slug', 'description', 'instructor_id', 'category_id', 'price', 'level', 'language'];
-          const missingFields = requiredFields.filter(field => !submitData[field]);
+          const requiredFields = [
+            "title",
+            "slug",
+            "description",
+            "instructor_id",
+            "category_id",
+            "price",
+            "level",
+            "language",
+          ];
+          const missingFields = requiredFields.filter(
+            (field) => !submitData[field],
+          );
 
           if (missingFields.length > 0) {
-            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+            throw new Error(
+              `Missing required fields: ${missingFields.join(", ")}`,
+            );
           }
 
-          if (isNaN(submitData.instructor_id) || isNaN(submitData.category_id)) {
-            throw new Error('Please select a valid instructor and category.');
+          if (
+            isNaN(submitData.instructor_id) ||
+            isNaN(submitData.category_id)
+          ) {
+            throw new Error("Please select a valid instructor and category.");
           }
         }
 
         response = await apiClient.createCourse(submitData);
 
         if (response.data) {
-          setCourses(prevCourses => [response.data, ...prevCourses]);
+          setCourses((prevCourses) => [response.data, ...prevCourses]);
         }
       }
 
@@ -308,11 +370,12 @@ export default function CoursesPage() {
       setOpenForm(false);
       setEditingCourse(null);
     } catch (error) {
-      console.error('Error saving course:', error);
-      const errorMessage = error.response?.data?.message ||
+      console.error("Error saving course:", error);
+      const errorMessage =
+        error.response?.data?.message ||
         error.response?.data?.error ||
         error.message ||
-        'Failed to save course. Please try again.';
+        "Failed to save course. Please try again.";
       alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -326,14 +389,18 @@ export default function CoursesPage() {
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm("Are you sure you want to delete this course? This will also delete all modules and lessons in this course.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this course? This will also delete all modules and lessons in this course.",
+      )
+    ) {
       try {
         setIsOperationInProgress(true);
         await apiClient.deleteCourse(courseId);
         setCourses((prev) => prev.filter((course) => course.id !== courseId));
 
         // Remove all cached data for this course
-        setModulesByCourse(prev => {
+        setModulesByCourse((prev) => {
           const newModules = { ...prev };
           delete newModules[courseId];
           return newModules;
@@ -341,15 +408,15 @@ export default function CoursesPage() {
 
         // Remove lessons for all modules of this course
         const courseModules = modulesByCourse[courseId] || [];
-        setLessonsByModule(prev => {
+        setLessonsByModule((prev) => {
           const newLessons = { ...prev };
-          courseModules.forEach(module => {
+          courseModules.forEach((module) => {
             delete newLessons[module.id];
           });
           return newLessons;
         });
 
-        setExpandedCourses(prev => {
+        setExpandedCourses((prev) => {
           const newExpanded = { ...prev };
           delete newExpanded[courseId];
           return newExpanded;
@@ -358,8 +425,8 @@ export default function CoursesPage() {
 
         setTimeout(() => fetchCourses(currentPage, false), 1000);
       } catch (error) {
-        console.error('Error deleting course:', error);
-        alert('Failed to delete course. Please try again.');
+        console.error("Error deleting course:", error);
+        alert("Failed to delete course. Please try again.");
       } finally {
         setIsOperationInProgress(false);
       }
@@ -380,33 +447,38 @@ export default function CoursesPage() {
   };
 
   const handleDeleteModule = async (moduleId, courseId) => {
-    if (window.confirm("Are you sure you want to delete this module and all its lessons?")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this module and all its lessons?",
+      )
+    ) {
       try {
         setIsOperationInProgress(true);
         await apiClient.deleteModule(moduleId);
 
         // Remove module from state
-        setModulesByCourse(prev => ({
+        setModulesByCourse((prev) => ({
           ...prev,
-          [courseId]: prev[courseId]?.filter(module => module.id !== moduleId) || []
+          [courseId]:
+            prev[courseId]?.filter((module) => module.id !== moduleId) || [],
         }));
 
         // Remove lessons from cache
-        setLessonsByModule(prev => {
+        setLessonsByModule((prev) => {
           const newLessons = { ...prev };
           delete newLessons[moduleId];
           return newLessons;
         });
 
         // Clear expanded state
-        setExpandedModules(prev => {
+        setExpandedModules((prev) => {
           const newExpanded = { ...prev };
           delete newExpanded[moduleId];
           return newExpanded;
         });
       } catch (error) {
-        console.error('Error deleting module:', error);
-        alert('Failed to delete module. Please try again.');
+        console.error("Error deleting module:", error);
+        alert("Failed to delete module. Please try again.");
       } finally {
         setIsOperationInProgress(false);
       }
@@ -418,7 +490,7 @@ export default function CoursesPage() {
       setIsOperationInProgress(true);
 
       const courseId = moduleData.course_id || selectedCourseForModule;
-      if (!courseId) throw new Error('Course ID is required');
+      if (!courseId) throw new Error("Course ID is required");
 
       const dataToSubmit = {
         ...moduleData,
@@ -431,11 +503,14 @@ export default function CoursesPage() {
 
         // Update module in state
         if (courseId) {
-          setModulesByCourse(prev => ({
+          setModulesByCourse((prev) => ({
             ...prev,
-            [courseId]: prev[courseId]?.map(module =>
-              module.id === editingModule.id ? { ...module, ...response.data } : module
-            ) || []
+            [courseId]:
+              prev[courseId]?.map((module) =>
+                module.id === editingModule.id
+                  ? { ...module, ...response.data }
+                  : module,
+              ) || [],
           }));
         }
       } else {
@@ -444,9 +519,9 @@ export default function CoursesPage() {
         // Add new module to state
         const newModule = response.data;
         if (courseId) {
-          setModulesByCourse(prev => ({
+          setModulesByCourse((prev) => ({
             ...prev,
-            [courseId]: [...(prev[courseId] || []), newModule]
+            [courseId]: [...(prev[courseId] || []), newModule],
           }));
         }
       }
@@ -454,10 +529,9 @@ export default function CoursesPage() {
       setShowModuleForm(false);
       setEditingModule(null);
       setSelectedCourseForModule(null);
-
     } catch (error) {
-      console.error('Error saving module:', error);
-      alert(error.message || 'Failed to save module. Please try again.');
+      console.error("Error saving module:", error);
+      alert(error.message || "Failed to save module. Please try again.");
     } finally {
       setIsOperationInProgress(false);
     }
@@ -483,27 +557,32 @@ export default function CoursesPage() {
         await apiClient.deleteLesson(lessonId);
 
         // Remove lesson from state
-        setLessonsByModule(prev => ({
+        setLessonsByModule((prev) => ({
           ...prev,
-          [moduleId]: prev[moduleId]?.filter(lesson => lesson.id !== lessonId) || []
+          [moduleId]:
+            prev[moduleId]?.filter((lesson) => lesson.id !== lessonId) || [],
         }));
 
         // Update module's lessons in modulesByCourse
-        setModulesByCourse(prev => ({
+        setModulesByCourse((prev) => ({
           ...prev,
-          [courseId]: prev[courseId]?.map(module => {
-            if (module.id === moduleId) {
-              return {
-                ...module,
-                lessons: module.lessons?.filter(lesson => lesson.id !== lessonId) || []
-              };
-            }
-            return module;
-          }) || []
+          [courseId]:
+            prev[courseId]?.map((module) => {
+              if (module.id === moduleId) {
+                return {
+                  ...module,
+                  lessons:
+                    module.lessons?.filter(
+                      (lesson) => lesson.id !== lessonId,
+                    ) || [],
+                };
+              }
+              return module;
+            }) || [],
         }));
       } catch (error) {
-        console.error('Error deleting lesson:', error);
-        alert('Failed to delete lesson. Please try again.');
+        console.error("Error deleting lesson:", error);
+        alert("Failed to delete lesson. Please try again.");
       } finally {
         setIsOperationInProgress(false);
       }
@@ -524,58 +603,68 @@ export default function CoursesPage() {
         response = await apiClient.updateLesson(editingLesson.id, dataToSubmit);
 
         // Update lesson in both caches
-        setLessonsByModule(prev => ({
+        setLessonsByModule((prev) => ({
           ...prev,
-          [selectedModuleForLesson.moduleId]: prev[selectedModuleForLesson.moduleId]?.map(lesson =>
-            lesson.id === editingLesson.id ? { ...lesson, ...response.data } : lesson
-          ) || []
+          [selectedModuleForLesson.moduleId]:
+            prev[selectedModuleForLesson.moduleId]?.map((lesson) =>
+              lesson.id === editingLesson.id
+                ? { ...lesson, ...response.data }
+                : lesson,
+            ) || [],
         }));
 
-        setModulesByCourse(prev => ({
+        setModulesByCourse((prev) => ({
           ...prev,
-          [selectedModuleForLesson.courseId]: prev[selectedModuleForLesson.courseId]?.map(module => {
-            if (module.id === selectedModuleForLesson.moduleId) {
-              return {
-                ...module,
-                lessons: module.lessons?.map(lesson =>
-                  lesson.id === editingLesson.id ? { ...lesson, ...response.data } : lesson
-                ) || []
-              };
-            }
-            return module;
-          }) || []
+          [selectedModuleForLesson.courseId]:
+            prev[selectedModuleForLesson.courseId]?.map((module) => {
+              if (module.id === selectedModuleForLesson.moduleId) {
+                return {
+                  ...module,
+                  lessons:
+                    module.lessons?.map((lesson) =>
+                      lesson.id === editingLesson.id
+                        ? { ...lesson, ...response.data }
+                        : lesson,
+                    ) || [],
+                };
+              }
+              return module;
+            }) || [],
         }));
       } else {
         response = await apiClient.createLesson(dataToSubmit);
 
         // Add new lesson to both caches
         const newLesson = response.data;
-        setLessonsByModule(prev => ({
+        setLessonsByModule((prev) => ({
           ...prev,
-          [selectedModuleForLesson.moduleId]: [...(prev[selectedModuleForLesson.moduleId] || []), newLesson]
+          [selectedModuleForLesson.moduleId]: [
+            ...(prev[selectedModuleForLesson.moduleId] || []),
+            newLesson,
+          ],
         }));
 
-        setModulesByCourse(prev => ({
+        setModulesByCourse((prev) => ({
           ...prev,
-          [selectedModuleForLesson.courseId]: prev[selectedModuleForLesson.courseId]?.map(module => {
-            if (module.id === selectedModuleForLesson.moduleId) {
-              return {
-                ...module,
-                lessons: [...(module.lessons || []), newLesson]
-              };
-            }
-            return module;
-          }) || []
+          [selectedModuleForLesson.courseId]:
+            prev[selectedModuleForLesson.courseId]?.map((module) => {
+              if (module.id === selectedModuleForLesson.moduleId) {
+                return {
+                  ...module,
+                  lessons: [...(module.lessons || []), newLesson],
+                };
+              }
+              return module;
+            }) || [],
         }));
       }
 
       setShowLessonForm(false);
       setEditingLesson(null);
       setSelectedModuleForLesson(null);
-
     } catch (error) {
-      console.error('Error saving lesson:', error);
-      alert(error.message || 'Failed to save lesson. Please try again.');
+      console.error("Error saving lesson:", error);
+      alert(error.message || "Failed to save lesson. Please try again.");
     } finally {
       setIsOperationInProgress(false);
     }
@@ -589,13 +678,16 @@ export default function CoursesPage() {
     }
 
     // Otherwise, get from modulesByCourse
-    const module = modulesByCourse[courseId]?.find(m => m.id === moduleId);
+    const module = modulesByCourse[courseId]?.find((m) => m.id === moduleId);
     return module?.lessons || [];
   };
 
-
   const handlePageChange = (page) => {
-    if (page !== currentPage && page >= 1 && page <= (pagination?.last_page || 1)) {
+    if (
+      page !== currentPage &&
+      page >= 1 &&
+      page <= (pagination?.last_page || 1)
+    ) {
       setCurrentPage(page);
     }
   };
@@ -649,7 +741,7 @@ export default function CoursesPage() {
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Refresh courses"
           >
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
             Refresh
           </button>
           <Button
@@ -721,12 +813,18 @@ export default function CoursesPage() {
                 <tr>
                   <th className="text-left font-semibold px-4 py-3 w-12"></th>
                   <th className="text-left font-semibold px-4 py-3">Course</th>
-                  <th className="text-left font-semibold px-4 py-3">Category</th>
-                  <th className="text-left font-semibold px-4 py-3">Instructor</th>
+                  <th className="text-left font-semibold px-4 py-3">
+                    Category
+                  </th>
+                  <th className="text-left font-semibold px-4 py-3">
+                    Instructor
+                  </th>
                   <th className="text-left font-semibold px-4 py-3">Price</th>
                   <th className="text-left font-semibold px-4 py-3">Level</th>
                   <th className="text-left font-semibold px-4 py-3">Status</th>
-                  <th className="text-right font-semibold px-4 py-3">Actions</th>
+                  <th className="text-right font-semibold px-4 py-3">
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
@@ -756,7 +854,10 @@ export default function CoursesPage() {
                         <td className="px-2 py-3">
                           <div className="flex items-center gap-3">
                             <img
-                              src={resolveImageUrl(course.image) || PLACEHOLDER_IMAGE}
+                              src={
+                                resolveImageUrl(course.image) ||
+                                PLACEHOLDER_IMAGE
+                              }
                               alt={course.title}
                               className="w-14 h-10 rounded-md object-cover border border-gray-200 shrink-0"
                               onError={(e) => {
@@ -778,11 +879,15 @@ export default function CoursesPage() {
                         </td>
 
                         <td className="px-4 py-3 text-gray-700">
-                          {course.category?.name || course.category || '-'}
+                          {course.category?.name || course.category || "-"}
                         </td>
 
                         <td className="px-4 py-3 text-gray-700">
-                          {course.instructor?.user?.name || course.instructor?.name || course.instructor?.title || course.instructor || '-'}
+                          {course.instructor?.user?.name ||
+                            course.instructor?.name ||
+                            course.instructor?.title ||
+                            course.instructor ||
+                            "-"}
                         </td>
 
                         <td className="px-4 py-3 text-gray-700 font-medium">
@@ -791,14 +896,19 @@ export default function CoursesPage() {
 
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                            {course.level || '-'}
+                            {course.level || "-"}
                           </span>
                         </td>
 
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                            {course.is_active ? 'Active' : 'Inactive'}
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              course.is_active
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {course.is_active ? "Active" : "Inactive"}
                           </span>
                         </td>
 
@@ -830,10 +940,14 @@ export default function CoursesPage() {
                           <td colSpan="8" className="px-4 py-6">
                             <div className="pl-8 border-l-2 border-primary">
                               <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-gray-900 text-lg">Course Content</h3>
+                                <h3 className="font-bold text-gray-900 text-lg">
+                                  Course Content
+                                </h3>
                                 <div className="flex items-center gap-2">
                                   <button
-                                    onClick={() => handleAddModuleClick(course.id)}
+                                    onClick={() =>
+                                      handleAddModuleClick(course.id)
+                                    }
                                     className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                                   >
                                     <Plus size={18} />
@@ -845,22 +959,36 @@ export default function CoursesPage() {
                               {loadingStates.modules[course.id] ? (
                                 <div className="flex justify-center items-center py-8">
                                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                                  <span className="ml-3 text-gray-600">Loading modules...</span>
+                                  <span className="ml-3 text-gray-600">
+                                    Loading modules...
+                                  </span>
                                 </div>
                               ) : courseModules.length > 0 ? (
                                 <div className="space-y-4">
                                   {courseModules.map((module, moduleIndex) => {
-                                    const isModuleExpanded = expandedModules[module.id];
-                                    const moduleLessons = getLessonsForModule(module.id, course.id);
+                                    const isModuleExpanded =
+                                      expandedModules[module.id];
+                                    const moduleLessons = getLessonsForModule(
+                                      module.id,
+                                      course.id,
+                                    );
 
                                     return (
-                                      <div key={module.id} className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden">
+                                      <div
+                                        key={module.id}
+                                        className="bg-white rounded-lg border border-gray-300 shadow-sm overflow-hidden"
+                                      >
                                         {/* Module Header */}
                                         <div className="p-4 border-b border-gray-200 bg-gray-50">
                                           <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                               <button
-                                                onClick={() => toggleModuleExpansion(module.id, course.id)}
+                                                onClick={() =>
+                                                  toggleModuleExpansion(
+                                                    module.id,
+                                                    course.id,
+                                                  )
+                                                }
                                                 className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
                                               >
                                                 {isModuleExpanded ? (
@@ -873,9 +1001,13 @@ export default function CoursesPage() {
                                                     {moduleIndex + 1}
                                                   </div>
                                                   <div>
-                                                    <h4 className="font-semibold text-gray-900">{module.title}</h4>
+                                                    <h4 className="font-semibold text-gray-900">
+                                                      {module.title}
+                                                    </h4>
                                                     {module.description && (
-                                                      <p className="text-sm text-gray-600 mt-1">{module.description}</p>
+                                                      <p className="text-sm text-gray-600 mt-1">
+                                                        {module.description}
+                                                      </p>
                                                     )}
                                                   </div>
                                                 </div>
@@ -890,21 +1022,36 @@ export default function CoursesPage() {
                                               </span>
                                               {/* Module Action Buttons */}
                                               <button
-                                                onClick={() => handleEditModule(module, course.id)}
+                                                onClick={() =>
+                                                  handleEditModule(
+                                                    module,
+                                                    course.id,
+                                                  )
+                                                }
                                                 className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                                 title="Edit module"
                                               >
                                                 <Edit2 className="w-4 h-4" />
                                               </button>
                                               <button
-                                                onClick={() => handleAddLessonClick(module.id, course.id)}
+                                                onClick={() =>
+                                                  handleAddLessonClick(
+                                                    module.id,
+                                                    course.id,
+                                                  )
+                                                }
                                                 className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
                                                 title="Add lesson"
                                               >
                                                 <Plus className="w-4 h-4" />
                                               </button>
                                               <button
-                                                onClick={() => handleDeleteModule(module.id, course.id)}
+                                                onClick={() =>
+                                                  handleDeleteModule(
+                                                    module.id,
+                                                    course.id,
+                                                  )
+                                                }
                                                 className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                                 title="Delete module"
                                               >
@@ -917,86 +1064,138 @@ export default function CoursesPage() {
                                         {/* Module Content (Lessons) - Only shown when expanded */}
                                         {isModuleExpanded && (
                                           <div className="p-4 bg-gray-50">
-                                            {loadingStates.lessons[module.id] ? (
+                                            {loadingStates.lessons[
+                                              module.id
+                                            ] ? (
                                               <div className="flex justify-center items-center py-4">
                                                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                                <span className="ml-3 text-gray-600">Loading lessons...</span>
+                                                <span className="ml-3 text-gray-600">
+                                                  Loading lessons...
+                                                </span>
                                               </div>
                                             ) : moduleLessons.length > 0 ? (
                                               <div className="space-y-2">
-                                                {moduleLessons.map((lesson, lessonIndex) => (
-                                                  <div key={lesson.id} className="bg-white rounded border border-gray-200 p-3 hover:border-primary transition-colors">
-                                                    <div className="flex items-center justify-between">
-                                                      <div className="flex items-center gap-3">
-                                                        <div className="flex-shrink-0">
-                                                          {lesson.lesson_type === 'video' ? (
-                                                            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                                                              <Video className="w-4 h-4 text-red-600" />
-                                                            </div>
-                                                          ) : lesson.lesson_type === 'article' ? (
-                                                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                              <FileText className="w-4 h-4 text-blue-600" />
-                                                            </div>
-                                                          ) : (
-                                                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                                              <Link className="w-4 h-4 text-green-600" />
-                                                            </div>
-                                                          )}
-                                                        </div>
-                                                        <div>
-                                                          <h5 className="font-medium text-gray-900">{lesson.title}</h5>
-                                                          {lesson.description && (
-                                                            <p className="text-sm text-gray-600 mt-1">{lesson.description}</p>
-                                                          )}
-                                                          <div className="flex items-center gap-3 mt-2">
-                                                            <span className="text-xs text-gray-500">
-                                                              {moduleIndex + 1}.{lessonIndex + 1}
-                                                            </span>
-                                                            {lesson.duration && (
-                                                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                                                                {lesson.duration}
-                                                              </span>
-                                                            )}
-                                                            {lesson.lesson_type && (
-                                                              <span className={`text-xs px-2 py-1 rounded capitalize ${lesson.lesson_type === 'video' ? 'bg-red-100 text-red-800' :
-                                                                lesson.lesson_type === 'article' ? 'bg-blue-100 text-blue-800' :
-                                                                  'bg-green-100 text-green-800'
-                                                                }`}>
-                                                                {lesson.lesson_type}
-                                                              </span>
+                                                {moduleLessons.map(
+                                                  (lesson, lessonIndex) => (
+                                                    <div
+                                                      key={lesson.id}
+                                                      className="bg-white rounded border border-gray-200 p-3 hover:border-primary transition-colors"
+                                                    >
+                                                      <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                          <div className="flex-shrink-0">
+                                                            {lesson.lesson_type ===
+                                                            "video" ? (
+                                                              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                                                <Video className="w-4 h-4 text-red-600" />
+                                                              </div>
+                                                            ) : lesson.lesson_type ===
+                                                              "article" ? (
+                                                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                <FileText className="w-4 h-4 text-blue-600" />
+                                                              </div>
+                                                            ) : (
+                                                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                                <Link className="w-4 h-4 text-green-600" />
+                                                              </div>
                                                             )}
                                                           </div>
+                                                          <div>
+                                                            <h5 className="font-medium text-gray-900">
+                                                              {lesson.title}
+                                                            </h5>
+                                                            {lesson.description && (
+                                                              <p className="text-sm text-gray-600 mt-1">
+                                                                {
+                                                                  lesson.description
+                                                                }
+                                                              </p>
+                                                            )}
+                                                            <div className="flex items-center gap-3 mt-2">
+                                                              <span className="text-xs text-gray-500">
+                                                                {moduleIndex +
+                                                                  1}
+                                                                .
+                                                                {lessonIndex +
+                                                                  1}
+                                                              </span>
+                                                              {lesson.duration && (
+                                                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                                                                  {
+                                                                    lesson.duration
+                                                                  }
+                                                                </span>
+                                                              )}
+                                                              {lesson.lesson_type && (
+                                                                <span
+                                                                  className={`text-xs px-2 py-1 rounded capitalize ${
+                                                                    lesson.lesson_type ===
+                                                                    "video"
+                                                                      ? "bg-red-100 text-red-800"
+                                                                      : lesson.lesson_type ===
+                                                                          "article"
+                                                                        ? "bg-blue-100 text-blue-800"
+                                                                        : "bg-green-100 text-green-800"
+                                                                  }`}
+                                                                >
+                                                                  {
+                                                                    lesson.lesson_type
+                                                                  }
+                                                                </span>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                          {/* Lesson Action Buttons */}
+                                                          <button
+                                                            onClick={() =>
+                                                              handleEditLesson(
+                                                                lesson,
+                                                                module.id,
+                                                                course.id,
+                                                              )
+                                                            }
+                                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                            title="Edit lesson"
+                                                          >
+                                                            <Edit2 className="w-3 h-3" />
+                                                          </button>
+                                                          <button
+                                                            onClick={() =>
+                                                              handleDeleteLesson(
+                                                                lesson.id,
+                                                                module.id,
+                                                                course.id,
+                                                              )
+                                                            }
+                                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                                            title="Delete lesson"
+                                                          >
+                                                            <Trash2 className="w-3 h-3" />
+                                                          </button>
                                                         </div>
                                                       </div>
-                                                      <div className="flex items-center gap-2">
-                                                        {/* Lesson Action Buttons */}
-                                                        <button
-                                                          onClick={() => handleEditLesson(lesson, module.id, course.id)}
-                                                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                                          title="Edit lesson"
-                                                        >
-                                                          <Edit2 className="w-3 h-3" />
-                                                        </button>
-                                                        <button
-                                                          onClick={() => handleDeleteLesson(lesson.id, module.id, course.id)}
-                                                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                                          title="Delete lesson"
-                                                        >
-                                                          <Trash2 className="w-3 h-3" />
-                                                        </button>
-                                                      </div>
                                                     </div>
-                                                  </div>
-                                                ))}
+                                                  ),
+                                                )}
                                               </div>
                                             ) : (
                                               <div className="text-center py-6">
                                                 <div className="text-gray-400 mb-2">
                                                   <Book className="w-12 h-12 mx-auto" />
                                                 </div>
-                                                <p className="text-gray-500 mb-4">No lessons added to this module yet</p>
+                                                <p className="text-gray-500 mb-4">
+                                                  No lessons added to this
+                                                  module yet
+                                                </p>
                                                 <button
-                                                  onClick={() => handleAddLessonClick(module.id, course.id)}
+                                                  onClick={() =>
+                                                    handleAddLessonClick(
+                                                      module.id,
+                                                      course.id,
+                                                    )
+                                                  }
                                                   className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:text-primary-dark"
                                                 >
                                                   <Plus size={14} />
@@ -1015,10 +1214,17 @@ export default function CoursesPage() {
                                   <div className="text-gray-400 mb-3">
                                     <Book className="w-16 h-16 mx-auto" />
                                   </div>
-                                  <h4 className="text-lg font-medium text-gray-900 mb-2">No modules found for this course</h4>
-                                  <p className="text-gray-600 mb-4">This course doesn't have any modules yet. Start by adding your first module.</p>
+                                  <h4 className="text-lg font-medium text-gray-900 mb-2">
+                                    No modules found for this course
+                                  </h4>
+                                  <p className="text-gray-600 mb-4">
+                                    This course doesn't have any modules yet.
+                                    Start by adding your first module.
+                                  </p>
                                   <button
-                                    onClick={() => handleAddModuleClick(course.id)}
+                                    onClick={() =>
+                                      handleAddModuleClick(course.id)
+                                    }
                                     className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
                                   >
                                     <Plus size={18} />
@@ -1059,7 +1265,8 @@ export default function CoursesPage() {
 
             {/* Pagination Info */}
             <div className="text-sm text-gray-600">
-              Showing {pagination.from || 0} to {pagination.to || 0} of {pagination.total || 0} courses
+              Showing {pagination.from || 0} to {pagination.to || 0} of{" "}
+              {pagination.total || 0} courses
             </div>
 
             {/* Page Navigation */}
@@ -1074,32 +1281,39 @@ export default function CoursesPage() {
 
               {/* Page Numbers */}
               <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, pagination.last_page || 1) }, (_, i) => {
-                  let pageNum;
-                  const totalPages = pagination.last_page || 1;
+                {Array.from(
+                  { length: Math.min(5, pagination.last_page || 1) },
+                  (_, i) => {
+                    let pageNum;
+                    const totalPages = pagination.last_page || 1;
 
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else {
-                    const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
-                    pageNum = startPage + i;
-                  }
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else {
+                      const startPage = Math.max(
+                        1,
+                        Math.min(currentPage - 2, totalPages - 4),
+                      );
+                      pageNum = startPage + i;
+                    }
 
-                  if (pageNum > totalPages) return null;
+                    if (pageNum > totalPages) return null;
 
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`px-3 py-1 border rounded-md text-sm ${currentPage === pageNum
-                        ? 'bg-primary text-white border-primary'
-                        : 'border-gray-300 hover:bg-gray-50'
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          currentPage === pageNum
+                            ? "bg-primary text-white border-primary"
+                            : "border-gray-300 hover:bg-gray-50"
                         }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  },
+                )}
               </div>
 
               <button
@@ -1137,7 +1351,7 @@ export default function CoursesPage() {
             <p className="text-gray-500 mb-4">
               Get started by creating your first course.
             </p>
-            <Button
+            {/* <Button
               variant="primary"
               text="Create Course"
               onClick={() => {
@@ -1152,7 +1366,7 @@ export default function CoursesPage() {
                 setOpenForm(true);
               }}
               className="bg-primary hover:bg-primary-dark text-white"
-            />
+            /> */}
           </div>
         )}
       </div>

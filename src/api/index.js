@@ -611,3 +611,5 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
+import '@fortawesome/fontawesome-free/css/all.min.css';

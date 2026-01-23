@@ -1,13 +1,19 @@
 import { FaClock, FaCheck } from "react-icons/fa";
-// import { Syllabus } from "../../../../Data/Courses.Array";
+import { useNavigate } from "react-router-dom";
 import Button from "../../UI/Button";
 
-export default function LessonItem({ lesson }) {
+export default function LessonItem({ lesson, courseId }) {
+  const navigate = useNavigate();
+
+  const handleStartLesson = () => {
+    // Navigate to video detail page with lesson id and course context
+    navigate(`/video/${lesson.id || 1}?courseId=${courseId}`);
+  };
   return (
     <div className="group/lesson bg-white rounded-xl border-2 border-gray-100 hover:border-primary lg:px-4 px-2 lg:py-3 py-1 transition-all duration-300 hover:shadow-md">
       <div className="flex items-center justify-between gap-2 p-2">
         <div className="flex items-center gap-4 ">
-          
+
           <div className="flex flex-col gap-2">
             <h4 className="lg:text-lg text-sm font-semibold text-gray-900 group-hover/lesson:text-primary-dark transition-colors">
               {lesson.name}
@@ -31,10 +37,10 @@ export default function LessonItem({ lesson }) {
             </span>
           )}
           <div className="lg:hidden">
-            <Button text="Start Lesson"  size="xs"/>
+            <Button text="Start Lesson" size="xs" onClick={handleStartLesson} />
           </div>
           <div className="hidden lg:block">
-            <Button text="Start Lesson" />
+            <Button text="Start Lesson" onClick={handleStartLesson} />
           </div>
         </div>
       </div>

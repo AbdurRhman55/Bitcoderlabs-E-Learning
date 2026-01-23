@@ -1,10 +1,9 @@
 import React from 'react';
 import { FaFileAlt, FaRibbon, FaAward } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { selectCourses } from '../../../slices/courseSlice';
-
+import { selectMyCourses } from '../../../slices/courseSlice';
 const Certificates = () => {
-  const enrolledCourses = useSelector(selectCourses);
+  const enrolledCourses = useSelector(selectMyCourses);
 
   // Show all enrolled courses, but lock certificates for incomplete ones
   const certificates = enrolledCourses.map(course => {
@@ -72,8 +71,8 @@ const Certificates = () => {
                 <button
                   disabled={cert.isLocked}
                   className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 ${cert.isLocked
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-primary hover:bg-primary-dark text-white'
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary hover:bg-primary-dark text-white'
                     }`}
                 >
                   {cert.isLocked ? 'Locked' : 'View Certificate'}
@@ -81,8 +80,8 @@ const Certificates = () => {
                 <button
                   disabled={cert.isLocked}
                   className={`flex-1 border py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200 ${cert.isLocked
-                      ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   Download

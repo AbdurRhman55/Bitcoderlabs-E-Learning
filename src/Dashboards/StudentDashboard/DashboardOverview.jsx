@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMyCourses, selectCourses } from "../../../slices/courseSlice";
+import { fetchMyCourses, selectMyCourses } from "../../../slices/courseSlice";
 import { API_ORIGIN } from "../../api/index.js";
 import { useNavigate } from "react-router-dom";
 import {
@@ -18,12 +18,14 @@ import {
 const DashboardOverview = ({ userData, setActiveSection }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const enrolledCourses = useSelector(selectCourses);
-  const { loading } = useSelector((state) => state.courses);
+  const enrolledCourses = useSelector(selectMyCourses);
+  const loading = useSelector((state) => state.courses.myCoursesLoading);
 
   useEffect(() => {
-    dispatch(fetchMyCourses());
-  }, [dispatch]);
+    if (userData?.id) {
+      dispatch(fetchMyCourses());
+    }
+  }, [dispatch, userData?.id]);
 
   const resolveImageUrl = (image) => {
     if (!image) return null;

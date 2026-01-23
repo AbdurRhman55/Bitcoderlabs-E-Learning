@@ -6,6 +6,7 @@ import Button from "../../UI/Button";
 export default function ModuleCard({
   module,
   index,
+  courseId,
   expandedModule,
   toggleModule,
 }) {
@@ -92,7 +93,7 @@ export default function ModuleCard({
             <div className="p-6 sm:p-8 bg-gradient-to-b from-white to-gray-50">
               <div className="space-y-4 mb-8">
                 {(module.lessonsList || []).map((lesson, i) => (
-                  <LessonItem key={i} lesson={lesson} />
+                  <LessonItem key={i} lesson={lesson} courseId={courseId} />
                 ))}
               </div>
 

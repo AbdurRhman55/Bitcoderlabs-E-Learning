@@ -22,6 +22,7 @@ import AdminDashboard from "./Pages/AdminDashboard";
 import StudentDashboard from "./Pages/StudentDashboard";
 import TeacherProfile from "./Dashboards/TeacherProfile/TeacherProfile"
 import TeacherMainDashboard from "./Dashboards/TeacherDashboard/TeacherMainDashboard";
+import VideoDetailPage from "./Pages/VideoDetailPage";
 
 
 
@@ -61,6 +62,7 @@ function Layout() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/course/:id" element={<CourseDetailPage />} />
         <Route path="/enroll/:id" element={<Enroll />} />
+        <Route path="/video/:id" element={<VideoDetailPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/email/verify" element={<EmailVerification />} />
         <Route path="/forgotpassword" element={<ForgotPassword />} />

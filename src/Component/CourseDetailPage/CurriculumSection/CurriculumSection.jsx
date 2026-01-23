@@ -50,6 +50,7 @@ const CurriculumSection = ({ course }) => {
             key={module.id || index}
             module={module}
             index={index}
+            courseId={course.id}
             expandedModule={expandedModule}
             toggleModule={toggleModule}
           />

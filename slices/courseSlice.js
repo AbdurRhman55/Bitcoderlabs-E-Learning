@@ -1,14 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiClient } from '../src/api/index.js';
 
-
 export const fetchCourses = createAsyncThunk(
   'courses/fetchCourses',
   async () => {
     const response = await apiClient.getCourses();
     console.log(response.data);
-
-    return response.data;
+    return response.data || [];
   }
 );
 
@@ -23,25 +21,26 @@ export const fetchMyCourses = createAsyncThunk(
         return rejectWithValue("User not authenticated");
       }
 
-      // 1. Fetch all enrollments
       const enrollmentsRes = await apiClient.getEnrollments();
       const enrollmentsData = enrollmentsRes.data || [];
 
-      // 2. Filter for current student's enrollments
-      // Note: We handle both single object and array responses for robustness
-      const allEnrollments = Array.isArray(enrollmentsData) ? enrollmentsData : [enrollmentsData];
-      const userEnrollments = allEnrollments.filter(e => e.user_id === userId);
+      const allEnrollments = Array.isArray(enrollmentsData)
+        ? enrollmentsData
+        : [enrollmentsData];
+
+      const userEnrollments = allEnrollments.filter(
+        e => String(e.user_id) === String(userId)
+      );
 
       if (userEnrollments.length === 0) {
         return [];
       }
 
-      // 3. For each enrollment, fetch the actual course details
       const coursePromises = userEnrollments.map(async (enrollment) => {
         try {
           const courseRes = await apiClient.getCourseById(enrollment.course_id);
-          // Unwrap nested course data if it follows the { data: { ... } } pattern
-          const courseData = courseRes.data?.data || courseRes.data || courseRes;
+          const courseData =
+            courseRes.data?.data || courseRes.data || courseRes;
 
           const getDisplayStatus = (enrollment) => {
             if (enrollment.status) {
@@ -72,8 +71,8 @@ export const fetchMyCourses = createAsyncThunk(
       });
 
       const resolvedCourses = await Promise.all(coursePromises);
-      // Return only successfully fetched courses
       return resolvedCourses.filter(Boolean);
+
     } catch (err) {
       console.error("fetchMyCourses error:", err);
       return rejectWithValue(err.message || "Failed to fetch enrolled courses");
@@ -81,16 +80,16 @@ export const fetchMyCourses = createAsyncThunk(
   }
 );
 
-
 const coursesSlice = createSlice({
   name: 'courses',
   initialState: {
     courses: [],
+    myCourses: [],
     loading: false,
+    myCoursesLoading: false,
     error: null,
   },
-  reducers: {
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchCourses.pending, (state) => {
@@ -105,17 +104,18 @@ const coursesSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
+
       .addCase(fetchMyCourses.pending, (state) => {
-        state.loading = true;
+        state.myCoursesLoading = true;
         state.error = null;
       })
       .addCase(fetchMyCourses.fulfilled, (state, action) => {
-        state.loading = false;
-        state.courses = action.payload;
+        state.myCoursesLoading = false;
+        state.myCourses = action.payload;
       })
       .addCase(fetchMyCourses.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+        state.myCoursesLoading = false;
+        state.error = action.payload || action.error.message;
       });
   },
 });
@@ -123,3 +123,4 @@ const coursesSlice = createSlice({
 export default coursesSlice.reducer;
 
 export const selectCourses = (state) => state.courses.courses;
+export const selectMyCourses = (state) => state.courses.myCourses;

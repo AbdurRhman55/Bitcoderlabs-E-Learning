@@ -5,7 +5,7 @@ import { apiClient } from "../../../src/api/index.js";
 export default function StudentsTable() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loadingIds, setLoadingIds] = useState([]); // Track loading for specific users
+  const [loadingIds, setLoadingIds] = useState([]);
 
   // ================= FETCH STUDENTS =================
   const fetchUsers = async () => {
@@ -29,18 +29,18 @@ export default function StudentsTable() {
 
     setLoadingIds((prev) => [...prev, userId]);
     try {
-      await apiClient.approveUser(userId);
-
-      // Optimistic update
       setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, is_active: true } : u))
+        prev.map((u) => (u.id === userId ? { ...u, is_active: true } : u)),
       );
 
-      // Refresh to be sure
-      fetchUsers();
+      await apiClient.approveUser(userId);
     } catch (err) {
       console.error("Approval failed:", err);
       alert(err.message || "Approval failed");
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, is_active: false } : u)),
+      );
     } finally {
       setLoadingIds((prev) => prev.filter((id) => id !== userId));
     }
@@ -48,25 +48,25 @@ export default function StudentsTable() {
 
   // ================= REJECT =================
   const handleReject = async (userId) => {
-    if (!window.confirm("Reject this student? This will delete account.")) return;
+    if (!window.confirm("Reject this student? This will delete account."))
+      return;
 
     setLoadingIds((prev) => [...prev, userId]);
     try {
-      await apiClient.rejectUser(userId);
-
-      // Optimistic removal
       setUsers((prev) => prev.filter((u) => u.id !== userId));
-      fetchUsers();
 
+      await apiClient.rejectUser(userId);
     } catch (err) {
       console.error("Rejection failed:", err);
       alert(err.message || "Rejection failed");
+
+      fetchUsers();
     } finally {
       setLoadingIds((prev) => prev.filter((id) => id !== userId));
     }
   };
 
-  //  DELETE 
+  //  DELETE
   const handleDelete = async (userId) => {
     if (!window.confirm("Delete this student?")) return;
 
@@ -77,7 +77,6 @@ export default function StudentsTable() {
       // Optimistic removal
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       fetchUsers();
-
     } catch (err) {
       console.error("Delete failed:", err);
       alert(err.message || "Delete failed");
@@ -90,7 +89,7 @@ export default function StudentsTable() {
   const filteredUsers = users.filter(
     (u) =>
       (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+      (u.email || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -135,14 +134,16 @@ export default function StudentsTable() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 ">
-              {["ID", "Student", "Email", "Status", "Approval", "Actions"].map((h) => (
-                <th
-                  key={h}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
-                >
-                  {h}
-                </th>
-              ))}
+              {["ID", "Student", "Email", "Status", "Approval", "Actions"].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
+                  >
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
 
@@ -180,22 +181,30 @@ export default function StudentsTable() {
                       <button
                         disabled={loadingIds.includes(u.id)}
                         onClick={() => handleApprove(u.id)}
-                        className={`text-green-600 ${loadingIds.includes(u.id) ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
+                        className={`text-green-600 ${
+                          loadingIds.includes(u.id)
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         <CheckCircle2 size={18} />
                       </button>
                       <button
                         disabled={loadingIds.includes(u.id)}
                         onClick={() => handleReject(u.id)}
-                        className={`text-red-600 ${loadingIds.includes(u.id) ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
+                        className={`text-red-600 ${
+                          loadingIds.includes(u.id)
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         <XCircle size={18} />
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs text-primary font-medium">Approved</span>
+                    <span className="text-xs text-primary font-medium">
+                      Approved
+                    </span>
                   )}
                 </td>
 
@@ -204,8 +213,11 @@ export default function StudentsTable() {
                   <button
                     onClick={() => handleDelete(u.id)}
                     disabled={loadingIds.includes(u.id)}
-                    className={`text-white text-xs flex bg-red-500 px-2 py-1 rounded ${loadingIds.includes(u.id) ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                    className={`text-white text-xs flex bg-red-500 px-2 py-1 rounded ${
+                      loadingIds.includes(u.id)
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
                   >
                     DELETE
                     <Trash2 size={14} />
