@@ -5,12 +5,16 @@ const RelatedVideoCard = ({ video }) => {
     return (
         <Link
             to={`/video/${video.id}?courseId=${video.courseId}`}
-            className="flex flex-col lg:flex-row group overflow-hidden bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+            className="flex flex-col lg:flex-row group overflow-hidden bg-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
         >
-            <div className="lg:w-2/5 relative overflow-hidden">
-                <video
-                    src={video.videoUrl}
+            <div className="lg:w-2/5 relative overflow-hidden bg-gray-100">
+                <img
+                    src={video.thumbnail}
+                    alt={video.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/640x360?text=No+Thumbnail";
+                    }}
                 />
                 <div className="absolute bottom-1 right-1 bg-black bg-opacity-70 text-white text-xs px-1 rounded">
                     {video.duration}

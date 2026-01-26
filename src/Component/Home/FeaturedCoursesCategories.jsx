@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { FaCode, FaPaintBrush, FaBriefcase, FaFire, FaChartLine, FaStar, FaRocket, FaUsers, FaGraduationCap, FaClock, FaDollarSign } from "react-icons/fa";
-import { apiClient } from "../../api/index.js";
+import { apiClient, API_ORIGIN } from "../../api/index.js";
 import { Link } from "react-router-dom";
 
+const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
+
 export default function FilteredCourses() {
+  const resolveImageUrl = (url) => {
+    if (!url) return PLACEHOLDER_IMAGE;
+    const stringUrl = String(url).trim();
+    if (stringUrl.startsWith('http') || stringUrl.startsWith('data')) return stringUrl;
+
+    let cleanPath = stringUrl.startsWith('/') ? stringUrl.substring(1) : stringUrl;
+
+    // Check if the path already includes 'storage/'
+    if (cleanPath.startsWith('storage/')) {
+      return `${API_ORIGIN}/${cleanPath}`;
+    }
+
+    // Default to the storage folder
+    return `${API_ORIGIN}/storage/${cleanPath}`;
+  };
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -251,9 +268,15 @@ export default function FilteredCourses() {
                 <div className="relative h-48 overflow-hidden bg-gray-100">
                   {course.image ? (
                     <img
-                      src={course.image}
+                      src={resolveImageUrl(course.image)}
                       alt={course.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        if (e.target.src !== PLACEHOLDER_IMAGE) {
+                          e.target.onerror = null;
+                          e.target.src = PLACEHOLDER_IMAGE;
+                        }
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">

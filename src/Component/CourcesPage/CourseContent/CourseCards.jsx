@@ -12,6 +12,7 @@ import {
 import { FiUsers, FiBarChart2, FiBookOpen } from "react-icons/fi";
 import Button from "../../UI/Button";
 import { Link } from "react-router-dom";
+import { API_ORIGIN } from "../../../api/index";
 
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
 
@@ -21,6 +22,22 @@ export default function CourseCard({
   onWishlist,
   onShare,
 }) {
+  const resolveImageUrl = (url) => {
+    if (!url) return PLACEHOLDER_IMAGE;
+    const stringUrl = String(url).trim();
+    if (stringUrl.startsWith('http') || stringUrl.startsWith('data')) return stringUrl;
+
+    let cleanPath = stringUrl.startsWith('/') ? stringUrl.substring(1) : stringUrl;
+
+    // Check if the path already includes 'storage/'
+    if (cleanPath.startsWith('storage/')) {
+      return `${API_ORIGIN}/${cleanPath}`;
+    }
+
+    // Default to the storage folder
+    return `${API_ORIGIN}/storage/${cleanPath}`;
+  };
+
   return (
     <Link to={`/course/${course.id}`}>
       <div
@@ -37,7 +54,7 @@ export default function CourseCard({
             }`}
         >
           <img
-            src={course.image || PLACEHOLDER_IMAGE}
+            src={resolveImageUrl(course.image)}
             alt={course.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             onError={(e) => {

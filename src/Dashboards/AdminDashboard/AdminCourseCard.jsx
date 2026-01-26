@@ -12,12 +12,20 @@ const AdminCourseCard = ({ course, onEdit, onDelete }) => {
     }).format(price || 0);
   };
 
-  const resolveImageUrl = (image) => {
-    if (!image) return null;
-    if (typeof image !== "string") return null;
-    if (image.startsWith("http://") || image.startsWith("https://")) return image;
-    if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
-    return `${API_ORIGIN}/${image}`;
+  const resolveImageUrl = (url) => {
+    if (!url) return PLACEHOLDER_IMAGE;
+    const stringUrl = String(url).trim();
+    if (stringUrl.startsWith('http') || stringUrl.startsWith('data')) return stringUrl;
+
+    let cleanPath = stringUrl.startsWith('/') ? stringUrl.substring(1) : stringUrl;
+
+    // Check if the path already includes 'storage/'
+    if (cleanPath.startsWith('storage/')) {
+      return `${API_ORIGIN}/${cleanPath}`;
+    }
+
+    // Default to the storage folder
+    return `${API_ORIGIN}/storage/${cleanPath}`;
   };
 
   return (
@@ -40,12 +48,12 @@ const AdminCourseCard = ({ course, onEdit, onDelete }) => {
         <div className="absolute top-3 left-3">
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${course.level === "beginner"
-                ? "bg-green-100 text-green-800"
-                : course.level === "intermediate"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : course.level === "advanced"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-red-100 text-red-800"
+              ? "bg-green-100 text-green-800"
+              : course.level === "intermediate"
+                ? "bg-yellow-100 text-yellow-800"
+                : course.level === "advanced"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-red-100 text-red-800"
               }`}
           >
             {course.level}

@@ -27,12 +27,20 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
     }
   }, [dispatch, userData?.id]);
 
-  const resolveImageUrl = (image) => {
-    if (!image) return null;
-    if (typeof image !== "string") return null;
-    if (image.startsWith("http://") || image.startsWith("https://")) return image;
-    if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
-    return `${API_ORIGIN}/storage/${image}`;
+  const resolveImageUrl = (url) => {
+    if (!url) return PLACEHOLDER_IMAGE;
+    const stringUrl = String(url).trim();
+    if (stringUrl.startsWith('http') || stringUrl.startsWith('data')) return stringUrl;
+
+    let cleanPath = stringUrl.startsWith('/') ? stringUrl.substring(1) : stringUrl;
+
+    // Check if the path already includes 'storage/'
+    if (cleanPath.startsWith('storage/')) {
+      return `${API_ORIGIN}/${cleanPath}`;
+    }
+
+    // Default to the storage folder
+    return `${API_ORIGIN}/storage/${cleanPath}`;
   };
 
   const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";

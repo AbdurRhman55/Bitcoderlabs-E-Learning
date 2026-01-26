@@ -31,7 +31,7 @@ const VideoDetail = ({ videoData, comments, relatedVideos }) => {
                 {/* Left Column (70%) */}
                 <div className="w-full mx-auto lg:w-8/12">
                     {/* Video Player */}
-                    <VideoPlayer videoUrl={videoData.videoUrl} />
+                    <VideoPlayer videoUrl={videoData.videoUrl} thumbnail={videoData.thumbnail} />
 
                     {/* Video Title and Metadata */}
                     <VideoMetadata

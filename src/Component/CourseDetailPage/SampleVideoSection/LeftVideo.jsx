@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import { FaPlay, FaClock, FaUser, FaStar } from "react-icons/fa";
 import { API_ORIGIN } from "../../../api/index";
 
@@ -17,7 +17,6 @@ export default function LeftVideo({ course }) {
 
     if (videoRef.current.paused) {
       try {
-        // Track the play promise to handle interruptions
         playPromiseRef.current = videoRef.current.play();
         await playPromiseRef.current;
       } catch (err) {
@@ -26,8 +25,6 @@ export default function LeftVideo({ course }) {
         }
       }
     } else {
-      // If we're playing or still trying to play, we pause
-      // Note: We don't need to await pause()
       videoRef.current.pause();
     }
   };
@@ -40,24 +37,23 @@ export default function LeftVideo({ course }) {
 
   const resolveMediaUrl = (url, type = 'video') => {
     if (!url) {
-      console.log('this is test');
-
       return type === 'video'
         ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
         : "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=1000&q=80";
     }
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('data')) return url;
 
-    // Handle paths stored in database (e.g., 'courses/videos/filename.mp4')
+    if (url.startsWith('http') || url.startsWith('data')) return url;
+
+    // Handle paths stored in database
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
-    console.log('clean path:', cleanPath);
     return `${API_ORIGIN}/storage/${cleanPath}`;
   };
 
-  const videoUrl = useMemo(() => resolveMediaUrl(course?.video_url, 'video'), [course?.video_url]);
+  // Always use course preview video
+  const videoUrl = useMemo(() => {
+    return resolveMediaUrl(course?.video_url, 'video');
+  }, [course?.video_url]);
 
-  // Helper to detect and convert YouTube URLs
   const getVideoType = (url) => {
     if (!url) return 'mp4';
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
@@ -67,29 +63,46 @@ export default function LeftVideo({ course }) {
 
   const convertToEmbedUrl = (url) => {
     if (!url) return null;
+    let stringUrl = String(url).trim();
 
     // YouTube
-    if (url.includes('youtube.com/watch')) {
-      const videoId = new URL(url).searchParams.get('v');
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1].split('?')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
+    const ytMatch = stringUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&showinfo=0&autoplay=0`;
     }
 
     // Vimeo
-    if (url.includes('vimeo.com/')) {
-      const videoId = url.split('vimeo.com/')[1].split('?')[0];
-      return `https://player.vimeo.com/video/${videoId}`;
+    const vimeoMatch = stringUrl.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/i);
+    if (vimeoMatch && vimeoMatch[1]) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
     }
 
     return url;
   };
 
+  const getYoutubeId = (url) => {
+    const ytMatch = String(url).match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i);
+    return ytMatch ? ytMatch[1] : null;
+  };
+
   const videoType = useMemo(() => getVideoType(videoUrl), [videoUrl]);
   const embedUrl = useMemo(() => convertToEmbedUrl(videoUrl), [videoUrl]);
-  const posterUrl = useMemo(() => resolveMediaUrl(course?.image, 'image'), [course?.image]);
+
+  // Prioritize YouTube thumbnails for YT videos, else use provided thumbnail
+  const finalThumbnail = useMemo(() => {
+    if (videoType === 'youtube') {
+      const id = getYoutubeId(videoUrl);
+      if (id) return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+    }
+    return resolveMediaUrl(course?.image, 'image');
+  }, [course?.image, videoUrl, videoType]);
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Reset load state when URL changes
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [videoUrl]);
 
   return (
     <div className="space-y-6">
@@ -105,66 +118,58 @@ export default function LeftVideo({ course }) {
         <p className="text-gray-600 text-base sm:text-lg">
           Get a real taste of our teaching style and course quality.
         </p>
-        {/* Debug info - remove after testing */}
-        <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-          <strong>Debug:</strong> Video URL: {videoUrl}
-        </div>
       </div>
 
-      {/*  Video Player */}
+      {/*  Video Player Facade */}
       <div className="relative group">
         <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl blur-lg opacity-20 group-hover:opacity-30 transition-opacity"></div>
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-          {videoType === 'youtube' || videoType === 'vimeo' ? (
-            // YouTube/Vimeo iframe
-            <iframe
-              src={embedUrl}
-              className="w-full aspect-video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="Course Preview Video"
-            />
-          ) : (
-            // Regular MP4 video
-            <video
-              ref={videoRef}
-              key={videoUrl}
-              className="w-full aspect-video object-cover cursor-pointer"
-              poster={posterUrl}
-              onClick={togglePlay}
-              onPlay={handleVideoStateChange}
-              onPause={handleVideoStateChange}
-              onEnded={() => setIsPlaying(false)}
-              onError={(e) => {
-                console.error('Video error:', e);
-                console.error('Video src:', videoUrl);
-                console.error('Error details:', e.target.error);
-              }}
-              onLoadedData={() => console.log('Video loaded successfully')}
-              preload="metadata"
-              controls={isPlaying}
-              playsInline
+        <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black aspect-video">
+          {!isLoaded ? (
+            <div
+              className="w-full h-full cursor-pointer relative"
+              onClick={() => setIsLoaded(true)}
             >
-              <source
-                src={videoUrl}
-                type="video/mp4"
+              <img
+                src={finalThumbnail}
+                alt="Video Thumbnail"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                onError={(e) => {
+                  if (e.target.src.includes('maxresdefault')) {
+                    e.target.src = e.target.src.replace('maxresdefault', 'hqdefault');
+                  }
+                }}
               />
-              Your browser does not support the video tag.
-            </video>
-          )}
-
-          {/* Play button overlay - only show for MP4 videos */}
-          {videoType === 'mp4' && !isPlaying && (
-            <button
-              onClick={togglePlay}
-              className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-all"
-            >
-              <div className="bg-white/20 backdrop-blur-sm p-6 rounded-full cursor-pointer border border-white/30 group-hover:scale-110 transition-transform duration-300">
-                <div className="bg-gradient-to-r from-primary to-primary-dark p-4 rounded-full shadow-2xl">
-                  <FaPlay className="text-white text-xl ml-1" />
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-xl transform transition-transform group-hover:scale-110">
+                  <FaPlay className="text-xl ml-1" />
                 </div>
               </div>
-            </button>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-primary/40 rounded-full animate-ping" />
+              </div>
+            </div>
+          ) : (
+            <>
+              {videoType === 'youtube' || videoType === 'vimeo' ? (
+                <iframe
+                  src={embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1'}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Course Preview Video"
+                />
+              ) : (
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  className="w-full h-full object-cover"
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              )}
+            </>
           )}
         </div>
       </div>

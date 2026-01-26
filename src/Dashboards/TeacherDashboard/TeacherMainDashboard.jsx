@@ -55,6 +55,7 @@ const TeacherMainDashboard = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [recentActivities, setRecentActivities] = useState(null);
+  const [myCourses, setMyCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [allDataLoaded, setAllDataLoaded] = useState(false);
 
@@ -102,11 +103,13 @@ const TeacherMainDashboard = () => {
         const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
 
         // Fetch all data in parallel
-        const [profileResult, statsResult, activitiesResult] =
+        const [profileResult, statsResult, activitiesResult, coursesResult, notificationsResult] =
           await Promise.allSettled([
             apiClient.getMyProfile(),
             apiClient.getTeacherStats(),
             apiClient.getRecentActivities(),
+            apiClient.getMyCourses(),
+            apiClient.getNotifications(),
           ]);
 
         // Wait for ALL data to be ready
@@ -120,6 +123,14 @@ const TeacherMainDashboard = () => {
           activitiesResult.status === "fulfilled"
             ? unwrap(activitiesResult.value)
             : null;
+        const coursesData =
+          coursesResult.status === "fulfilled"
+            ? unwrap(coursesResult.value)
+            : [];
+        const notificationsData =
+          notificationsResult.status === "fulfilled"
+            ? unwrap(notificationsResult.value)
+            : [];
 
         // Only update state when we have ALL data
         if (profileData && statsData && activitiesData !== null) {
@@ -176,6 +187,8 @@ const TeacherMainDashboard = () => {
           setUserProfile(processedProfile);
           setStats(processedStats);
           setRecentActivities(processedActivities);
+          setMyCourses(Array.isArray(coursesData) ? coursesData : (coursesData?.data || []));
+          setNotifications(Array.isArray(notificationsData) ? notificationsData : (notificationsData?.data || []));
           setAllDataLoaded(true);
           setIsLoading(false);
         }
@@ -360,7 +373,7 @@ const TeacherMainDashboard = () => {
           />
         );
       case "analytics":
-        return <AnalyticsTab />;
+        return <AnalyticsTab stats={stats} courses={myCourses} />;
       case "settings":
         return (
           <SettingsTab
@@ -394,7 +407,7 @@ const TeacherMainDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader
         profile={headerProfile}
-        notifications={notifications.filter((n) => !n.read).length}
+        notifications={notifications}
         setActiveTab={setActiveTab}
       />
 
