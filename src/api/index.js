@@ -240,6 +240,10 @@ class ApiClient {
     return this.request(`/course-modules${queryString ? `?${queryString}` : ""}`);
   }
 
+  async getModuleProgress(moduleId) {
+    return this.request(`/course-modules/${moduleId}/progress`);
+  }
+
   async createModule(moduleData) {
     const isFormData = typeof FormData !== 'undefined' && moduleData instanceof FormData;
     if (isFormData) {

@@ -8,6 +8,8 @@ import { apiClient } from "../../../api/index";
 const CurriculumSection = ({ course, isEnrolled }) => {
   const [expandedModule, setExpandedModule] = useState(null);
   const [completedLessonIds, setCompletedLessonIds] = useState(new Set());
+  const [moduleProgressData, setModuleProgressData] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -35,6 +37,47 @@ const CurriculumSection = ({ course, isEnrolled }) => {
     fetchProgress();
   }, [isEnrolled]);
 
+  // Fetch module progress for each module when user is enrolled
+  useEffect(() => {
+    const fetchModuleProgressData = async () => {
+      if (!isEnrolled || !course?.modules || course.modules.length === 0) return;
+
+      setLoading(true);
+      try {
+        const progressPromises = course.modules.map((module) =>
+          apiClient.getModuleProgress(module.id)
+            .then((data) => ({
+              moduleId: module.id,
+              progress: data.data || data,
+            }))
+            .catch((err) => {
+              console.error(`Failed to fetch progress for module ${module.id}:`, err);
+              return {
+                moduleId: module.id,
+                progress: null,
+              };
+            })
+        );
+
+        const results = await Promise.all(progressPromises);
+        const progressMap = {};
+        results.forEach(({ moduleId, progress }) => {
+          if (progress) {
+            progressMap[moduleId] = progress;
+          }
+        });
+
+        setModuleProgressData(progressMap);
+      } catch (err) {
+        console.error("Module Progress Fetch Failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModuleProgressData();
+  }, [isEnrolled, course?.modules]);
+
   const toggleModule = (id) =>
     setExpandedModule(expandedModule === id ? null : id);
 
@@ -46,6 +89,36 @@ const CurriculumSection = ({ course, isEnrolled }) => {
   console.log(rawModules);
 
   const modules = rawModules.map((module) => {
+    // Get module progress from API if available
+    const apiModuleProgress = moduleProgressData[module.id];
+
+    // If we have API progress data, use it
+    if (apiModuleProgress) {
+      const lessonsList = (apiModuleProgress.lessons || []).map((lesson) => ({
+        id: lesson.id,
+        name: lesson.title,
+        title: lesson.title,
+        description: lesson.description,
+        duration: lesson.duration,
+        type: lesson.type,
+        completed: lesson.is_completed,
+      }));
+
+      return {
+        ...module,
+        id: module.id,
+        title: module.title,
+        description: module.description,
+        lessons: apiModuleProgress.total_lessons,
+        duration: module.duration,
+        progress: apiModuleProgress.progress_percentage,
+        completedLessons: apiModuleProgress.completed_lessons,
+        totalLessons: apiModuleProgress.total_lessons,
+        lessonsList: lessonsList,
+      };
+    }
+
+    // Fallback to calculated progress based on local completion tracking
     // Process lessons first to determine completion status
     const lessonsList = Array.isArray(module.lessons)
       ? module.lessons.map((lesson) => {
