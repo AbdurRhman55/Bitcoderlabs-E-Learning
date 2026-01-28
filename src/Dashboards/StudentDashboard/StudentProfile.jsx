@@ -8,8 +8,6 @@ import MyCourses from './Mycourses';
 import Progress from './Progress';
 import Settings from './Settings';
 import Certificates from './Certificates';
-import { FiLogOut } from 'react-icons/fi';
-import { logoutAsync } from '../../../slices/AuthSlice';
 import { fetchMyCourses, selectMyCourses } from '../../../slices/courseSlice';
 
 const UserDashboard = () => {
@@ -19,9 +17,6 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, loading, user } = useSelector(state => state.auth);
 
-  const handleLogout = () => {
-    dispatch(logoutAsync());
-  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -57,7 +52,11 @@ const UserDashboard = () => {
     streak: user?.streak || 0,
     completedCourses: completedCount,
     enrolledCourses: totalEnrolled,
-    completionRate: avgProgress
+    completionRate: avgProgress,
+    weeklyGoal: user?.weekly_goal || 10,
+    weeklyCompleted: user?.weekly_completed || Math.floor(avgProgress / 10),
+    daysLeft: 7 - new Date().getDay() || 7,
+    learningHours: user?.learning_hours || Math.round((totalEnrolled * avgProgress * 0.4)) || 0
   };
 
   const renderMainContent = () => {
@@ -91,40 +90,50 @@ const UserDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop Header */}
-        <header className="hidden lg:flex items-center justify-between bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-1">Welcome back, {userData.name}!</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-          >
-            <FiLogOut size={18} />
-            Logout
-          </button>
-        </header>
+        {/* Premium Desktop & Mobile Header */}
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 lg:h-20">
+              {/* Left Side: Mobile Menu Button & Welcome Text */}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-primary-light hover:text-primary transition-all duration-300 cursor-pointer shadow-sm active:scale-90"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
 
-        {/* Mobile header */}
-        <header className="lg:hidden bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between p-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="text-gray-500 hover:text-gray-600"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="text-red-600 hover:text-red-700 p-1"
-              title="Logout"
-            >
-              <FiLogOut size={20} />
-            </button>
+                <div className="hidden sm:block">
+                  <h1 className="text-lg lg:text-xl font-extrabold text-gray-900 tracking-tight">Student Dashboard</h1>
+                  <p className="text-xs text-primary font-bold uppercase tracking-widest mt-0.5">Welcome back, {userData.name}!</p>
+                </div>
+                <div className="sm:hidden">
+                  <h1 className="text-base font-bold text-gray-900">Dashboard</h1>
+                </div>
+              </div>
+
+              {/* Right Side: Quick Stats / User Info */}
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex flex-col items-end mr-2">
+                  <span className="text-xs font-black text-gray-900 leading-none">{userData.points} XP</span>
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-tighter mt-1">Learning Score</span>
+                </div>
+                <div className="relative group">
+                  <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl overflow-hidden border-2 border-white shadow-md ring-2 ring-primary/5 group-hover:ring-primary/20 transition-all">
+                    {userData.avatar ? (
+                      <img src={userData.avatar} alt={userData.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-primary flex items-center justify-center text-white font-bold">
+                        {userData.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 

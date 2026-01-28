@@ -1,76 +1,72 @@
 // CourseProgress.jsx
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { selectMyCourses } from '../../../slices/courseSlice';
+import { API_ORIGIN } from '../../api/index.js';
+import { useNavigate } from 'react-router-dom';
 
 const CourseProgress = () => {
-  const courses = [
-    {
-      id: 1,
-      title: 'Advanced React Patterns',
-      instructor: 'Sarah Johnson',
-      progress: 85,
-      thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=100&h=60&fit=crop',
-      duration: '12h 30m',
-      lastAccessed: '2 days ago'
-    },
-    {
-      id: 2,
-      title: 'Node.js Backend Development',
-      instructor: 'Mike Chen',
-      progress: 45,
-      thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=100&h=60&fit=crop',
-      duration: '18h 15m',
-      lastAccessed: '1 week ago'
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Fundamentals',
-      instructor: 'Emily Davis',
-      progress: 30,
-      thumbnail: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=100&h=60&fit=crop',
-      duration: '8h 45m',
-      lastAccessed: '3 days ago'
-    }
-  ];
+  const enrolledCourses = useSelector(selectMyCourses) || [];
+  const navigate = useNavigate();
+
+  const resolveImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/100x60?text=Course';
+    const stringUrl = String(url).trim();
+    if (stringUrl.startsWith('http')) return stringUrl;
+    let cleanPath = stringUrl.startsWith('/') ? stringUrl.substring(1) : stringUrl;
+    return `${API_ORIGIN}/storage/${cleanPath}`;
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Current Courses</h2>
-        <button className="text-primary hover:text-primary-dark font-medium text-sm">
+        <h2 className="text-xl font-bold text-gray-900 tracking-tight">Current Courses</h2>
+        <button
+          onClick={() => navigate('/courses')}
+          className="text-primary hover:text-primary-dark font-bold text-sm transition-colors"
+        >
           View All Courses
         </button>
       </div>
 
       <div className="space-y-4">
-        {courses.map((course) => (
-          <div key={course.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:border-primary-light transition-colors duration-200">
-            <img
-              src={course.thumbnail}
-              alt={course.title}
-              className="w-16 h-12 object-cover rounded"
-            />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">{course.title}</h3>
-              <p className="text-sm text-gray-600">by {course.instructor}</p>
-              <div className="flex items-center space-x-4 mt-1">
-                <span className="text-xs text-gray-500">{course.duration}</span>
-                <span className="text-xs text-gray-500">Last accessed: {course.lastAccessed}</span>
+        {enrolledCourses.length > 0 ? (
+          enrolledCourses.map((course) => (
+            <div key={course.id} className="flex items-center space-x-4 p-4 border border-gray-50 rounded-xl hover:border-primary/30 hover:bg-gray-50/50 transition-all duration-300">
+              <img
+                src={resolveImageUrl(course.image)}
+                alt={course.title}
+                className="w-16 h-12 object-cover rounded-lg shadow-sm"
+              />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-gray-900 truncate tracking-tight">{course.title}</h3>
+                <p className="text-xs text-gray-500 font-medium">{course.instructor?.name || 'Instructor'}</p>
+                <div className="flex items-center space-x-4 mt-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{course.duration || 'N/A'}</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="hidden sm:block w-24 bg-gray-100 rounded-full h-2 overflow-hidden border border-gray-50">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-700"
+                    style={{ width: `${course.progress || 0}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs font-black text-primary w-8">{course.progress || 0}%</span>
+                <button
+                  onClick={() => navigate(`/course/${course.id}`)}
+                  className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-bold transition-all"
+                >
+                  Continue
+                </button>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-24 bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${course.progress}%` }}
-                ></div>
-              </div>
-              <span className="text-sm font-medium text-gray-700 w-8">{course.progress}%</span>
-              <button className="text-primary hover:text-primary-dark text-sm font-medium">
-                Continue
-              </button>
-            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500 italic text-sm">
+            No courses enrolled yet.
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

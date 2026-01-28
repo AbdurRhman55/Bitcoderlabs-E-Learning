@@ -25,8 +25,8 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
     students_count: 0,
     is_featured: false,
     is_active: true,
-    features: [],
-    tags: [],
+    features: "",
+    tags: "",
   });
 
   const [instructors, setInstructors] = useState([]);
@@ -37,13 +37,23 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
   // If editing, populate form with initial data
   useEffect(() => {
     if (initialData) {
+      const parseList = (data) => {
+        if (!data) return "";
+        if (Array.isArray(data)) return data.join(', ');
+        try {
+          const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+          return Array.isArray(parsed) ? parsed.join(', ') : (typeof data === 'string' ? data : "");
+        } catch (e) {
+          return typeof data === 'string' ? data : "";
+        }
+      };
+
       setCourse({
         ...initialData,
         category_id: initialData.category_id || initialData.category?.id || "",
         instructor_id: initialData.instructor_id || initialData.instructor?.id || "",
-        // Parse JSON strings back to arrays for form editing
-        features: initialData.features ? (typeof initialData.features === 'string' ? JSON.parse(initialData.features) : initialData.features) : [],
-        tags: initialData.tags ? (typeof initialData.tags === 'string' ? JSON.parse(initialData.tags) : initialData.tags) : [],
+        features: parseList(initialData.features),
+        tags: parseList(initialData.tags),
       });
     }
   }, [initialData]);
@@ -96,14 +106,10 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
   };
 
   const handleCommaListChange = (name) => (e) => {
-    const raw = e.target.value;
-    const arr = raw
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
+    const { value } = e.target;
     setCourse(prev => ({
       ...prev,
-      [name]: arr,
+      [name]: value,
     }));
   };
 
@@ -141,8 +147,10 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
 
           // Handle different field types
           if (key === 'features' || key === 'tags') {
-            // JSON stringify arrays - ensure empty arrays if null/undefined
-            formData.append(key, JSON.stringify(value || []));
+            const arr = typeof value === 'string'
+              ? value.split(',').map(s => s.trim()).filter(Boolean)
+              : (Array.isArray(value) ? value : []);
+            formData.append(key, JSON.stringify(arr));
           } else if (key === 'image') {
             // Only append if it's a File
             if (value instanceof File) {
@@ -183,8 +191,12 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           video_url: cleanCourse.video_url || null,
           duration: cleanCourse.duration || null,
           original_price: cleanCourse.original_price ? parseFloat(cleanCourse.original_price) : null,
-          features: cleanCourse.features ? (typeof cleanCourse.features === 'string' ? cleanCourse.features : JSON.stringify(cleanCourse.features)) : "[]",
-          tags: cleanCourse.tags ? (typeof cleanCourse.tags === 'string' ? cleanCourse.tags : JSON.stringify(cleanCourse.tags)) : "[]",
+          features: typeof cleanCourse.features === 'string'
+            ? JSON.stringify(cleanCourse.features.split(',').map(s => s.trim()).filter(Boolean))
+            : JSON.stringify(cleanCourse.features || []),
+          tags: typeof cleanCourse.tags === 'string'
+            ? JSON.stringify(cleanCourse.tags.split(',').map(s => s.trim()).filter(Boolean))
+            : JSON.stringify(cleanCourse.tags || []),
           price: parseFloat(cleanCourse.price) || 0,
           rating: cleanCourse.rating ? parseFloat(cleanCourse.rating) : 0,
           reviews_count: cleanCourse.reviews_count ? parseInt(cleanCourse.reviews_count) : 0,
@@ -218,8 +230,8 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           students_count: 0,
           is_featured: false,
           is_active: true,
-          features: [],
-          tags: [],
+          features: "",
+          tags: "",
         });
       }
     } catch (error) {
@@ -389,14 +401,14 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         />
       </div>
 
-      {/* Features */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Features (comma separated)
         </label>
         <input
           type="text"
-          value={(course.features || []).join(', ')}
+          name="features"
+          value={course.features}
           onChange={handleCommaListChange('features')}
           className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
           placeholder="e.g., Certificate, Lifetime access, Projects"
@@ -410,7 +422,8 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         </label>
         <input
           type="text"
-          value={(course.tags || []).join(', ')}
+          name="tags"
+          value={course.tags}
           onChange={handleCommaListChange('tags')}
           className="w-full border border-gray-300 rounded-lg px-4 py-3  focus:ring-primary focus:border-primary-dark outline-none transition-colors duration-200"
           placeholder="e.g., React, Frontend, Beginner"

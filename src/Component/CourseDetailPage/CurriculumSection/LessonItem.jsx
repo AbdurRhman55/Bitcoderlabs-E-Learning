@@ -1,11 +1,27 @@
-import { FaClock, FaCheck } from "react-icons/fa";
+import { FaClock, FaCheck, FaLock } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Button from "../../UI/Button";
+import Swal from "sweetalert2";
 
-export default function LessonItem({ lesson, courseId }) {
+export default function LessonItem({ lesson, courseId, isEnrolled }) {
   const navigate = useNavigate();
 
   const handleStartLesson = () => {
+    if (!isEnrolled) {
+      Swal.fire({
+        title: "Lesson Locked",
+        text: "This lesson is reserved for enrolled students. Please complete your enrollment to start learning.",
+        icon: "lock",
+        confirmButtonText: "Enroll Now",
+        showCancelButton: true,
+        confirmButtonColor: "#3baee9",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(`/Enroll/${courseId}`);
+        }
+      });
+      return;
+    }
     // Navigate to video detail page with lesson id and course context
     navigate(`/video/${lesson.id || 1}?courseId=${courseId}`);
   };
@@ -37,10 +53,17 @@ export default function LessonItem({ lesson, courseId }) {
             </span>
           )}
           <div className="lg:hidden">
-            <Button text="Start Lesson" size="xs" onClick={handleStartLesson} />
+            <Button
+              text={isEnrolled ? "Start Lesson" : <><FaLock className="inline mr-1" /> Locked</>}
+              size="xs"
+              onClick={handleStartLesson}
+            />
           </div>
           <div className="hidden lg:block">
-            <Button text="Start Lesson" onClick={handleStartLesson} />
+            <Button
+              text={isEnrolled ? "Start Lesson" : <><FaLock className="inline mr-1" /> Unlock Lesson</>}
+              onClick={handleStartLesson}
+            />
           </div>
         </div>
       </div>

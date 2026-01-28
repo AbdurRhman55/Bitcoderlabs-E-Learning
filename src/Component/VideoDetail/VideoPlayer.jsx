@@ -1,8 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { FaPlay } from 'react-icons/fa';
 
-const VideoPlayer = ({ videoUrl, thumbnail }) => {
+const VideoPlayer = ({ videoUrl, thumbnail, onEnded }) => {
     const [isLoaded, setIsLoaded] = useState(false);
+    const playerRef = useRef(null);
+    const iframeRef = useRef(null);
 
     const getVideoType = (url) => {
         if (!url) return 'mp4';
@@ -24,12 +26,12 @@ const VideoPlayer = ({ videoUrl, thumbnail }) => {
 
         if (videoType === 'youtube') {
             const ytId = getYoutubeId(stringUrl);
-            if (ytId) return `https://www.youtube.com/embed/${ytId}?rel=0&showinfo=0&autoplay=1&modestbranding=1&iv_load_policy=3`;
+            if (ytId) return `https://www.youtube.com/embed/${ytId}?enablejsapi=1&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3`;
         }
 
         if (videoType === 'vimeo') {
             const vimeoMatch = stringUrl.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/i);
-            if (vimeoMatch && vimeoMatch[1]) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
+            if (vimeoMatch && vimeoMatch[1]) return `https://player.vimeo.com/video/${vimeoMatch[1]}?api=1`;
         }
 
         return url;
@@ -52,6 +54,47 @@ const VideoPlayer = ({ videoUrl, thumbnail }) => {
     useEffect(() => {
         setIsLoaded(false);
     }, [videoUrl]);
+
+    // YouTube IFrame API integration
+    useEffect(() => {
+        if (!isLoaded || videoType !== 'youtube' || !onEnded) return;
+
+        // Load YouTube IFrame API
+        if (!window.YT) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+
+        const onYouTubeIframeAPIReady = () => {
+            if (iframeRef.current && window.YT && window.YT.Player) {
+                playerRef.current = new window.YT.Player(iframeRef.current, {
+                    events: {
+                        onStateChange: (event) => {
+                            // YT.PlayerState.ENDED = 0
+                            if (event.data === 0) {
+                                console.log('🎬 YouTube video ended!');
+                                onEnded();
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        if (window.YT && window.YT.Player) {
+            onYouTubeIframeAPIReady();
+        } else {
+            window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+        }
+
+        return () => {
+            if (playerRef.current && playerRef.current.destroy) {
+                playerRef.current.destroy();
+            }
+        };
+    }, [isLoaded, videoType, onEnded]);
 
     return (
         <div className="aspect-video mx-auto bg-black rounded-2xl overflow-hidden mb-8 shadow-2xl relative group">
@@ -89,7 +132,16 @@ const VideoPlayer = ({ videoUrl, thumbnail }) => {
                 </div>
             ) : (
                 <>
-                    {videoType === 'youtube' || videoType === 'vimeo' ? (
+                    {videoType === 'youtube' ? (
+                        <iframe
+                            ref={iframeRef}
+                            src={embedUrl}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title="Course Video"
+                        />
+                    ) : videoType === 'vimeo' ? (
                         <iframe
                             src={embedUrl}
                             className="w-full h-full"
@@ -104,6 +156,7 @@ const VideoPlayer = ({ videoUrl, thumbnail }) => {
                             controls
                             autoPlay
                             playsInline
+                            onEnded={onEnded}
                         >
                             Your browser does not support the video tag.
                         </video>

@@ -1,5 +1,7 @@
 // src/Dashboards/TeacherDashboard/Header.jsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBell,
   FaUserCircle,
@@ -12,11 +14,12 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaBook,
+  FaBars,
 } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { logoutAsync } from "../../../slices/AuthSlice";
 
-const DashboardHeader = ({ profile, notifications = [], setActiveTab }) => {
+const DashboardHeader = ({ profile, notifications = [], setActiveTab, setSidebarOpen }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] =
     useState(false);
@@ -100,30 +103,36 @@ const DashboardHeader = ({ profile, notifications = [], setActiveTab }) => {
   }, []);
 
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50 border-gray-200">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Left: Profile Dropdown */}
-          <div className="flex items-center">
+    <header className="bg-white/80 backdrop-blur-md shadow-sm border-b sticky top-0 z-50 border-gray-100 transition-all duration-300">
+      <div className="px-4 sm:px-6 lg:px-10">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Left: Mobile Menu + Profile */}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-primary-light hover:text-primary transition-all duration-300 cursor-pointer shadow-sm active:scale-90"
+            >
+              <FaBars size={18} />
+            </button>
+
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                className="cursor-pointer flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="cursor-pointer flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-gray-50 transition-all duration-300 active:scale-95 group"
               >
-                <img
-                  src={profile.profileImage}
-                  alt={profile.name}
-                  className="w-9 h-9 rounded-full border-2 border-white shadow-sm object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "https://images.unsplash.com/photo-1582750433449-648ed127bb54?crop=faces&fit=crop&w=200&h=200";
-                  }}
-                />
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-800">
+                <div className="relative">
+                  <img
+                    src={profile.profileImage}
+                    alt={profile.name}
+                    className="w-9 h-9 lg:w-11 lg:h-11 rounded-xl border-2 border-white shadow-md object-cover ring-2 ring-primary/5"
+                  />
+                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full transition-transform group-hover:scale-110"></div>
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-extrabold text-gray-900 leading-tight">
                     {profile.name}
                   </p>
-                  <p className="text-xs text-gray-600">Teacher</p>
+                  <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Premium Instructor</p>
                 </div>
               </button>
 
@@ -162,7 +171,7 @@ const DashboardHeader = ({ profile, notifications = [], setActiveTab }) => {
           <div className="relative" ref={notificationDropdownRef}>
             <button
               onClick={handleNotificationClick}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+              className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors relative"
             >
               <FaBell className="text-gray-600 text-xl" />
               {unreadCount > 0 && (
@@ -173,101 +182,119 @@ const DashboardHeader = ({ profile, notifications = [], setActiveTab }) => {
             </button>
 
             {/* Notification Dropdown */}
-            {showNotificationDropdown && (
-              <div className="fixed  inset-0 z-50">
-                {/* Overlay */}
-                <div
-                  className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
-                  onClick={() => setShowNotificationDropdown(false)}
-                />
+            {/* Notification Dropdown - Portaled to Body for correct stacking context */}
+            {createPortal(
+              <AnimatePresence>
+                {showNotificationDropdown && (
+                  <div className="fixed inset-0 z-[9999] overflow-hidden">
+                    {/* Overlay */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+                      onClick={() => setShowNotificationDropdown(false)}
+                    />
 
-                {/* Notification Panel */}
-                <div className="fixed shadow-2xl inset-y-0 right-0 flex max-w-full">
-                  <div className="relative w-screen max-w-md">
-                    <div className="h-full flex flex-col bg-white shadow-xl">
-                      {/* Header */}
-                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">Notifications</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {unreadCount} unread messages
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setShowNotificationDropdown(false)}
-                          className="p-2 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-
-                      {/* Notification List */}
-                      <div className="flex-1 overflow-y-auto">
-                        {formattedNotifications.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center h-64 text-center px-10">
-                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                              <FaBell className="text-gray-300 text-2xl" />
-                            </div>
-                            <h4 className="text-gray-900 font-medium">All caught up!</h4>
-                            <p className="text-gray-500 text-sm mt-1">
-                              You don't have any notifications at the moment.
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="divide-y divide-gray-100">
-                            {formattedNotifications.map((notification) => (
-                              <div
-                                key={notification.id}
-                                className={`p-5 hover:bg-gray-50 cursor-pointer transition-colors relative ${!notification.read ? "bg-blue-50/50" : ""}`}
-                              >
-                                <div className="flex items-start">
-                                  <div className="flex-shrink-0 mt-1">
-                                    <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
-                                      {notification.icon}
-                                    </div>
-                                  </div>
-                                  <div className="ml-4 flex-1">
-                                    <div className="flex justify-between items-start">
-                                      <p className={`text-sm font-semibold ${!notification.read ? "text-gray-900" : "text-gray-700"}`}>
-                                        {notification.title}
-                                      </p>
-                                      <span className="text-[10px] text-gray-400 font-medium uppercase shrink-0 ml-2">
-                                        {notification.time}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-                                      {notification.message}
-                                    </p>
-                                    {!notification.read && (
-                                      <div className="mt-2 flex items-center">
-                                        <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-                                        <span className="text-[11px] font-bold text-primary uppercase tracking-wider">New</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
+                    {/* Notification Panel */}
+                    <div className="fixed inset-y-0 right-0 flex max-w-full pointer-events-none">
+                      <motion.div
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                        className="pointer-events-auto w-screen max-w-md"
+                      >
+                        <div className="h-full flex flex-col bg-white shadow-2xl overflow-hidden border-l border-gray-100">
+                          {/* Header */}
+                          <div className="px-6 py-5 border-b border-gray-100 bg-white flex items-center justify-between sticky top-0 z-10">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 tracking-tight">Notifications</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                                <p className="text-xs text-primary font-bold uppercase tracking-wider">
+                                  {unreadCount} UNREAD MESSAGES
+                                </p>
                               </div>
-                            ))}
+                            </div>
+                            <button
+                              onClick={() => setShowNotificationDropdown(false)}
+                              className="p-2.5 rounded-xl hover:bg-gray-50 text-gray-400 hover:text-gray-900 transition-all active:scale-95 border border-transparent hover:border-gray-100"
+                            >
+                              <FaTimes size={18} />
+                            </button>
                           </div>
-                        )}
-                      </div>
 
-                      {/* Footer */}
-                      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                        <button
-                          onClick={() => {
-                            setShowNotificationDropdown(false);
-                            setActiveTab("messages");
-                          }}
-                          className="w-full py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all text-center"
-                        >
-                          View All Notifications
-                        </button>
-                      </div>
+                          {/* Notification List */}
+                          <div className="flex-1 overflow-y-auto bg-white">
+                            {formattedNotifications.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-10">
+                                <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-gray-100">
+                                  <FaBell className="text-gray-200 text-3xl" />
+                                </div>
+                                <h4 className="text-gray-900 font-bold text-lg">All caught up!</h4>
+                                <p className="text-gray-500 text-sm mt-2 max-w-[200px] leading-relaxed">
+                                  You've read all your notifications. We'll let you know when something new arrives.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="divide-y divide-gray-50">
+                                {formattedNotifications.map((notification) => (
+                                  <div
+                                    key={notification.id}
+                                    className={`group p-5 hover:bg-gray-50/80 cursor-pointer transition-all relative ${!notification.read ? "bg-primary/[0.02]" : ""}`}
+                                  >
+                                    <div className="flex items-start">
+                                      <div className="flex-shrink-0 mt-0.5">
+                                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105 ${!notification.read ? "bg-white" : "bg-gray-50"}`}>
+                                          {notification.icon}
+                                        </div>
+                                      </div>
+                                      <div className="ml-4 flex-1">
+                                        <div className="flex justify-between items-start gap-2">
+                                          <p className={`text-sm tracking-tight ${!notification.read ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}>
+                                            {notification.title}
+                                          </p>
+                                          <span className="text-[10px] text-gray-400 font-bold uppercase whitespace-nowrap bg-gray-100/50 px-2 py-0.5 rounded-full">
+                                            {notification.time}
+                                          </span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mt-1.5 leading-relaxed font-medium">
+                                          {notification.message}
+                                        </p>
+                                        {!notification.read && (
+                                          <div className="mt-3 flex items-center">
+                                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em] px-2 py-0.5 bg-primary/10 rounded-md">New</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Footer */}
+                          <div className="px-6 py-5 border-t border-gray-100 bg-white sticky bottom-0">
+                            <button
+                              onClick={() => {
+                                setShowNotificationDropdown(false);
+                                setActiveTab("messages");
+                              }}
+                              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 hover:bg-black text-white rounded-xl text-sm font-bold transition-all shadow-lg active:scale-[0.98]"
+                            >
+                              <span>View All Notifications</span>
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
                     </div>
                   </div>
-                </div>
-              </div>
+                )}
+              </AnimatePresence>,
+              document.body
             )}
           </div>
         </div>

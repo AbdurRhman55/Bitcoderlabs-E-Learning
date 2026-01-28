@@ -58,6 +58,7 @@ const TeacherMainDashboard = () => {
   const [myCourses, setMyCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [allDataLoaded, setAllDataLoaded] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [showNotification, setShowNotification] = useState({
     show: false,
@@ -409,6 +410,7 @@ const TeacherMainDashboard = () => {
         profile={headerProfile}
         notifications={notifications}
         setActiveTab={setActiveTab}
+        setSidebarOpen={setSidebarOpen}
       />
 
       {showNotification.show && (
@@ -424,10 +426,14 @@ const TeacherMainDashboard = () => {
           setActiveTab={setActiveTab}
           stats={stats}
           isLoading={!allDataLoaded}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
         />
 
-        <main className="flex-1 p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">{renderContent()}</div>
+        <main className="flex-1 overflow-x-hidden p-4 lg:p-8 transition-all duration-300">
+          <div className="max-w-7xl mx-auto w-full">
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>

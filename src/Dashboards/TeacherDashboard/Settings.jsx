@@ -451,48 +451,47 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-600">
-            Manage your account settings and preferences
-          </p>
+          <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">Account Settings</h1>
+          <p className="text-sm text-gray-500 mt-1 font-medium">Personalize your teacher profile and security preferences.</p>
         </div>
-        {isEditing && activeSection === "profile" && (
-          <div className="flex space-x-3">
+        <div className="flex w-full sm:w-auto gap-3">
+          {isEditing && activeSection === "profile" ? (
+            <>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-bold text-sm transition-all flex items-center shadow-sm"
+              >
+                <FaTimes className="mr-2" />
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                disabled={loading}
+                className="flex-1 sm:flex-none justify-center px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all flex items-center font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-50"
+              >
+                <FaSave className="mr-2" />
+                {loading ? "..." : "Save"}
+              </button>
+            </>
+          ) : activeSection === "profile" && (
             <button
-              onClick={() => setIsEditing(false)}
-              className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => setIsEditing(true)}
+              className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/20"
             >
-              <FaTimes className="mr-2" />
-              Cancel
+              <FaEdit className="mr-2" />
+              Edit Profile
             </button>
-            <button
-              onClick={handleSaveProfile}
-              disabled={loading}
-              className="flex items-center px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FaSave className="mr-2" />
-              {loading ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
-        )}
-        {!isEditing && activeSection === "profile" && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-          >
-            <FaEdit className="mr-2" />
-            Edit Profile
-          </button>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <nav className="space-y-1">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 lg:p-4 overflow-x-auto lg:overflow-x-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <nav className="flex lg:flex-col gap-2 min-w-max lg:min-w-0">
               {sections.map((section) => (
                 <button
                   key={section.id}
@@ -502,15 +501,15 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                       setIsEditing(false);
                     }
                   }}
-                  className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all ${activeSection === section.id
-                    ? "bg-primary text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                  className={`flex items-center px-5 py-3.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all duration-300 whitespace-nowrap ${activeSection === section.id
+                    ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
+                    : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                     }`}
                 >
                   <span
-                    className={`mr-3 ${activeSection === section.id
+                    className={`mr-3 text-lg ${activeSection === section.id
                       ? "text-white"
-                      : "text-gray-500"
+                      : "text-gray-300 transition-colors"
                       }`}
                   >
                     {section.icon}

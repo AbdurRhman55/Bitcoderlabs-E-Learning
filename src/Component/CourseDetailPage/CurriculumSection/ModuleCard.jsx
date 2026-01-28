@@ -1,28 +1,56 @@
-import { FaBookOpen, FaClock, FaChevronDown, FaRocket } from "react-icons/fa";
+import {
+  FaBookOpen,
+  FaClock,
+  FaChevronDown,
+  FaRocket,
+  FaLock,
+} from "react-icons/fa";
 import ProgressStatus from "./ProgressStatus";
 import LessonItem from "./LessonItem";
 import Button from "../../UI/Button";
+import Swal from "sweetalert2";
 
 export default function ModuleCard({
   module,
   index,
   courseId,
+  isEnrolled,
   expandedModule,
   toggleModule,
 }) {
   const isExpanded = expandedModule === module.id;
+
+  const handleToggle = () => {
+    if (!isEnrolled) {
+      Swal.fire({
+        title: "Access Restricted",
+        text: "Please enroll and get approved in the course to access the curriculum and learning materials.",
+        icon: "warning",
+        confirmButtonText: "Enroll Now",
+        showCancelButton: true,
+        confirmButtonColor: "#3baee9",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `/Enroll/${courseId}`;
+        }
+      });
+      return;
+    }
+    toggleModule(module.id);
+  };
   const isEven = index % 2 === 0;
 
   return (
     <div className="group">
       <div
-        className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 ${isEven ? "hover:border-blue-200" : "hover:border-purple-200"
-          }`}
+        className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 ${
+          isEven ? "hover:border-blue-200" : "hover:border-purple-200"
+        }`}
       >
         {/* Header */}
         <div
-          className={` lg:px-4 px-2 lg:py-3 py-1 p-5 cursor-pointer transition-all duration-300 bg-gradient-to-r from-white to-blue-50 hover:from-blue-50 hover:to-blue-100`}
-          onClick={() => toggleModule(module.id)}
+          className={` lg:px-4 px-2 lg:py-3 py-1 p-5 cursor-pointer transition-all duration-300 bg-gradient-to-r from-white to-blue-50 hover:from-blue-50 hover:to-blue-100 ${!isEnrolled ? "opacity-90" : ""}`}
+          onClick={handleToggle}
         >
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-0 p-3">
             {/* Left Section */}
@@ -57,30 +85,52 @@ export default function ModuleCard({
 
             {/* Right Section */}
             <div className="flex items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
-              {/* Progress (hidden on small screens) */}
-              <div className=" sm:flex flex-col  items-start ">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-24 sm:w-28 bg-gray-200 rounded-full h-2 shadow-inner">
+              {/* Accessible progress area */}
+              <div className="sm:flex flex-col items-start w-full lg:w-auto">
+                <div className="w-full sm:w-48 lg:w-56">
+                  <div
+                    className="bg-gray-200 rounded-full h-3 overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={module.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`Module progress ${module.progress} percent`}
+                  >
                     <div
-                      className={`h-2 rounded-full transition-all duration-700 bg-gradient-to-r from-primary to-primary-dark`}
+                      className={`h-3 rounded-full transition-all duration-700 bg-gradient-to-r from-primary to-primary-dark`}
                       style={{ width: `${module.progress}%` }}
                     />
                   </div>
-                  <span className="text-sm font-semibold text-gray-700 min-w-[40px]">
-                    {module.progress}%
-                  </span>
+
+                  <div className="flex items-center justify-between mt-2 gap-3">
+                    <span className="text-sm font-semibold text-gray-700">
+                      {module.progress}%
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {module.completedLessons ?? 0}/{module.lessons ?? 0}{" "}
+                      lessons
+                    </span>
+                  </div>
+                  <div className="mt-1">
+                    <ProgressStatus
+                      progress={module.progress}
+                      completed={module.completedLessons ?? 0}
+                      total={module.lessons ?? 0}
+                    />
+                  </div>
                 </div>
-                <ProgressStatus progress={module.progress} />
               </div>
 
               {/* Expand Icon */}
               <div
-                className={`p-3 rounded-xl transition-all duration-300 flex-shrink-0 ${isEven ? "bg-blue-50" : "bg-purple-50"
-                  } ${isExpanded ? "rotate-180" : ""}`}
+                className={`p-3 rounded-xl transition-all duration-300 flex-shrink-0 ${
+                  isEven ? "bg-blue-50" : "bg-purple-50"
+                } ${isExpanded ? "rotate-180" : ""}`}
               >
                 <FaChevronDown
-                  className={`transition-transform duration-500 ${isEven ? "text-blue-500" : "text-purple-500"
-                    }`}
+                  className={`transition-transform duration-500 ${
+                    isEven ? "text-blue-500" : "text-purple-500"
+                  }`}
                 />
               </div>
             </div>
@@ -93,7 +143,12 @@ export default function ModuleCard({
             <div className="p-6 sm:p-8 bg-gradient-to-b from-white to-gray-50">
               <div className="space-y-4 mb-8">
                 {(module.lessonsList || []).map((lesson, i) => (
-                  <LessonItem key={i} lesson={lesson} courseId={courseId} />
+                  <LessonItem
+                    key={i}
+                    lesson={lesson}
+                    courseId={courseId}
+                    isEnrolled={isEnrolled}
+                  />
                 ))}
               </div>
 
@@ -102,13 +157,18 @@ export default function ModuleCard({
                 <Button
                   text={
                     <>
-                      <FaRocket className="inline-block mr-2 text-blue-500" />
+                      {isEnrolled ? (
+                        <FaRocket className="inline-block mr-2 text-blue-500" />
+                      ) : (
+                        <FaLock className="inline-block mr-2 text-gray-400" />
+                      )}
                       {module.progress === 100
                         ? "Review Module"
                         : "Start Learning"}
                     </>
                   }
                   variant="outline"
+                  onClick={handleToggle}
                 />
               </div>
             </div>

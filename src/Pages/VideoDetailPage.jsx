@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import VideoDetail from '../Component/VideoDetail/VideoDetail';
 import { apiClient, API_ORIGIN } from '../api/index';
+import Swal from 'sweetalert2';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateCourseProgress } from '../../slices/courseSlice';
 
 const VideoDetailPage = () => {
+    const navigate = useNavigate();
+    const { isAuthenticated } = useSelector((state) => state.auth);
     const { id: lessonId } = useParams();
     const [searchParams] = useSearchParams();
     const courseId = searchParams.get('courseId');
+    const dispatch = useDispatch();
+    const [enrollmentId, setEnrollmentId] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [videoData, setVideoData] = useState(null);
@@ -65,6 +72,51 @@ const VideoDetailPage = () => {
 
             try {
                 setLoading(true);
+
+                // --- SECURITY CHECK ---
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        title: "Login Required",
+                        text: "Please login to access course videos.",
+                        icon: "info",
+                        confirmButtonText: "Go to Login",
+                        confirmButtonColor: "#3baee9",
+                    }).then(() => {
+                        navigate("/login");
+                    });
+                    return;
+                }
+
+                // Check enrollment status
+                const enrollResponse = await apiClient.getMyEnrollments();
+                const enrollments = Array.isArray(enrollResponse) ? enrollResponse : enrollResponse.data || [];
+                const currentEnrollment = enrollments.find(e =>
+                    String(e.course_id) === String(courseId) && (e.status === 'approved' || e.status === 'active')
+                );
+
+                if (currentEnrollment) {
+                    setEnrollmentId(currentEnrollment.id);
+                }
+
+                if (!currentEnrollment) {
+                    Swal.fire({
+                        title: "Course Locked",
+                        text: "You haven't enrolled in this course yet, or your enrollment is pending approval.",
+                        icon: "warning",
+                        confirmButtonText: "Enroll Now",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3baee9",
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            navigate(`/Enroll/${courseId}`);
+                        } else {
+                            navigate(`/CourseDetail/${courseId}`);
+                        }
+                    });
+                    return;
+                }
+                // --- END SECURITY CHECK ---
+
                 const response = await apiClient.getCourseById(courseId);
                 // Handle different potential API response structures
                 const course = response.data?.data || response.data || response;
@@ -194,7 +246,148 @@ const VideoDetailPage = () => {
             </div>
         );
 
-    return <VideoDetail videoData={videoData} comments={comments} relatedVideos={relatedVideos} />;
+    const handleVideoEnded = async () => {
+        if (!enrollmentId || !courseId) {
+            console.error("No enrollment ID or course ID found. Cannot update progress.");
+            Swal.fire({
+                title: 'Error',
+                text: 'Unable to track progress. Please refresh and try again.',
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
+
+        try {
+            // Fetch course data to get total lessons count
+            const courseResponse = await apiClient.getCourseById(courseId);
+            const course = courseResponse.data?.data || courseResponse.data || courseResponse;
+
+            // Calculate total lessons across all modules
+            let totalLessons = 0;
+            if (course.modules && Array.isArray(course.modules)) {
+                course.modules.forEach(module => {
+                    const lessons = Array.isArray(module.lessons) ? module.lessons :
+                        Array.isArray(module.lessonsList) ? module.lessonsList :
+                            Array.isArray(module.course_lessons) ? module.course_lessons :
+                                [module];
+                    totalLessons += lessons.length;
+                });
+            }
+
+            // Calculate progress increment per lesson
+            const progressPerLesson = totalLessons > 0 ? (100 / totalLessons) : 10;
+
+            console.log(`📚 Total lessons in course: ${totalLessons}`);
+            console.log(`📊 Progress per lesson: ${progressPerLesson.toFixed(2)}%`);
+
+            let currentModule = null;
+            let currentModuleId = null;
+
+            if (course.modules && Array.isArray(course.modules)) {
+                currentModule = course.modules.find(m => {
+                    const lessons = Array.isArray(m.lessons) ? m.lessons :
+                        Array.isArray(m.lessonsList) ? m.lessonsList :
+                            Array.isArray(m.course_lessons) ? m.course_lessons :
+                                [m];
+
+                    return lessons.some(l => {
+                        const lId = (l.id || l.lesson_id || l._id)?.toString();
+                        return lId === lessonId;
+                    });
+                });
+
+                if (currentModule) {
+                    currentModuleId = currentModule.id;
+                    const moduleLessons = Array.isArray(currentModule.lessons) ? currentModule.lessons :
+                        Array.isArray(currentModule.lessonsList) ? currentModule.lessonsList :
+                            Array.isArray(currentModule.course_lessons) ? currentModule.course_lessons :
+                                [];
+
+                    const totalModuleLessons = moduleLessons.length;
+                    const moduleProgressIncrement = totalModuleLessons > 0 ? (100 / totalModuleLessons) : 100;
+
+                    // Get current module progress (optimistic or from data if available)
+                    const currentModuleProgress = currentModule.progress_percentage || 0;
+                    const newModuleProgress = Math.min(100, Math.round(currentModuleProgress + moduleProgressIncrement));
+
+                    console.log(`📘 Module ID: ${currentModuleId}`);
+                    console.log(`📘 Total Lessons in Module: ${totalModuleLessons}`);
+                    console.log(`📘 Module Progress Increment: ${moduleProgressIncrement.toFixed(2)}%`);
+                    console.log(`📘 New Module Progress: ${newModuleProgress}%`);
+
+                    // Update Module Progress API Call
+                    // NOTE: This endpoint (course-modules/{id}) is restricted to instructors (returns 403 for students).
+                    // We cannot persist module-level progress without a specific student endpoint (e.g., module_user table).
+                    // For now, we only log the calculation but do not attempt the unauthorized API call.
+                    /*
+                    try {
+                        if (currentModuleId) {
+                            await apiClient.updateModuleProgress(currentModuleId, newModuleProgress);
+                            console.log("✅ Module progress updated successfully");
+                        }
+                    } catch (modErr) {
+                        console.error("⚠️ Failed to update module progress:", modErr);
+                    }
+                    */
+                }
+            }
+            // --- END MODULE PROGRESS CALCULATION ---
+
+            // Fetch current enrollment to get actual progress
+            const enrollmentResponse = await apiClient.getMyEnrollments();
+            const enrollments = Array.isArray(enrollmentResponse) ? enrollmentResponse : enrollmentResponse.data || [];
+            const currentEnrollment = enrollments.find(e => e.id === enrollmentId);
+
+            if (!currentEnrollment) {
+                console.error("Enrollment not found in current data");
+                return;
+            }
+
+            const currentProgress = currentEnrollment.progress_percentage || 0;
+            const newProgress = Math.min(100, Math.round(currentProgress + progressPerLesson));
+
+            console.log(`Current progress: ${currentProgress}%`);
+            console.log(`New progress: ${newProgress}%`);
+
+            dispatch(updateCourseProgress({
+                enrollmentId,
+                progress: newProgress
+            }));
+
+            Swal.fire({
+                title: 'Lesson Completed!',
+                text: `Progress updated: ${currentProgress}% → ${newProgress}%`,
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+
+        } catch (err) {
+            console.error("Error updating progress:", err);
+            Swal.fire({
+                title: 'Update Failed',
+                text: 'Could not update progress. Please try again.',
+                icon: 'error',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+    };
+
+    return <VideoDetail
+        videoData={videoData}
+        comments={comments}
+        relatedVideos={relatedVideos}
+        onVideoEnded={handleVideoEnded}
+    />;
 };
 
 export default VideoDetailPage;

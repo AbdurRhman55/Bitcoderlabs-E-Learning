@@ -83,7 +83,7 @@ const ReviewSection = ({ courseId, courseData }) => {
                 <div className="lg:col-span-1 border-r border-gray-100 pr-0 lg:pr-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Student Reviews</h2>
                     <div className="flex items-center gap-6 mb-8 bg-blue-50/50 p-6 rounded-2xl">
-                        <div className="text-6xl font-extrabold text-blue-600">
+                        <div className="text-6xl font-extrabold text-primary">
                             {averageRating}
                         </div>
                         <div>
@@ -160,7 +160,7 @@ const ReviewSection = ({ courseId, courseData }) => {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="bg-primary text-white px-8 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-primary text-white px-8 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-primary-dark cursor-pointer hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isSubmitting ? 'Submitting...' : 'Post Review'}
                                 </button>

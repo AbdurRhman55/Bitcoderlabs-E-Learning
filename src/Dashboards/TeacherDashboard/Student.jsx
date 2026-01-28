@@ -35,10 +35,10 @@ const StudentsSection = () => {
     const fetchAllData = useCallback(async () => {
         try {
             setLoading(true);
-            
+
             // First, get teacher's assigned courses
             const teacherCourseIds = await fetchTeacherCourses();
-            
+
             if (teacherCourseIds.length === 0) {
                 setStudents([]);
                 setUsers({});
@@ -50,15 +50,15 @@ const StudentsSection = () => {
             // Fetch enrollments using your existing apiClient method
             const enrollmentsRes = await apiClient.getEnrollments();
             let enrollmentsData = enrollmentsRes?.data || enrollmentsRes || [];
-            
+
             // Make sure it's an array
             enrollmentsData = Array.isArray(enrollmentsData) ? enrollmentsData : [enrollmentsData];
-            
+
             // Filter only active enrollments AND enrollments in teacher's courses
-            const activeEnrollments = enrollmentsData.filter(e => 
-                (e.is_active === true || 
-                 e.status === 'active' || 
-                 e.enrollment_status === 'active') &&
+            const activeEnrollments = enrollmentsData.filter(e =>
+                (e.is_active === true ||
+                    e.status === 'active' ||
+                    e.enrollment_status === 'active') &&
                 teacherCourseIds.includes(e.course_id)
             );
 
@@ -69,7 +69,7 @@ const StudentsSection = () => {
                 .map(e => e.user_id)
                 .filter(Boolean)
             )];
-            
+
             const courseIds = [...new Set(activeEnrollments
                 .map(e => e.course_id)
                 .filter(Boolean)
@@ -79,9 +79,9 @@ const StudentsSection = () => {
             const usersPromises = userIds.map(async (userId) => {
                 try {
                     const userRes = await apiClient.getUserById(userId);
-                    return { 
-                        userId, 
-                        userData: userRes?.data || userRes || null 
+                    return {
+                        userId,
+                        userData: userRes?.data || userRes || null
                     };
                 } catch (err) {
                     console.error(`Failed to fetch user ${userId}`, err);
@@ -94,15 +94,15 @@ const StudentsSection = () => {
                 try {
                     const courseRes = await apiClient.getCourseById(courseId);
                     let courseData = courseRes?.data || courseRes;
-                    
+
                     // Handle array response (if API returns array of courses)
                     if (Array.isArray(courseData)) {
                         courseData = courseData[0] || null;
                     }
-                    
-                    return { 
-                        courseId, 
-                        courseData 
+
+                    return {
+                        courseId,
+                        courseData
                     };
                 } catch (err) {
                     console.error(`Failed to fetch course ${courseId}`, err);
@@ -191,10 +191,10 @@ const StudentsSection = () => {
     };
 
     const getProgressPercentage = (enrollment) => {
-        return enrollment?.progress_percentage || 
-               enrollment?.progress || 
-               enrollment?.completion_percentage || 
-               0;
+        return enrollment?.progress_percentage ||
+            enrollment?.progress ||
+            enrollment?.completion_percentage ||
+            0;
     };
 
     const getProgressColor = (progress) => {
@@ -230,15 +230,15 @@ const StudentsSection = () => {
     // ================= FILTER STUDENTS =================
     const filteredStudents = students.filter(student => {
         if (!searchTerm) return true;
-        
+
         const name = getStudentName(student.user_id).toLowerCase();
         const email = getStudentEmail(student.user_id).toLowerCase();
         const course = getCourseTitle(student.course_id).toLowerCase();
         const search = searchTerm.toLowerCase();
-        
-        return name.includes(search) || 
-               email.includes(search) || 
-               course.includes(search);
+
+        return name.includes(search) ||
+            email.includes(search) ||
+            course.includes(search);
     });
 
     // ================= HANDLE STUDENT SELECTION =================
@@ -288,51 +288,51 @@ const StudentsSection = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Students Management</h1>
-                    <p className="text-gray-600">Track your students' progress and performance</p>
+                    <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900">Students Management</h1>
+                    <p className="text-sm text-gray-500 mt-1 font-medium">Track and support your student community in real-time.</p>
                 </div>
-                <div className="flex space-x-3">
-                    <button 
+                <div className="flex w-full sm:w-auto gap-3">
+                    <button
                         onClick={fetchAllData}
                         disabled={loading}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+                        className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-bold text-sm transition-all flex items-center shadow-sm"
                     >
                         <FaRedoAlt className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-                        {loading ? 'Loading...' : 'Refresh'}
+                        {loading ? '...' : 'Refresh'}
                     </button>
-                    <button 
+                    <button
                         onClick={handleExportData}
                         disabled={loading || students.length === 0}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center disabled:opacity-50"
+                        className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all flex items-center font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-50"
                     >
                         <FaDownload className="mr-2" />
-                        Export Data
+                        Export
                     </button>
                 </div>
             </div>
 
             {/* Search and Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="lg:col-span-3">
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <FaSearch className="text-gray-400" />
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 lg:gap-6">
+                <div className="sm:col-span-3">
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
+                            <FaSearch size={14} />
                         </div>
                         <input
                             type="search"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                            placeholder="Search students by name, email, or course..."
+                            className="block w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-2xl bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-sm transition-all shadow-sm"
+                            placeholder="Search by student name, email, or course..."
                             disabled={loading}
                         />
                     </div>
                 </div>
-                <div className="bg-white rounded-md flex justify-center items-center gap-5 px-6 shadow-sm border border-gray-200">
-                    <p className="text-2xl font-bold text-gray-800">{students.length}</p>
-                    <p className="text-sm text-gray-600">My Students</p>
+                <div className="bg-white rounded-2xl flex flex-col justify-center items-center py-3 px-6 shadow-sm border border-gray-100">
+                    <p className="text-2xl font-black text-primary">{students.length}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Active Enrolled</p>
                 </div>
             </div>
 
@@ -393,7 +393,7 @@ const StudentsSection = () => {
                                         {filteredStudents.map((student) => {
                                             const progress = getProgressPercentage(student);
                                             const grade = getGrade(progress);
-                                            
+
                                             return (
                                                 <tr
                                                     key={student.id}
@@ -438,17 +438,16 @@ const StudentsSection = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                                            grade === 'A+' ? 'bg-green-100 text-green-800' :
-                                                            grade.includes('A') ? 'bg-blue-100 text-blue-800' :
-                                                            grade.includes('B') ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-red-100 text-red-800'
-                                                        }`}>
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${grade === 'A+' ? 'bg-green-100 text-green-800' :
+                                                                grade.includes('A') ? 'bg-blue-100 text-blue-800' :
+                                                                    grade.includes('B') ? 'bg-yellow-100 text-yellow-800' :
+                                                                        'bg-red-100 text-red-800'
+                                                            }`}>
                                                             {grade}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleStudentSelect(student)}
                                                             className="text-primary hover:text-primary-dark text-sm font-medium"
                                                         >

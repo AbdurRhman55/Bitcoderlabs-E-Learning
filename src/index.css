@@ -20,3 +20,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes progress-bar-stripes {
+  from {
+    background-position: 1rem 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}
+
+.animate-progress-stripes {
+  animation: progress-bar-stripes 1s linear infinite;
+}

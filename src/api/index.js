@@ -597,6 +597,12 @@ class ApiClient {
     });
   }
 
+  async deleteEnrollment(id) {
+    return this.request(`/enrollments/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Reviews & Ratings
   async getCourseReviews(courseId) {
     return this.request(`/courses/${courseId}/reviews`);
@@ -612,6 +618,56 @@ class ApiClient {
         course_id: courseId,
       }),
     });
+  }
+
+  // Progress Management
+  async updateProgress(enrollmentId, progress) {
+    return this.request(`/enrollments/${enrollmentId}`, {
+      method: "POST",
+      body: JSON.stringify({
+        progress_percentage: progress,
+        _method: "PUT"
+      }),
+    });
+  }
+
+  // Module Progress Management
+  async updateModuleProgress(moduleId, progress) {
+    return this.request(`/course-modules/${moduleId}`, {
+      method: "POST",
+      body: JSON.stringify({
+        progress_percentage: progress,
+        _method: "PUT"
+      }),
+    });
+  }
+
+  // Individual Lesson Progress
+  async updateUserProgress(lessonId, isCompleted = true, timeSpent = 0) {
+    return this.request("/user-progress", {
+      method: "POST",
+      body: JSON.stringify({
+        course_lesson_id: lessonId,
+        is_completed: isCompleted,
+        time_spent: timeSpent
+      }),
+    });
+  }
+
+  async getUserProgress(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const res = await this.request(`/user-progress${queryString ? `?${queryString}` : ""}`);
+    // Normalize response: support raw array, wrapper { data: [...] },
+    // and LengthAwarePaginator-like structures that include `data` key.
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.data)) return res.data;
+    // If paginator was serialized as object with nested data, try to find it
+    if (res && typeof res === "object") {
+      for (const key of ["data", "items", "results"]) {
+        if (Array.isArray(res[key])) return res[key];
+      }
+    }
+    return [];
   }
 }
 

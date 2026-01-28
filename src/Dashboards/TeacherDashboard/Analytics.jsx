@@ -60,52 +60,52 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Analytics Dashboard</h1>
-                    <p className="text-gray-600">Real-time performance metrics for your courses</p>
+                    <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">Analytics Dashboard</h1>
+                    <p className="text-sm text-gray-600 mt-1 font-medium">Real-time performance metrics for your instruction impact.</p>
                 </div>
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 rounded-lg bg-blue-100">
-                            <FaUsers className="text-blue-600" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="p-3 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                            <FaUsers size={20} />
                         </div>
-                        <span className={`text-sm font-medium ${analyticsData.studentsChange.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${analyticsData.studentsChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             {analyticsData.studentsChange}
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-800">{analyticsData.totalStudents.toLocaleString()}</p>
-                    <p className="text-sm text-gray-600">Total Students</p>
+                    <p className="text-3xl font-extrabold text-gray-900 leading-none mb-2">{analyticsData.totalStudents.toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Active Students</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 rounded-lg bg-green-100">
-                            <FaClock className="text-green-600" />
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="p-3 rounded-xl bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                            <FaClock size={20} />
                         </div>
-                        <span className={`text-sm font-medium ${analyticsData.hoursChange.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${analyticsData.hoursChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             {analyticsData.hoursChange}
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-800">{analyticsData.totalWatchHours}h</p>
-                    <p className="text-sm text-gray-600">Teaching Hours</p>
+                    <p className="text-3xl font-extrabold text-gray-900 leading-none mb-2">{analyticsData.totalWatchHours}h</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Instruction Hours</p>
                 </div>
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="p-2 rounded-lg bg-amber-100">
-                            <FaStar className="text-amber-600" />
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group sm:col-span-2 lg:col-span-1">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="p-3 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-300">
+                            <FaStar size={20} />
                         </div>
-                        <span className={`text-sm font-medium ${analyticsData.ratingChange.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${analyticsData.ratingChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             {analyticsData.ratingChange}
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-800">{analyticsData.avgRating.toFixed(1)}</p>
-                    <p className="text-sm text-gray-600">Avg. Rating</p>
+                    <p className="text-3xl font-extrabold text-gray-900 leading-none mb-2">{analyticsData.avgRating.toFixed(1)}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Global Satisfaction</p>
                 </div>
             </div>
 

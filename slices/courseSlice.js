@@ -62,6 +62,21 @@ export const fetchMyCourses = createAsyncThunk(
   }
 );
 
+export const updateCourseProgress = createAsyncThunk(
+  'courses/updateProgress',
+  async ({ enrollmentId, progress }, { rejectWithValue, dispatch }) => {
+    try {
+      await apiClient.updateProgress(enrollmentId, progress);
+      // Refetch to get fresh data
+      await dispatch(fetchMyCourses());
+      return { enrollmentId, progress };
+    } catch (err) {
+      console.error("Failed to update progress:", err);
+      return rejectWithValue(err.message || "Failed to update progress");
+    }
+  }
+);
+
 const coursesSlice = createSlice({
   name: 'courses',
   initialState: {

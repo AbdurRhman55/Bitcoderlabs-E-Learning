@@ -14,10 +14,31 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+
   // Also try to find in Redux store as initial data / optimistic UI
   const reduxCourse = useSelector((state) =>
-    state.courses.courses.find((c) => c.id == id)
+    state.courses?.courses?.find((c) => String(c.id) === String(id))
   );
+
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!isAuthenticated || !id) return;
+      try {
+        const response = await apiClient.getMyEnrollments();
+        const enrollments = Array.isArray(response) ? response : response.data || [];
+        const match = enrollments.find(e =>
+          String(e.course_id) === String(id) && e.status === 'approved'
+        );
+        setIsEnrolled(!!match);
+      } catch (err) {
+        console.error("Error checking enrollment:", err);
+      }
+    };
+
+    checkEnrollment();
+  }, [id, isAuthenticated]);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -73,7 +94,7 @@ export default function CourseDetailPage() {
   return (
     <div>
       <CourseHero course={course} />
-      <CurriculumSection course={course} />
+      <CurriculumSection course={course} isEnrolled={isEnrolled} />
       <CourseVideo course={course} />
       <ReviewSection courseId={id} courseData={course} />
       <CTASection />

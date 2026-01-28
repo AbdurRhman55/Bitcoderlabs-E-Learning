@@ -8,6 +8,7 @@ import {
   FaUser,
   FaBook,
   FaClock,
+  FaTrash,
 } from "react-icons/fa";
 import { apiClient, API_ORIGIN } from "../../api/index.js";
 
@@ -206,6 +207,28 @@ export default function EnrolledStudentsTable() {
     } catch (err) {
       console.error("Failed to reject enrollment:", err);
       alert(err.message || "Failed to reject enrollment");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle delete enrollment
+  const handleDelete = async (enrollment) => {
+    if (!window.confirm("Are you sure you want to permanently delete this enrollment? This will allow the student to re-enroll."))
+      return;
+
+    const id = getEnrollmentId(enrollment);
+    if (!id) return;
+
+    try {
+      setActionLoading(true);
+      await apiClient.deleteEnrollment(id);
+      alert("Enrollment deleted successfully!");
+      await fetchEnrollments();
+      setShowModal(false);
+    } catch (err) {
+      console.error("Failed to delete enrollment:", err);
+      alert(err.message || "Failed to delete enrollment. Make sure the backend supports DELETE /enrollments/{id}");
     } finally {
       setActionLoading(false);
     }
@@ -515,11 +538,10 @@ export default function EnrolledStudentsTable() {
               <button
                 key={tab.value}
                 onClick={() => setFilter(tab.value)}
-                className={`px-4 py-2 rounded-md font-medium transition-all ${
-                  filter === tab.value
-                    ? "bg-white text-primary shadow-md"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                className={`px-4 py-2 rounded-md font-medium transition-all ${filter === tab.value
+                  ? "bg-white text-primary shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}
               >
                 {tab.label} ({tab.count})
               </button>
@@ -662,6 +684,16 @@ export default function EnrolledStudentsTable() {
                             </button>
                           </>
                         )}
+                        {enrollment.status === "rejected" && (
+                          <button
+                            onClick={() => handleDelete(enrollment)}
+                            className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-red-500 hover:text-white transition-all font-mono"
+                            title="Delete Record"
+                            disabled={actionLoading}
+                          >
+                            <FaTrash size={12} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -673,323 +705,118 @@ export default function EnrolledStudentsTable() {
       )}
 
       {/* Lightbox Overlay */}
-      {lightboxImage && (
-        <div className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4">
-          <div className="relative max-w-4xl w-full">
-            <button
-              onClick={closeLightbox}
-              className="absolute top-2 right-2 bg-white rounded-full p-2 z-10"
-              title="Close"
-            >
-              ✕
-            </button>
-            <img
-              src={lightboxImage}
-              alt="Payment proof large"
-              className="w-full max-h-[80vh] object-contain rounded-md"
-              onError={(e) => {
-                e.target.src =
-                  "https://via.placeholder.com/800x600?text=Image+Not+Found";
-              }}
-            />
-            <div className="mt-2 text-right">
-              <a
-                href={lightboxImage}
-                download
-                className="px-4 py-2 bg-white rounded-md shadow"
+      {
+        lightboxImage && (
+          <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+            <div className="relative max-w-4xl w-full">
+              <button
+                onClick={closeLightbox}
+                className="absolute top-2 right-2 bg-white rounded-full p-2 z-10"
+                title="Close"
               >
-                Download
-              </a>
+                <FaTimes />
+              </button>
+              <img
+                src={lightboxImage}
+                alt="Payment proof large"
+                className="w-full max-h-[80vh] object-contain rounded-md"
+                onError={(e) => {
+                  e.target.src =
+                    "https://via.placeholder.com/800x600?text=Image+Not+Found";
+                }}
+              />
+              <div className="mt-2 text-right">
+                <a
+                  href={lightboxImage}
+                  download
+                  className="px-4 py-2 bg-white rounded-md shadow"
+                >
+                  Download
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Enrollment Details Modal */}
-      {showModal && selectedEnrollment && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-6 sticky top-0 z-10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold">
-                  Enrollment Request Details
-                </h3>
+      {
+        showModal && selectedEnrollment && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-6 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold">Enrollment Request Details</h3>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-6">
+                {/* Student Info */}
+                <div className="bg-blue-50 rounded-xl p-6">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <FaUser className="text-primary" /> Student Information
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div><span className="text-sm text-gray-600">Full Name:</span><p className="font-semibold text-gray-900">{getStudentName(selectedEnrollment)}</p></div>
+                    <div><span className="text-sm text-gray-600">Email:</span><p className="font-semibold text-gray-900">{selectedEnrollment.user?.email || selectedEnrollment.email || "-"}</p></div>
+                    <div><span className="text-sm text-gray-600">Student ID:</span><p className="font-semibold text-gray-900">{getStudentId(selectedEnrollment)}</p></div>
+                  </div>
+                </div>
+
+                {/* Course Info */}
+                <div className="bg-green-50 rounded-xl p-6">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <FaBook className="text-green-600" /> Course Information
+                  </h4>
+                  <p className="font-semibold text-gray-900">{getCourseTitle(selectedEnrollment)}</p>
+                  <div className="text-sm text-gray-600 mt-1">Course ID: {selectedEnrollment.course_id}</div>
+                </div>
+
+                {/* Payment Info */}
+                <div className="bg-yellow-50 rounded-xl p-6">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <FaClock className="text-yellow-600" /> Payment Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><span className="text-sm text-gray-600">Method:</span><p className="font-semibold capitalize">{getPaymentMethod(selectedEnrollment)}</p></div>
+                    <div><span className="text-sm text-gray-600">Amount:</span><p className="font-semibold text-green-600">Rs {selectedEnrollment.amount}</p></div>
+                  </div>
+                  {getPaymentProofUrl(selectedEnrollment) && (
+                    <div className="mt-4">
+                      <img src={getPaymentProofUrl(selectedEnrollment)} className="w-full max-h-64 object-contain border rounded-lg" alt="Proof" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+                {selectedEnrollment.status === 'rejected' && (
+                  <button
+                    onClick={() => handleDelete(selectedEnrollment)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-bold"
+                    disabled={actionLoading}
+                  >
+                    Delete Entire Record
+                  </button>
+                )}
                 <button
                   onClick={() => setShowModal(false)}
-                  className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
                 >
-                  <FaTimes size={20} />
+                  Close
                 </button>
               </div>
             </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-6">
-              {/* Student Information */}
-              <div className="bg-blue-50 rounded-xl p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaUser className="text-primary" />
-                  Student Information
-                </h4>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm text-gray-600">Full Name:</span>
-                    <p className="font-semibold text-gray-900">
-                      {getStudentName(selectedEnrollment)}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">Email:</span>
-                    <p className="font-semibold text-gray-900">
-                      {selectedEnrollment.user?.email ||
-                        selectedEnrollment.email ||
-                        "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <span className="text-sm text-gray-600">Student ID:</span>
-                    <p className="font-semibold text-gray-900">
-                      {getStudentId(selectedEnrollment)}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">
-                      Enrollment ID:
-                    </span>
-                    <p className="font-semibold text-gray-900">
-                      {getEnrollmentId(selectedEnrollment) || "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Course Information */}
-              <div className="bg-green-50 rounded-xl p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaBook className="text-green-600" />
-                  Course Information
-                </h4>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm text-gray-600">Course Title:</span>
-                    <p className="font-semibold text-gray-900">
-                      {getCourseTitle(selectedEnrollment)}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">Course ID:</span>
-                    <p className="font-semibold text-gray-900">
-                      {selectedEnrollment.course_id || "-"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">Course Price:</span>
-                    <p className="font-semibold text-gray-900">
-                      Rs{" "}
-                      {selectedEnrollment.course?.price ||
-                        selectedEnrollment.amount ||
-                        "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">
-                      Course Duration:
-                    </span>
-                    <p className="font-semibold text-gray-900">
-                      {selectedEnrollment.course?.duration || "N/A"}
-                    </p>
-                  </div>
-                  {selectedEnrollment.course?.description && (
-                    <div className="md:col-span-2">
-                      <span className="text-sm text-gray-600">
-                        Description:
-                      </span>
-                      <p className="font-semibold text-gray-900 mt-1">
-                        {selectedEnrollment.course.description}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Payment Information */}
-              <div className="bg-yellow-50 rounded-xl p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaClock className="text-yellow-600" />
-                  Payment Information
-                </h4>
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <span className="text-sm text-gray-600">
-                      Payment Method:
-                    </span>
-                    <p className="font-semibold text-gray-900 capitalize">
-                      {getPaymentMethod(selectedEnrollment)}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">Amount Paid:</span>
-                    <p className="font-semibold text-green-600 text-xl">
-                      Rs {selectedEnrollment.amount || 0}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">
-                      Transaction ID:
-                    </span>
-                    <p className="font-semibold text-gray-900">
-                      {selectedEnrollment.transaction_id ||
-                        selectedEnrollment.transactionId ||
-                        "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600">
-                      Submission Date:
-                    </span>
-                    <p className="font-semibold text-gray-900">
-                      {selectedEnrollment.created_at
-                        ? new Date(
-                            selectedEnrollment.created_at,
-                          ).toLocaleString()
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Payment Proof */}
-                {getPaymentProofUrl(selectedEnrollment) ? (
-                  <div className="mt-4">
-                    <span className="text-sm text-gray-600 block mb-2">
-                      Payment Proof Screenshot:
-                    </span>
-                    <div className="relative group p">
-                      <img
-                        src={getPaymentProofUrl(selectedEnrollment)}
-                        alt="Payment Proof"
-                        className="w-full max-h-96 object-contain bg-gray-100 rounded-lg border-2 py-5 border-gray-300"
-                        onError={(e) => {
-                          e.target.src =
-                            "https://via.placeholder.com/800x600?text=Image+Not+Found";
-                        }}
-                      />
-                      <a
-                        href={getPaymentProofUrl(selectedEnrollment)}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute top-2 right-2 bg-white p-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <FaDownload className="text-primary" />
-                      </a>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500">
-                    No payment proof uploaded.
-                  </div>
-                )}
-              </div>
-
-              {/* Status and Admin Notes */}
-              <div className="bg-gray-50 rounded-xl p-6">
-                <h4 className="text-lg font-bold text-gray-900 mb-4">
-                  Status & Notes
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-sm text-gray-600">
-                      Current Status:
-                    </span>
-                    <p
-                      className={`inline-block ml-2 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusBadge(
-                        selectedEnrollment.status,
-                      )}`}
-                    >
-                      {selectedEnrollment.status?.toUpperCase() || "UNKNOWN"}
-                    </p>
-                  </div>
-
-                  {selectedEnrollment.admin_notes && (
-                    <div>
-                      <span className="text-sm text-gray-600">
-                        Admin Notes:
-                      </span>
-                      <p className="font-medium text-gray-900 mt-1">
-                        {selectedEnrollment.admin_notes}
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedEnrollment.approved_at && (
-                    <div>
-                      <span className="text-sm text-gray-600">
-                        Approved At:
-                      </span>
-                      <p className="font-medium text-gray-900">
-                        {new Date(
-                          selectedEnrollment.approved_at,
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Rejection Reason Input (only for pending) */}
-              {selectedEnrollment.status === "pending" && (
-                <div className="bg-red-50 rounded-xl p-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Rejection Reason (required for rejection):
-                  </label>
-                  <textarea
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
-                    rows={3}
-                    placeholder="Provide a detailed reason for rejecting this enrollment..."
-                    required
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Modal Actions */}
-            {selectedEnrollment.status === "pending" && (
-              <div className="bg-gray-50 p-6 flex gap-4 justify-end sticky bottom-0">
-                <button
-                  onClick={() =>
-                    handleReject(getEnrollmentId(selectedEnrollment))
-                  }
-                  className="px-4 py-2 cursor-pointer bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2"
-                  disabled={actionLoading || !rejectReason.trim()}
-                >
-                  {actionLoading ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <FaTimes />
-                  )}
-                  Reject
-                </button>
-                <button
-                  onClick={() => handleApprove(selectedEnrollment)}
-                  className="px-4 py-2 cursor-pointer bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors flex items-center gap-2"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <FaCheck />
-                  )}
-                  Approve
-                </button>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

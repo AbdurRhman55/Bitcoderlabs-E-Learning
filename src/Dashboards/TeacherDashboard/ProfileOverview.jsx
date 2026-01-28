@@ -86,12 +86,12 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
   return (
     <div className="space-y-6">
       {/* Header - Real API data */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">
             Teacher Dashboard
           </h1>
-          <p className="text-gray-600">Welcome back, {profile.name}</p>
+          <p className="text-sm lg:text-base text-gray-600 font-medium">Welcome back, {profile.name} 👋</p>
         </div>
       </div>
 
@@ -100,24 +100,24 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
         {displayStats.map((stat, index) => (
           <div
             key={index}
-            className="relative bg-white rounded-2xl p-6 border border-gray-200 shadow-sm 
-                 hover:shadow-md transition-all duration-300 group"
+            className="relative bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm 
+                 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
           >
             {/* Top Section */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
               <div
-                className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-100 
-                        group-hover:bg-primary-light transition-colors text-primary text-2xl"
+                className="flex items-center justify-center w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gray-50 
+                        group-hover:bg-primary-light transition-colors text-primary text-xl lg:text-2xl"
               >
                 {stat.icon}
               </div>
 
               {stat.change && (
                 <span
-                  className={`text-xs font-semibold px-2 py-1 rounded-full
+                  className={`text-[10px] lg:text-xs font-bold px-2 py-1 rounded-full
               ${stat.change.startsWith("+")
-                      ? "bg-gray-100 text-primary"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-green-50 text-green-600"
+                      : "bg-red-50 text-red-600"
                     }`}
                 >
                   {stat.change}
@@ -125,11 +125,11 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
               )}
             </div>
 
-            <p className="text-3xl font-bold text-gray-900 leading-tight">
+            <p className="text-2xl lg:text-3xl font-extrabold text-gray-900 leading-tight">
               {stat.value}
             </p>
 
-            <p className="mt-1 text-sm font-medium text-gray-500">
+            <p className="mt-1 text-[12px] lg:text-sm font-bold text-gray-400 uppercase tracking-wider">
               {stat.label}
             </p>
           </div>
@@ -139,12 +139,12 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
       {/* Profile Card - Real API data */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-start space-x-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-6">
               <img
                 src={profile.profileImage || PLACEHOLDER_IMAGE}
                 alt={profile.name}
-                className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
+                className="w-24 h-24 lg:w-28 lg:h-28 rounded-full border-4 border-white shadow-xl object-cover ring-2 ring-gray-50"
                 onError={(e) => {
                   if (e.target.src !== PLACEHOLDER_IMAGE) {
                     e.target.onerror = null;
@@ -152,41 +152,50 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
                   }
                 }}
               />
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
+              <div className="flex-1 w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-bold text-gray-900">
                       {profile.name}
                     </h2>
-                    <p className="text-gray-600">{profile.qualification}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {profile.experience} of teaching experience
+                    <p className="text-primary font-semibold text-sm uppercase tracking-wide">{profile.qualification}</p>
+                    <p className="text-sm text-gray-500 mt-1 font-medium italic">
+                      {profile.experience} of teaching excellence
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 text-sm font-medium rounded-full ${statusBadge.className}`}
+                    className={`px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-full shadow-sm ${statusBadge.className}`}
                   >
                     {statusBadge.label}
                   </span>
                 </div>
 
-                <div className="mt-4">
-                  <p className="text-gray-700 mb-4">{profile.about}</p>
+                <div className="mt-6">
+                  <p className="text-gray-700 text-sm lg:text-base leading-relaxed max-w-2xl mx-auto md:mx-0">{profile.about}</p>
 
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <MdWork className="mr-2 text-gray-500" />
-                      <span>{stats.active_courses || 0} Courses</span>
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-50 pt-6">
+                    <div className="flex flex-col items-center md:items-start">
+                      <div className="flex items-center text-gray-900 font-bold mb-1">
+                        <MdWork className="mr-2 text-primary" />
+                        <span>{stats.active_courses || 0} Courses</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">Impact Hub</p>
                     </div>
-                    <div className="flex items-center">
-                      <FaUsers className="mr-2 text-gray-500" />
-                      <span>{stats.total_students || 0} Students</span>
+                    <div className="flex flex-col items-center md:items-start">
+                      <div className="flex items-center text-gray-900 font-bold mb-1">
+                        <FaUsers className="mr-2 text-green-500" />
+                        <span>{stats.total_students || 0} Students</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">Community Reach</p>
                     </div>
-                    <div className="flex items-center">
-                      <FaStar className="mr-2 text-gray-500" />
-                      <span>
-                        {stats.average_rating?.toFixed(1) || "0.0"} Rating
-                      </span>
+                    <div className="flex flex-col items-center md:items-start">
+                      <div className="flex items-center text-gray-900 font-bold mb-1">
+                        <FaStar className="mr-2 text-amber-500" />
+                        <span>
+                          {stats.average_rating?.toFixed(1) || "0.0"} Rating
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">Trust Level</p>
                     </div>
                   </div>
                 </div>
@@ -250,35 +259,7 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-4">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex flex-col items-center justify-center p-6 border border-gray-200 rounded-xl hover:border-primary hover:bg-primary-light transition-colors">
-            <FaBook className="text-2xl text-primary mb-3" />
-            <span className="font-medium text-gray-800">Create New Course</span>
-            <span className="text-sm text-gray-600 mt-1">
-              Start teaching now
-            </span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-6 border border-gray-200 rounded-xl hover:border-primary hover:bg-primary-light transition-colors">
-            <FaTasks className="text-2xl text-primary mb-3" />
-            <span className="font-medium text-gray-800">Create Assignment</span>
-            <span className="text-sm text-gray-600 mt-1">
-              Add new assessment
-            </span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-6 border border-gray-200 rounded-xl hover:border-primary hover:bg-primary-light transition-colors">
-            <FaChartLine className="text-2xl text-primary mb-3" />
-            <span className="font-medium text-gray-800">View Analytics</span>
-            <span className="text-sm text-gray-600 mt-1">
-              Track performance
-            </span>
-          </button>
-        </div>
-      </div>
+
     </div>
   );
 };

@@ -75,14 +75,21 @@ const NotificationImage = ({ notif }) => {
   // Fallback Icon
   return (
     <div
-      className={`w-full h-full flex items-center justify-center ${
-        notif.type === "teacher"
-          ? "bg-primary/10 text-primary"
-          : "bg-primary/10 text-primary"
-      }`}
+      className={`w-full h-full flex items-center justify-center ${notif.type === "teacher"
+          ? "bg-amber-100 text-amber-600"
+          : notif.type === "enrollment"
+            ? "bg-green-100 text-green-600"
+            : notif.type === "contact"
+              ? "bg-indigo-100 text-indigo-600"
+              : "bg-blue-100 text-blue-600"
+        }`}
     >
       {notif.type === "teacher" ? (
         <UserPlus size={18} />
+      ) : notif.type === "enrollment" ? (
+        <Users size={18} />
+      ) : notif.type === "contact" ? (
+        <Mail size={18} />
       ) : (
         <BookOpen size={18} />
       )}
@@ -164,19 +171,26 @@ function NotificationSidebar({
                       </p>
                       <div className="mt-2 flex items-center gap-2">
                         <span
-                          className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                            notif.type === "teacher"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-primary/10 text-primary"
-                          }`}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${notif.type === "teacher"
+                              ? "bg-amber-100 text-amber-700"
+                              : notif.type === "enrollment"
+                                ? "bg-green-100 text-green-700"
+                                : notif.type === "contact"
+                                  ? "bg-indigo-100 text-indigo-700"
+                                  : "bg-blue-100 text-blue-700"
+                            }`}
                         >
                           {notif.type === "teacher"
-                            ? "Instructor Request"
-                            : "Course Request"}
+                            ? "Instructor"
+                            : notif.type === "enrollment"
+                              ? "Student Enrollment"
+                              : notif.type === "contact"
+                                ? "Contact Message"
+                                : "Course Request"}
                         </span>
-                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <span className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
                           <Clock size={10} />
-                          Pending
+                          {notif.type === "contact" ? "New Message" : "Pending Review"}
                         </span>
                       </div>
                     </div>
@@ -508,13 +522,49 @@ export default function DashboardView() {
               c.instructor?.user?.name ||
               "Unknown Instructor",
             image: c.instructor?.image || c.instructor?.user?.image,
-            message: `Requesting approval for course: "${courseTitle}"`,
+            message: `New Course Request: "${courseTitle}"`,
             time: c.created_at || new Date().toISOString(),
             targetTab: "Course Requests",
           };
         });
 
-        const allNotifs = [...instNotifs, ...courseNotifs].sort(
+        // 3. Fetch Student Enrollment Requests
+        const enrollmentRes = await apiClient.getPendingEnrollments();
+        const enrollmentData = Array.isArray(enrollmentRes?.data)
+          ? enrollmentRes.data
+          : Array.isArray(enrollmentRes?.data?.data)
+            ? enrollmentRes.data.data
+            : [];
+
+        const enrollmentNotifs = enrollmentData.map((e) => ({
+          id: e.id,
+          type: "enrollment",
+          title: e.user?.name || "New Student",
+          image: e.user?.avatar || e.user?.image,
+          message: `Enrolled in "${e.course?.title || 'Unknown Course'}"`,
+          time: e.created_at || new Date().toISOString(),
+          targetTab: "Enrolled Students",
+        }));
+
+        // 4. Fetch Contact Messages
+        const contactRes = await apiClient.getContactMessages();
+        const contactData = Array.isArray(contactRes?.data)
+          ? contactRes.data
+          : Array.isArray(contactRes?.data?.data)
+            ? contactRes.data.data
+            : [];
+
+        const contactNotifs = contactData.slice(0, 10).map((m) => ({
+          id: m.id,
+          type: "contact",
+          title: m.name || "Inquiry",
+          image: null,
+          message: `Message: "${m.subject || m.message?.substring(0, 40)}..."`,
+          time: m.created_at || new Date().toISOString(),
+          targetTab: "Contacts",
+        }));
+
+        const allNotifs = [...instNotifs, ...courseNotifs, ...enrollmentNotifs, ...contactNotifs].sort(
           (a, b) => new Date(b.time) - new Date(a.time),
         );
         setNotifications(allNotifs);

@@ -58,31 +58,31 @@ const MessagesNotifications = ({ notifications = [], markAsRead, showNotificatio
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Messages & Notifications</h1>
-                    <p className="text-gray-600">Stay updated with important updates and communicate</p>
+                    <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">Messages & Notifications</h1>
+                    <p className="text-sm text-gray-500 mt-1 font-medium">Keep track of your interactions and system updates.</p>
                 </div>
-                <div className="flex space-x-3">
+                <div className="flex w-full sm:w-auto gap-3">
                     <button
                         onClick={markAllAsRead}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+                        className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-bold text-sm transition-all flex items-center shadow-sm"
                     >
-                        Mark All as Read
+                        Mark Read
                     </button>
-                    <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium text-sm shadow-sm">
+                    <button className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all flex items-center font-bold text-sm shadow-lg shadow-primary/20">
                         Compose
                     </button>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200">
+            <div className="flex border-b border-gray-100 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <button
                     onClick={() => setActiveTab('notifications')}
-                    className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors ${activeTab === 'notifications'
+                    className={`flex-shrink-0 px-6 py-4 font-bold text-sm border-b-2 transition-all duration-300 ${activeTab === 'notifications'
                         ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        : 'border-transparent text-gray-400 hover:text-gray-600'
                         }`}
                 >
                     <FaBell className="inline mr-2" />
@@ -90,9 +90,9 @@ const MessagesNotifications = ({ notifications = [], markAsRead, showNotificatio
                 </button>
                 <button
                     onClick={() => setActiveTab('messages')}
-                    className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors ${activeTab === 'messages'
+                    className={`flex-shrink-0 px-6 py-4 font-bold text-sm border-b-2 transition-all duration-300 ${activeTab === 'messages'
                         ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        : 'border-transparent text-gray-400 hover:text-gray-600'
                         }`}
                 >
                     <FaEnvelope className="inline mr-2" />

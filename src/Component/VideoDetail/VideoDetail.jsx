@@ -6,7 +6,7 @@ import VideoDescription from './VideoDescription';
 import CommentsSection from './CommentsSection';
 import RelatedVideos from './RelatedVideos';
 
-const VideoDetail = ({ videoData, comments, relatedVideos }) => {
+const VideoDetail = ({ videoData, comments, relatedVideos, onVideoEnded }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     const breadcrumbItems = [
@@ -31,7 +31,7 @@ const VideoDetail = ({ videoData, comments, relatedVideos }) => {
                 {/* Left Column (70%) */}
                 <div className="w-full mx-auto lg:w-8/12">
                     {/* Video Player */}
-                    <VideoPlayer videoUrl={videoData.videoUrl} thumbnail={videoData.thumbnail} />
+                    <VideoPlayer videoUrl={videoData.videoUrl} thumbnail={videoData.thumbnail} onEnded={onVideoEnded} />
 
                     {/* Video Title and Metadata */}
                     <VideoMetadata

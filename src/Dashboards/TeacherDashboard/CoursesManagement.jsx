@@ -192,108 +192,97 @@ const CoursesManagement = ({ showNotification }) => {
   return (
     <div className="space-y-8 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <FaChalkboardTeacher className="text-primary" />
-          Courses Management
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Request courses to teach and manage your approved curriculum.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+            <FaChalkboardTeacher className="text-primary" />
+            Courses Management
+          </h1>
+          <p className="text-sm text-gray-600 mt-1 font-medium">
+            Manage your courses and curriculum with ease.
+          </p>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-            <FaBook size={24} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+            <FaBook size={20} />
           </div>
           <div>
-            <p className="text-sm text-gray-500">My Approved Courses</p>
-            <p className="text-2xl font-bold">{stats.totalCourses}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Approved</p>
+            <p className="text-2xl font-extrabold text-gray-900">{stats.totalCourses}</p>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-          <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-            <FaUsers size={24} />
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+            <FaUsers size={20} />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Total Students</p>
-            <p className="text-2xl font-bold">{stats.totalStudents}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Students</p>
+            <p className="text-2xl font-extrabold text-gray-900">{stats.totalStudents}</p>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-          <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-            <FaHourglassHalf size={24} />
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl">
+            <FaHourglassHalf size={20} />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Pending Requests</p>
-            <p className="text-2xl font-bold">{stats.pendingRequests}</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Requests</p>
+            <p className="text-2xl font-extrabold text-gray-900">{stats.pendingRequests}</p>
           </div>
         </div>
       </div>
 
       {/* 1. Request Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <FaPlus className="text-primary" />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <FaPlus size={16} />
+          </div>
           Request New Course
         </h3>
-        <div className="flex flex-col md:flex-row gap-4 items-end">
+        <div className="flex flex-col md:flex-row gap-6 items-end">
           <div className="w-full md:flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
               Select a course from database
             </label>
-            <div className="relative">
+            <div className="relative group">
               <select
                 value={selectedCourseId}
                 onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="w-full p-3 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none bg-white"
+                className="w-full p-4 pl-5 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none appearance-none bg-white font-medium text-gray-700 transition-all cursor-pointer"
               >
-                <option value="">-- Select a course to request --</option>
+                <option value="">-- Click to select a course --</option>
                 {allCatalogCourses.map((course) => {
-                  // Check status
-                  const isAssigned = myCourses.some(
-                    (my) => my.id === course.id,
-                  );
+                  const isAssigned = myCourses.some((my) => my.id === course.id);
                   const pending = requestHistory.find(
-                    (r) => r.course_id === course.id && r.status === "pending",
+                    (r) => r.course_id === course.id && r.status === "pending"
                   );
-
-                  // Disable if assigned OR pending
                   const isDisabled = isAssigned || !!pending;
 
                   return (
-                    <option
-                      key={course.id}
-                      value={course.id}
-                      disabled={isDisabled}
-                      className="py-2"
-                    >
-                      {course.title}
-                      {isAssigned
-                        ? " (Already Assigned)"
-                        : pending
-                          ? " (Request Pending)"
-                          : ""}
+                    <option key={course.id} value={course.id} disabled={isDisabled}>
+                      {course.title} {isAssigned ? "🛡️ Acquired" : pending ? "⏳ Pending" : ""}
                     </option>
                   );
                 })}
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                <FaChevronDown size={12} />
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-primary transition-colors">
+                <FaChevronDown size={14} />
               </div>
             </div>
           </div>
           <button
             onClick={handleSubmitRequest}
             disabled={submitting || !selectedCourseId}
-            className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]"
+            className="w-full md:w-fit px-8 py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
           >
-            {submitting ? "Sending..." : "Send Request"}
+            {submitting ? "Processing..." : "Submit Request"}
           </button>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-[10px] text-gray-400 font-medium mt-4 italic">
           * Only unassigned courses are shown. Pending requests are disabled.
         </p>
       </div>
@@ -310,15 +299,15 @@ const CoursesManagement = ({ showNotification }) => {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
-              <tr>
-                <th className="px-6 py-3 text-left">Course Name</th>
-                <th className="px-6 py-3 text-left">Category</th>
-                <th className="px-6 py-3 text-left">Students</th>
-                <th className="px-6 py-3 text-left">Status</th>
-                <th className="px-6 py-3 text-right">Actions</th>
+        <div className="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Course Curriculum</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
+                <th className="hidden sm:table-cell px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Learners</th>
+                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -363,10 +352,10 @@ const CoursesManagement = ({ showNotification }) => {
                           ID: {course.id}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4 text-sm font-bold text-gray-600">
                         {course.category?.name || "—"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="hidden sm:table-cell px-6 py-4 text-sm font-bold text-gray-900">
                         {course.students_count || 0}
                       </td>
                       <td className="px-6 py-4">
@@ -449,7 +438,7 @@ const CoursesManagement = ({ showNotification }) => {
                                             Loading lessons...
                                           </div>
                                         ) : (lessons[module.id] || [])
-                                            .length === 0 ? (
+                                          .length === 0 ? (
                                           <div className="p-4 text-center text-xs text-gray-400 italic">
                                             No lessons in this module.
                                           </div>

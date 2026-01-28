@@ -12,7 +12,7 @@ import {
   FaUniversity,
   FaWallet,
 } from "react-icons/fa";
-import InformationForm from "./InformationForm";
+import { FiAlertCircle, FiBookOpen } from "react-icons/fi";
 import PaymentMethod from "./PaymentMethod";
 import PaymentProofUpload from "./PaymentProofUpload";
 import { apiClient, API_ORIGIN } from "../../api/index";
@@ -32,10 +32,10 @@ export default function EnrollPage() {
 
   // Consolidated form state
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    first_name: user?.name?.split(" ")[0] || "",
+    last_name: user?.name?.split(" ").slice(1).join(" ") || "Student",
     email: user?.email || "",
-    phone: "",
+    phone: user?.phone || "00000000000",
     payment_method: "easypaisa",
     // card fields
     card_number: "",
@@ -49,10 +49,44 @@ export default function EnrollPage() {
     easypaisa_number: "",
     easypaisa_account_name: "",
     // bank fields
-    bank_name: "",
-    bank_account_number: "",
     bank_account_holder_name: "",
   });
+
+  const [existingEnrollment, setExistingEnrollment] = useState(null);
+
+  useEffect(() => {
+    const checkExistingEnrollment = async () => {
+      if (!user || !id) return;
+      try {
+        const response = await apiClient.getMyEnrollments();
+        const enrollments = Array.isArray(response) ? response : response.data || [];
+        const match = enrollments.find(e => String(e.course_id) === String(id));
+        if (match) {
+          setExistingEnrollment(match);
+        }
+      } catch (err) {
+        console.error("Failed to check existing enrollment:", err);
+      }
+    };
+
+    if (user && id) {
+      checkExistingEnrollment();
+    }
+  }, [user, id]);
+
+  // Keep email and names updated if user loads late
+  useEffect(() => {
+    if (user) {
+      const names = user.name ? user.name.split(" ") : ["", ""];
+      setFormData(prev => ({
+        ...prev,
+        first_name: prev.first_name || names[0],
+        last_name: prev.last_name || names.slice(1).join(" ") || "Student",
+        email: prev.email || user.email || "",
+        phone: prev.phone === "00000000000" ? (user.phone || "00000000000") : prev.phone
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -155,9 +189,31 @@ export default function EnrollPage() {
       navigate("/student-dashboard");
     } catch (err) {
       console.error("Enrollment submission failed:", err);
+
+      const isDuplicate = err.message?.includes("already enrolled") ||
+        err.message?.includes("Duplicate entry") ||
+        err.message?.includes("1062");
+
+      if (isDuplicate) {
+        try {
+          // Sync state to trigger UI block
+          const response = await apiClient.getMyEnrollments();
+          const enrollments = Array.isArray(response) ? response : response.data || [];
+          const match = enrollments.find(e => String(e.course_id) === String(id));
+
+          if (match) {
+            setExistingEnrollment(match);
+            alert(`Unable to submit: You already have a ${match.status} record for this course in our database. ${match.status === 'rejected' ? 'Admins must clear your rejected status before you can try again.' : 'Please follow the instructions on screen.'}`);
+            return;
+          }
+        } catch (checkErr) {
+          console.error("Failed to sync enrollment on error:", checkErr);
+        }
+      }
+
       alert(
         err.message ||
-          "Failed to submit enrollment. Please check your information and try again.",
+        "Failed to submit enrollment. Please check your information and try again.",
       );
     } finally {
       setSubmitting(false);
@@ -208,9 +264,9 @@ export default function EnrollPage() {
   const discount =
     course.original_price && course.price
       ? Math.round(
-          ((course.original_price - course.price) / course.original_price) *
-            100,
-        )
+        ((course.original_price - course.price) / course.original_price) *
+        100,
+      )
       : 40;
 
   return (
@@ -232,9 +288,6 @@ export default function EnrollPage() {
             onSubmit={handleCompleteEnrollment}
             className="lg:col-span-2 space-y-6"
           >
-            {/* Personal Information Card */}
-            <InformationForm formData={formData} updateFormData={setFormData} />
-
             {/* Payment Method Card */}
             <PaymentMethod formData={formData} updateFormData={setFormData} />
 
@@ -245,27 +298,58 @@ export default function EnrollPage() {
             />
 
             {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:border-gray-400 transition-all"
-                disabled={submitting}
-              >
-                <FaArrowLeft /> Back to Course
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className={`flex-1 bg-gradient-to-r from-[#3baee9] to-[#2a9fd8] hover:from-[#2a9fd8] hover:to-[#3baee9] text-white font-semibold py-3 rounded-xl shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2 ${submitting ? "opacity-70 cursor-not-allowed" : ""}`}
-              >
-                {submitting ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <FaLock />
-                )}
-                {submitting ? "Processing..." : "Complete Enrollment"}
-              </button>
+            <div className="flex flex-col gap-4">
+              {existingEnrollment && (
+                <div className={`p-4 rounded-xl border flex items-start gap-3 ${existingEnrollment.status === 'rejected' ? 'bg-red-50 border-red-200 text-red-700' :
+                    existingEnrollment.status === 'pending' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                      'bg-green-50 border-green-200 text-green-700'
+                  }`}>
+                  <FiAlertCircle className="mt-0.5 shrink-0" size={18} />
+                  <div>
+                    <p className="text-sm font-bold">
+                      Enrollment Activity Found: {existingEnrollment.status?.toUpperCase()}
+                    </p>
+                    <p className="text-xs mt-1 leading-relaxed text-gray-600">
+                      {existingEnrollment.status === 'rejected' ?
+                        "Your previous application was rejected. Due to security protocols, you cannot re-submit while a rejected record exists. Please contact the administrator to have your previous record cleared before trying again." :
+                        existingEnrollment.status === 'pending' ?
+                          "You already have a pending request for this course. Please wait for admin review." :
+                          "You are already active in this course. You can access it from your student dashboard."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex-1 flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:border-gray-400 transition-all font-mono"
+                  disabled={submitting}
+                >
+                  <FaArrowLeft /> Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !!existingEnrollment}
+                  className={`flex-1 bg-gradient-to-r from-[#3baee9] to-[#2a9fd8] hover:from-[#2a9fd8] hover:to-[#3baee9] text-white font-semibold py-3 rounded-xl shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2 ${submitting || !!existingEnrollment ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                >
+                  {submitting ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <FaLock />
+                  )}
+                  {submitting ? "Processing..." :
+                    existingEnrollment ? (existingEnrollment.status === 'rejected' ? "Submission Blocked" : "Already Enrolled") : "Complete Enrollment"}
+                </button>
+              </div>
+
+              {existingEnrollment?.status === 'rejected' && (
+                <p className="text-[10px] text-center text-red-500 font-bold uppercase tracking-tight">
+                  System Alert: A record already exists. Admin intervention required to reset your status.
+                </p>
+              )}
             </div>
           </form>
 
