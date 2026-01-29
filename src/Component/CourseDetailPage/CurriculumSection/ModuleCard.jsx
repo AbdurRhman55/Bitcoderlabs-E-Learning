@@ -4,6 +4,8 @@ import {
   FaChevronDown,
   FaRocket,
   FaLock,
+  FaPlay,
+  FaCheck,
 } from "react-icons/fa";
 import ProgressStatus from "./ProgressStatus";
 import LessonItem from "./LessonItem";
@@ -67,7 +69,7 @@ export default function ModuleCard({
                 <h3 className="text-md lg:text-lg font-bold text-gray-900 mb-1">
                   {module.title}
                 </h3>
-                <p className="text-gray-600 lg:text-md text-sm mb-1 leading-snug">
+                <p className="text-gray-600 lg:text-md text-sm mb-1 max:w-180 w-full  leading-snug">
                   {module.description}
                 </p>
                 <div className="flex flex-wrap   items-center gap-3 sm:gap-6 text-sm text-gray-500">
@@ -85,40 +87,13 @@ export default function ModuleCard({
 
             {/* Right Section */}
             <div className="flex items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
-              {/* Accessible progress area */}
-              <div className="sm:flex flex-col items-start w-full lg:w-auto">
-                <div className="w-full sm:w-48 lg:w-56">
-                  <div
-                    className="bg-gray-200 rounded-full h-3 overflow-hidden"
-                    role="progressbar"
-                    aria-valuenow={module.progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`Module progress ${module.progress} percent`}
-                  >
-                    <div
-                      className={`h-3 rounded-full transition-all duration-700 bg-gradient-to-r from-primary to-primary-dark`}
-                      style={{ width: `${module.progress}%` }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between mt-2 gap-3">
-                    <span className="text-sm font-semibold text-gray-700">
-                      {module.progress}%
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {module.completedLessons ?? 0}/{module.lessons ?? 0}{" "}
-                      lessons
-                    </span>
-                  </div>
-                  <div className="mt-1">
-                    <ProgressStatus
-                      progress={module.progress}
-                      completed={module.completedLessons ?? 0}
-                      total={module.lessons ?? 0}
-                    />
-                  </div>
-                </div>
+              {/* Compact progress status (no progress bar) */}
+              <div className="hidden  sm:flex flex-col items-end">
+                <ProgressStatus
+                  progress={module.progress}
+                  completed={module.completedLessons ?? 0}
+                  total={module.lessons ?? 0}
+                />
               </div>
 
               {/* Expand Icon */}
@@ -153,21 +128,38 @@ export default function ModuleCard({
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-6 border-t border-gray-200 gap-4 sm:gap-0">
-                <ProgressStatus progress={module.progress} />
+                <ProgressStatus
+                  progress={module.progress}
+                  completed={module.completedLessons ?? 0}
+                  total={module.lessons ?? 0}
+                />
                 <Button
                   text={
                     <>
+                      {/* Dynamic icon based on state */}
                       {isEnrolled ? (
-                        <FaRocket className="inline-block mr-2 text-blue-500" />
+                        module.progress === 100 ? (
+                          <FaCheck className="inline-block mr-2 text-white" />
+                        ) : module.progress > 0 ? (
+                          <FaRocket className="inline-block mr-2 text-white" />
+                        ) : (
+                          <FaPlay className="inline-block mr-2 text-white" />
+                        )
                       ) : (
                         <FaLock className="inline-block mr-2 text-gray-400" />
                       )}
+
+                      {/* Dynamic label */}
                       {module.progress === 100
                         ? "Review Module"
-                        : "Start Learning"}
+                        : module.progress > 0
+                          ? "Continue Module"
+                          : "Start Learning"}
                     </>
                   }
-                  variant="outline"
+                  variant={
+                    isEnrolled && module.progress > 0 ? "primary" : "outline"
+                  }
                   onClick={handleToggle}
                 />
               </div>

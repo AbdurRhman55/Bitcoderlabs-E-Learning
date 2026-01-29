@@ -62,6 +62,20 @@ export const fetchMyCourses = createAsyncThunk(
   }
 );
 
+export const fetchUserActivity = createAsyncThunk(
+  'courses/fetchUserActivity',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.getUserProgress();
+      // Normalize response
+      const progressData = Array.isArray(response) ? response : (response.data || []);
+      return progressData;
+    } catch (err) {
+      return rejectWithValue(err.message || "Failed to fetch user activity");
+    }
+  }
+);
+
 export const updateCourseProgress = createAsyncThunk(
   'courses/updateProgress',
   async ({ enrollmentId, progress }, { rejectWithValue, dispatch }) => {
@@ -82,8 +96,10 @@ const coursesSlice = createSlice({
   initialState: {
     courses: [],
     myCourses: [],
+    userActivity: [],
     loading: false,
     myCoursesLoading: false,
+    userActivityLoading: false,
     error: null,
   },
   reducers: {},
@@ -113,6 +129,19 @@ const coursesSlice = createSlice({
       .addCase(fetchMyCourses.rejected, (state, action) => {
         state.myCoursesLoading = false;
         state.error = action.payload || action.error.message;
+      })
+
+      .addCase(fetchUserActivity.pending, (state) => {
+        state.userActivityLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserActivity.fulfilled, (state, action) => {
+        state.userActivityLoading = false;
+        state.userActivity = action.payload;
+      })
+      .addCase(fetchUserActivity.rejected, (state, action) => {
+        state.userActivityLoading = false;
+        state.error = action.payload || action.error.message;
       });
   },
 });
@@ -121,3 +150,4 @@ export default coursesSlice.reducer;
 
 export const selectCourses = (state) => state.courses.courses;
 export const selectMyCourses = (state) => state.courses.myCourses;
+export const selectUserActivity = (state) => state.courses.userActivity;

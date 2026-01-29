@@ -11,9 +11,17 @@ export default {
         "primary-light": "#e8f7ff",
         "primary-dark": "#2a9fd8",
       },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+        dancing: ['Dancing Script', 'cursive'],
+      },
       animation: {
         'fadeIn': 'fadeIn 0.3s ease-in-out',
         'slideIn': 'slideIn 0.3s ease-out',
+        'shimmer': 'shimmer 2s infinite',
+        'progress-bar-stripes': 'progress-bar-stripes 1s linear infinite',
+        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         fadeIn: {
@@ -24,24 +32,20 @@ export default {
           '0%': { transform: 'translateX(100%)' },
           '100%': { transform: 'translateX(0)' },
         },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'progress-bar-stripes': {
+          '0%': { backgroundPosition: '20px 0' },
+          '100%': { backgroundPosition: '0 0' },
+        },
+        pulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
+        },
       },
     },
   },
   plugins: [],
 };
-
-
-
-module.exports = {
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        primary: '#3b82f6', // Add your primary color
-      }
-    },
-  },
-  plugins: [],
-}

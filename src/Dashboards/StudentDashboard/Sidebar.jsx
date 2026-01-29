@@ -129,11 +129,11 @@ const Sidebar = ({
           <div className="p-4 bg-black/20 m-4 rounded-2xl border border-white/5">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-primary/20 rounded-xl">
-                  <FaClock className="text-primary text-sm" />
+                <div className="p-2.5 bg-primary rounded-xl">
+                  <FaClock className="text-white text-sm" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Focus Time</p>
+                  <p className="text-[10px] text-white font-bold uppercase tracking-tight">Focus Time</p>
                   <p className="text-xs text-white font-bold">{userData.learningHours} Hours</p>
                 </div>
               </div>
@@ -141,11 +141,11 @@ const Sidebar = ({
               <div className="h-px bg-white/5 w-full"></div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-yellow-500/20 rounded-xl">
-                  <FaTrophy className="text-yellow-500 text-sm" />
+                <div className="p-2.5 bg-primary rounded-xl">
+                  <FaTrophy className="text-white text-sm" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">Achievements</p>
+                  <p className="text-[10px] text-white font-bold uppercase tracking-tight">Achievements</p>
                   <p className="text-xs text-white font-bold">{userData.completedCourses} Certificates</p>
                 </div>
               </div>
@@ -156,7 +156,7 @@ const Sidebar = ({
           <div className="px-4 mt-4">
             <button
               onClick={handleLogout}
-              className="group flex items-center w-full px-4 py-3.5 text-sm font-bold text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 cursor-pointer"
+              className="group flex items-center w-full px-4 py-3.5 text-sm font-bold text-red-500 hover:text-white hover:bg-red-500 bg-white text-red-500 rounded-2xl transition-all duration-300 cursor-pointer"
             >
               <FaSignOutAlt className="mr-3.5 text-lg transition-transform group-hover:-translate-x-1" />
               Logout Account
@@ -168,7 +168,7 @@ const Sidebar = ({
             <div className="inline-flex px-3 py-1 bg-white/5 rounded-full border border-white/10 mb-3">
               <span className="text-[10px] font-bold text-gray-500">V.2.0.4 Premium</span>
             </div>
-            <p className="text-[10px] text-gray-500/60 leading-relaxed italic">
+            <p className="text-[10px] text-white/60 leading-relaxed italic">
               "Education is the most powerful weapon which you can use to change the world."
             </p>
           </div>

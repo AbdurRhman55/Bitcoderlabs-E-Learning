@@ -1,5 +1,15 @@
-export const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
-export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+// Allow overriding the API base during development using Vite env vars.
+// Example .env.local:
+// VITE_API_BASE_URL=/api/v1
+// VITE_API_ORIGIN=http://127.0.0.1:8000
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+
+// Compute API_ORIGIN robustly. If VITE_API_ORIGIN is provided use it,
+// otherwise derive from API_BASE_URL when it's an absolute URL or fallback
+// to the current window origin for relative base paths (proxy use-case).
+export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || (
+  /^https?:\/\//.test(API_BASE_URL) ? API_BASE_URL.replace(/\/api\/v1\/?$/, "") : window?.location?.origin || ''
+);
 
 class ApiClient {
   constructor() {
