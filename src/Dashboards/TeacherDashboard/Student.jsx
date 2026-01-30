@@ -290,8 +290,8 @@ const StudentsSection = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
-                    <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900">Students Management</h1>
-                    <p className="text-sm text-gray-500 mt-1 font-medium">Track and support your student community in real-time.</p>
+                    <h1 className="text-xl lg:text-2xl text-gray-900">Students Management</h1>
+                    <p className="text-sm text-gray-500 mt-1 ">Track and support your student community in real-time.</p>
                 </div>
                 <div className="flex w-full sm:w-auto gap-3">
                     <button
@@ -305,7 +305,7 @@ const StudentsSection = () => {
                     <button
                         onClick={handleExportData}
                         disabled={loading || students.length === 0}
-                        className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all flex items-center font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-50"
+                        className="flex-1 sm:flex-none justify-center px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary-dark transition-all flex items-center  text-sm shadow-lg shadow-primary/20 disabled:opacity-50"
                     >
                         <FaDownload className="mr-2" />
                         Export
@@ -332,7 +332,7 @@ const StudentsSection = () => {
                 </div>
                 <div className="bg-white rounded-2xl flex flex-col justify-center items-center py-3 px-6 shadow-sm border border-gray-100">
                     <p className="text-2xl font-black text-primary">{students.length}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Active Enrolled</p>
+                    <p className="text-[10px] text-gray-400  uppercase tracking-wider">Total Active Enrolled</p>
                 </div>
             </div>
 
@@ -341,7 +341,7 @@ const StudentsSection = () => {
                 <div className="lg:col-span-2">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-800">My Students ({students.length})</h3>
+                            <h3 className="text-lg  text-gray-800">My Students ({students.length})</h3>
                             {teacherCourses.length > 0 && (
                                 <p className="text-sm text-gray-500 mt-1">
                                     Showing students from {teacherCourses.length} assigned courses
@@ -381,12 +381,12 @@ const StudentsSection = () => {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrolled</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            <th className="px-6 py-3 text-left text-xs  text-gray-500 uppercase tracking-wider">Student</th>
+                                            <th className="px-6 py-3 text-left text-xs  text-gray-500 uppercase tracking-wider">Course</th>
+                                            <th className="px-6 py-3 text-left text-xs  text-gray-500 uppercase tracking-wider">Enrolled</th>
+                                            <th className="px-6 py-3 text-left text-xs  text-gray-500 uppercase tracking-wider">Progress</th>
+                                            <th className="px-6 py-3 text-left text-xs  text-gray-500 uppercase tracking-wider">Grade</th>
+                                            <th className="px-6 py-3 text-left text-xs  text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -438,10 +438,10 @@ const StudentsSection = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${grade === 'A+' ? 'bg-green-100 text-green-800' :
-                                                                grade.includes('A') ? 'bg-blue-100 text-blue-800' :
-                                                                    grade.includes('B') ? 'bg-yellow-100 text-yellow-800' :
-                                                                        'bg-red-100 text-red-800'
+                                                        <span className={`px-2 py-1 text-xs  rounded-full ${grade === 'A+' ? 'bg-green-100 text-green-800' :
+                                                            grade.includes('A') ? 'bg-blue-100 text-blue-800' :
+                                                                grade.includes('B') ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-red-100 text-red-800'
                                                             }`}>
                                                             {grade}
                                                         </span>
@@ -466,7 +466,7 @@ const StudentsSection = () => {
 
                 {/* Student Details */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-medium text-gray-800 mb-6">Student Details</h3>
+                    <h3 className="text-lg  text-gray-800 mb-6">Student Details</h3>
 
                     {selectedStudent ? (
                         <div className="space-y-6">
@@ -483,11 +483,11 @@ const StudentsSection = () => {
                             <div className="space-y-4">
                                 <div>
                                     <p className="text-sm text-gray-500">Course</p>
-                                    <p className="font-medium">{selectedStudent.course}</p>
+                                    <p className="">{selectedStudent.course}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Enrollment Date</p>
-                                    <p className="font-medium">{selectedStudent.enrolled}</p>
+                                    <p className="">{selectedStudent.enrolled}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Current Progress</p>
@@ -508,23 +508,23 @@ const StudentsSection = () => {
                             </div>
 
                             <div className="pt-6 border-t border-gray-200">
-                                <h4 className="font-medium text-gray-800 mb-3">Enrollment Details</h4>
+                                <h4 className=" text-gray-800 mb-3">Enrollment Details</h4>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Enrollment ID</span>
-                                        <span className="font-medium">#{selectedStudent.id}</span>
+                                        <span className="">#{selectedStudent.id}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Student ID</span>
-                                        <span className="font-medium">#{selectedStudent.user_id}</span>
+                                        <span className="">#{selectedStudent.user_id}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Course ID</span>
-                                        <span className="font-medium">#{selectedStudent.course_id}</span>
+                                        <span className="">#{selectedStudent.course_id}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Status</span>
-                                        <span className="font-medium text-green-600">Active</span>
+                                        <span className="text-green-600">Active</span>
                                     </div>
                                 </div>
                             </div>
@@ -555,26 +555,26 @@ const StudentsSection = () => {
             {/* Progress Analytics - Only show if students exist */}
             {students.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-medium text-gray-800 mb-4">Class Progress Overview</h3>
+                    <h3 className="text-lg  text-gray-800 mb-4">Class Progress Overview</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="p-4 bg-green-50 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-green-800">On Track</span>
-                                <span className="text-2xl font-bold text-green-800">{stats.onTrack}%</span>
+                                <span className="text-sm  text-green-800">On Track</span>
+                                <span className="text-2xl  text-green-800">{stats.onTrack}%</span>
                             </div>
                             <p className="text-sm text-green-600">Students with 80%+ progress</p>
                         </div>
                         <div className="p-4 bg-blue-50 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-blue-800">Average</span>
-                                <span className="text-2xl font-bold text-blue-800">{stats.average}%</span>
+                                <span className="text-sm  text-blue-800">Average</span>
+                                <span className="text-2xl  text-blue-800">{stats.average}%</span>
                             </div>
                             <p className="text-sm text-blue-600">Students with 60-80% progress</p>
                         </div>
                         <div className="p-4 bg-red-50 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-red-800">Needs Help</span>
-                                <span className="text-2xl font-bold text-red-800">{stats.needsHelp}%</span>
+                                <span className="text-sm  text-red-800">Needs Help</span>
+                                <span className="text-2xl  text-red-800">{stats.needsHelp}%</span>
                             </div>
                             <p className="text-sm text-red-600">Students with 60% progress</p>
                         </div>

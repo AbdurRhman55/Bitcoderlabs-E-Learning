@@ -22,7 +22,7 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
   const statusBadge = (() => {
     switch (approvalStatus) {
       case "approved":
-        return { label: "Verified", className: "bg-green-100 text-green-800" };
+        return { label: "Verified", className: "bg-green-100 text-green-1000" };
       case "submitted":
         return {
           label: "Under Review",
@@ -88,10 +88,10 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
       {/* Header - Real API data */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">
+          <h1 className="text-xl lg:text-2xl  text-gray-900 ">
             Teacher Dashboard
           </h1>
-          <p className="text-sm lg:text-base text-gray-600 font-medium">Welcome back, {profile.name} 👋</p>
+          <p className="text-sm lg:text-md text-gray-600 ">Welcome back, {profile.name}!</p>
         </div>
       </div>
 
@@ -100,38 +100,25 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
         {displayStats.map((stat, index) => (
           <div
             key={index}
-            className="relative bg-white rounded-2xl p-5 lg:p-6 border border-gray-100 shadow-sm 
-                 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-          >
+            className="relative flex items-center justify-between bg-white rounded-2xl p-5 lg:px-4 lg:py-4 border border-gray-100 shadow-sm 
+                 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
             {/* Top Section */}
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
+            <div className="">
               <div
-                className="flex items-center justify-center w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gray-50 
+                className="flex items-center justify-center w-10 h-10 lg:w-10 lg:h-10 rounded-xl bg-gray-50 
                         group-hover:bg-primary-light transition-colors text-primary text-xl lg:text-2xl"
               >
                 {stat.icon}
               </div>
-
-              {stat.change && (
-                <span
-                  className={`text-[10px] lg:text-xs font-bold px-2 py-1 rounded-full
-              ${stat.change.startsWith("+")
-                      ? "bg-green-50 text-green-600"
-                      : "bg-red-50 text-red-600"
-                    }`}
-                >
-                  {stat.change}
-                </span>
-              )}
             </div>
-
-            <p className="text-2xl lg:text-3xl font-extrabold text-gray-900 leading-tight">
-              {stat.value}
-            </p>
-
-            <p className="mt-1 text-[12px] lg:text-sm font-bold text-gray-400 uppercase tracking-wider">
-              {stat.label}
-            </p>
+            <div>
+              <p className="mt-1 text-[12px] lg:text-sm  uppercase tracking-wider">
+                {stat.label}
+              </p>
+              <p className="text-2xl lg:text-xl  leading-tight">
+                {stat.value}
+              </p>
+            </div>
           </div>
         ))}
       </div>
@@ -155,47 +142,47 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
               <div className="flex-1 w-full">
                 <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl  text-gray-900">
                       {profile.name}
                     </h2>
-                    <p className="text-primary font-semibold text-sm uppercase tracking-wide">{profile.qualification}</p>
-                    <p className="text-sm text-gray-500 mt-1 font-medium italic">
+                    <p className="text-primary my-2 text-sm uppercase tracking-wide">{profile.qualification}</p>
+                    <p className="text-sm text-gray-700  italic">
                       {profile.experience} of teaching excellence
                     </p>
                   </div>
                   <span
-                    className={`px-4 py-1.5 text-xs font-bold uppercase tracking-widest rounded-full shadow-sm ${statusBadge.className}`}
+                    className={`px-4 py-1.5 text-xs  uppercase tracking-widest rounded-full shadow-sm ${statusBadge.className}`}
                   >
                     {statusBadge.label}
                   </span>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-2">
                   <p className="text-gray-700 text-sm lg:text-base leading-relaxed max-w-2xl mx-auto md:mx-0">{profile.about}</p>
 
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-50 pt-6">
+                  <div className=" grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-50 pt-6">
                     <div className="flex flex-col items-center md:items-start">
-                      <div className="flex items-center text-gray-900 font-bold mb-1">
+                      <div className="flex items-center text-gray-900  mb-1">
                         <MdWork className="mr-2 text-primary" />
                         <span>{stats.active_courses || 0} Courses</span>
                       </div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Impact Hub</p>
+                      <p className="text-[10px] text-gray-400  uppercase">Impact Hub</p>
                     </div>
                     <div className="flex flex-col items-center md:items-start">
-                      <div className="flex items-center text-gray-900 font-bold mb-1">
+                      <div className="flex items-center text-gray-900  mb-1">
                         <FaUsers className="mr-2 text-green-500" />
                         <span>{stats.total_students || 0} Students</span>
                       </div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Community Reach</p>
+                      <p className="text-[10px] text-gray-400  uppercase">Community Reach</p>
                     </div>
                     <div className="flex flex-col items-center md:items-start">
-                      <div className="flex items-center text-gray-900 font-bold mb-1">
+                      <div className="flex items-center text-gray-900  mb-1">
                         <FaStar className="mr-2 text-amber-500" />
                         <span>
                           {stats.average_rating?.toFixed(1) || "0.0"} Rating
                         </span>
                       </div>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Trust Level</p>
+                      <p className="text-[10px] text-gray-400  uppercase">Trust Level</p>
                     </div>
                   </div>
                 </div>

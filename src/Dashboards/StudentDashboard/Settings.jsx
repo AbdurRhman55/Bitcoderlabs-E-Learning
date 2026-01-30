@@ -140,7 +140,7 @@ const Settings = ({ userData }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-2xl  text-gray-900">Settings</h1>
         <p className="text-gray-600 mt-1">Manage your account preferences</p>
       </div>
 
@@ -153,7 +153,7 @@ const Settings = ({ userData }) => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex-1 px-6 py-4 text-sm font-medium cursor-pointer border-b-2 whitespace-nowrap transition-colors duration-200
+                  flex-1 px-6 py-4 text-sm  cursor-pointer border-b-2 whitespace-nowrap transition-colors duration-200
                   ${activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -179,7 +179,7 @@ const Settings = ({ userData }) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="text-white font-bold text-xl">
+                    <div className="text-white  text-xl">
                       {userData.name.split(' ').map(n => n[0]).join('')}
                     </div>
                   )}
@@ -194,7 +194,7 @@ const Settings = ({ userData }) => {
                   />
                   <button
                     onClick={handleAvatarClick}
-                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm  transition-colors duration-200"
                   >
                     Change Avatar
                   </button>
@@ -204,7 +204,7 @@ const Settings = ({ userData }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm  text-gray-700 mb-2">
                     Full Name
                   </label>
                   <input
@@ -215,7 +215,7 @@ const Settings = ({ userData }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm  text-gray-700 mb-2">
                     Email Address
                   </label>
                   <input
@@ -226,7 +226,7 @@ const Settings = ({ userData }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm  text-gray-700 mb-2">
                     Job Title
                   </label>
                   <input
@@ -237,7 +237,7 @@ const Settings = ({ userData }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm  text-gray-700 mb-2">
                     Member Since
                   </label>
                   <input
@@ -250,7 +250,7 @@ const Settings = ({ userData }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm  text-gray-700 mb-2">
                   Bio
                 </label>
                 <textarea
@@ -291,10 +291,10 @@ const Settings = ({ userData }) => {
           {activeTab === 'preferences' && (
             <div className="space-y-6 max-w-2xl">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
+                <h3 className="text-lg  text-gray-900">Notifications</h3>
                 <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div>
-                    <div className="font-medium text-gray-900">Course Notifications</div>
+                    <div className=" text-gray-900">Course Notifications</div>
                     <div className="text-sm text-gray-600">Get notified about course updates and deadlines</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -309,7 +309,7 @@ const Settings = ({ userData }) => {
                 </div>
                 <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div>
-                    <div className="font-medium text-gray-900">Newsletter</div>
+                    <div className=" text-gray-900">Newsletter</div>
                     <div className="text-sm text-gray-600">Receive weekly learning tips and new course recommendations</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -325,10 +325,10 @@ const Settings = ({ userData }) => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">Appearance</h3>
+                <h3 className="text-lg  text-gray-900">Appearance</h3>
                 <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div>
-                    <div className="font-medium text-gray-900">Dark Mode</div>
+                    <div className="text-gray-900">Dark Mode</div>
                     <div className="text-sm text-gray-600">Switch to dark theme</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -348,10 +348,10 @@ const Settings = ({ userData }) => {
           {activeTab === 'security' && (
             <div className="space-y-6 max-w-2xl">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">Change Password</h3>
+                <h3 className="text-lg  text-gray-900">Change Password</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm  text-gray-700 mb-2">
                       Current Password
                     </label>
                     <input
@@ -363,7 +363,7 @@ const Settings = ({ userData }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm  text-gray-700 mb-2">
                       New Password
                     </label>
                     <input
@@ -375,7 +375,7 @@ const Settings = ({ userData }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm  text-gray-700 mb-2">
                       Confirm New Password
                     </label>
                     <input
@@ -401,15 +401,15 @@ const Settings = ({ userData }) => {
           {activeTab === 'billing' && (
             <div className="space-y-6 max-w-2xl">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">Subscription</h3>
+                <h3 className="text-lg  text-gray-900">Subscription</h3>
                 <div className="p-6 border border-primary rounded-lg bg-primary-light">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-gray-900">Pro Plan</div>
+                      <div className=" text-gray-900">Pro Plan</div>
                       <div className="text-sm text-gray-600">Active until March 15, 2024</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-gray-900">$29.99/month</div>
+                      <div className="text-gray-900">$29.99/month</div>
                       <div className="text-sm text-gray-600">Next billing: Mar 15</div>
                     </div>
                   </div>

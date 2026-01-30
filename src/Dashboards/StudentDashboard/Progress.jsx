@@ -39,13 +39,13 @@ const Progress = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Learning Progress</h1>
+        <h1 className="text-2xl  text-gray-900">Learning Progress</h1>
         <p className="text-gray-600 mt-1">Track your journey and achievements</p>
       </div>
 
       {/* Weekly Activity */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Weekly Activity</h2>
+        <h2 className="text-lg  text-gray-900 mb-6">Weekly Activity</h2>
         <div className="flex items-end justify-between space-x-2 h-32">
           {weeklyProgress.map((day) => (
             <div key={day.day} className="flex-1 flex flex-col items-center">
@@ -54,7 +54,7 @@ const Progress = () => {
                 style={{ height: `${(day.hours / maxHours) * 80}%` }}
               ></div>
               <div className="text-xs text-gray-600 mt-2">{day.day}</div>
-              <div className="text-xs font-medium text-gray-900">{day.hours}h</div>
+              <div className="text-xs  text-gray-900">{day.hours}h</div>
             </div>
           ))}
         </div>
@@ -66,10 +66,10 @@ const Progress = () => {
           <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-semibold text-gray-900">{path.title}</h3>
+                <h3 className=" text-gray-900">{path.title}</h3>
                 <p className="text-sm text-gray-600">by {path.instructor}</p>
               </div>
-              <span className="text-2xl font-bold text-primary">{path.progress}%</span>
+              <span className="text-2xl  text-primary">{path.progress}%</span>
             </div>
 
             <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
@@ -89,7 +89,7 @@ const Progress = () => {
         {activeLearning.length === 0 && (
           <div className="lg:col-span-2 text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
             <FaBookOpen className="text-4xl text-gray-400 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-gray-900">No active progress</h3>
+            <h3 className="text-lg  text-gray-900">No active progress</h3>
             <p className="text-gray-600">Start learning to see your progress here!</p>
           </div>
         )}
@@ -100,19 +100,19 @@ const Progress = () => {
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-center">
           <FaBookOpen className="text-primary text-3xl mx-auto mb-2" />
-          <div className="text-3xl font-bold text-primary mb-2">{stats.totalCourses}</div>
+          <div className="text-3xl  text-primary mb-2">{stats.totalCourses}</div>
           <div className="text-sm text-gray-600">Total Enrolled</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-center">
           <FaCalendarCheck className="text-green-600 text-3xl mx-auto mb-2" />
-          <div className="text-3xl font-bold text-green-600 mb-2">{stats.completed}</div>
+          <div className="text-3xl  text-green-600 mb-2">{stats.completed}</div>
           <div className="text-sm text-gray-600">Courses Completed</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 text-center">
           <FaFire className="text-purple-600 text-3xl mx-auto mb-2" />
-          <div className="text-3xl font-bold text-purple-600 mb-2">{stats.avgProgress}%</div>
+          <div className="text-3xl  text-purple-600 mb-2">{stats.avgProgress}%</div>
           <div className="text-sm text-gray-600">Average Progress</div>
         </div>
 

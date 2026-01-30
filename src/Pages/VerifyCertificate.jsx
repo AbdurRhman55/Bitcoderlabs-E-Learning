@@ -153,48 +153,59 @@ const VerifyCertificate = () => {
                         )}
 
                         {verificationStatus === 'success' && certData && (
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100 mb-6">
-                                    <div className="p-3 bg-green-500 rounded-full text-white">
-                                        <FaCheckCircle className="text-2xl" />
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-5 p-5 bg-green-50 rounded-2xl border-2 border-green-100/50 mb-8 animate-in zoom-in duration-500">
+                                    <div className="p-4 bg-green-500 rounded-full text-white shadow-lg shadow-green-200">
+                                        <FaCheckCircle className="text-3xl" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-green-800">Verified Successfully</h3>
-                                        <p className="text-green-600 font-medium">This is an authentic Bitcoderlabs document.</p>
+                                        <h3 className="text-xl font-black text-green-900">Credential Verified</h3>
+                                        <p className="text-green-700 font-medium tracking-tight">This is an authentic digital document issued by Bitcoderlabs.</p>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Student Name</label>
-                                        <p className="text-lg font-bold text-gray-900">{certData.studentName}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-2">
+                                    <div className="space-y-1.5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Full Name</label>
+                                        <p className="text-xl font-extrabold text-gray-900">{certData.studentName}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Course Title</label>
-                                        <p className="text-lg font-bold text-gray-900">{certData.course}</p>
+                                    <div className="space-y-1.5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Course Title</label>
+                                        <p className="text-xl font-extrabold text-gray-900">{certData.course}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Certificate ID</label>
-                                        <p className="text-md font-mono font-bold text-primary">{certData.id}</p>
+                                    <div className="space-y-1.5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Certificate Identifier</label>
+                                        <p className="text-lg font-mono font-bold text-primary">{certData.id}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Issue Date</label>
-                                        <p className="text-lg font-bold text-gray-900">{certData.issueDate}</p>
+                                    <div className="space-y-1.5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Issue Date</label>
+                                        <p className="text-xl font-extrabold text-gray-900">{certData.issueDate}</p>
+                                    </div>
+                                    <div className="space-y-1.5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Authorized By</label>
+                                        <p className="text-lg font-bold text-gray-900">{certData.instructor}</p>
+                                    </div>
+                                    <div className="space-y-1.5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</label>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
+                                            <p className="text-lg font-bold text-green-700">{certData.status}</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="pt-6 border-t mt-6 flex gap-4">
+                                <div className="pt-8 border-t border-gray-100 mt-8 flex flex-col sm:flex-row gap-4">
                                     <button
                                         onClick={() => { setVerificationStatus('idle'); setCertData(null); navigate('/verify'); }}
-                                        className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                                        className="flex-1 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl font-black hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
                                     >
                                         <FaCamera /> Scan Another
                                     </button>
                                     <button
                                         onClick={() => navigate('/')}
-                                        className="flex-1 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                                        className="flex-1 py-4 bg-primary text-white rounded-2xl font-black hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
                                     >
-                                        Return Home
+                                        Return to Platform
                                     </button>
                                 </div>
                             </div>

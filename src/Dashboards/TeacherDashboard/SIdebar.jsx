@@ -19,7 +19,7 @@ const DashboardSidebar = ({ activeTab, setActiveTab, stats, sidebarOpen, setSide
     { id: "overview", label: "Overview", icon: <FaHome /> },
     { id: "courses", label: "Courses", icon: <FaBook /> },
     { id: "students", label: "Students", icon: <FaUserGraduate /> },
-    { id: "messages", label: "Messages", icon: <FaEnvelope /> },
+    // { id: "messages", label: "Messages", icon: <FaEnvelope /> },
     { id: "analytics", label: "Analytics", icon: <FaChartLine /> },
     { id: "settings", label: "Settings", icon: <FaCog /> },
   ];
@@ -53,10 +53,7 @@ const DashboardSidebar = ({ activeTab, setActiveTab, stats, sidebarOpen, setSide
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 lg:py-8 space-y-1.5">
-            <div className="mb-4 px-4">
-              <p className="text-[10px] font-bold text-white uppercase tracking-widest">Main Menu</p>
-            </div>
+          <nav className="flex-1 px-4 py-6 lg:py-4 space-y-1.5">
             {menuItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -87,40 +84,30 @@ const DashboardSidebar = ({ activeTab, setActiveTab, stats, sidebarOpen, setSide
           </nav>
 
           {/* Quick Stats Panel */}
-          <div className="p-4 bg-black/20 m-4 rounded-2xl border border-white/5">
+          <div className="p-4 bg-white m-4 rounded-2xl border border-white/5">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/20 rounded-lg">
                   <FaGraduationCap className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Experience</p>
-                  <p className="text-xs text-white font-bold">{stats?.teaching_hours ?? 0} Teaching Hours</p>
+                  <p className="text-[10px] text-black  uppercase tracking-tight">Experience</p>
+                  <p className="text-xs text-primary">{stats?.teaching_hours ?? 0} Teaching Hours</p>
                 </div>
               </div>
 
               <div className="h-px bg-white/5 w-full"></div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <FaUserGraduate className="text-green-500" />
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <FaUserGraduate className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Network</p>
-                  <p className="text-xs text-white font-bold">{stats?.total_students ?? 0} Students</p>
+                  <p className="text-[10px] text-black  uppercase tracking-tight">Network</p>
+                  <p className="text-xs text-primary">{stats?.total_students ?? 0} Students</p>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Branding/Quote */}
-          <div className="p-6 text-center mt-auto">
-            <div className="inline-flex px-3 py-1 bg-white/5 rounded-full border border-white/10 mb-3">
-              <span className="text-[10px] font-bold text-gray-300">V.2.0.4 Premium</span>
-            </div>
-            <p className="text-[10px] text-gray-500 leading-relaxed italic">
-              "To teach is to learn twice."
-            </p>
           </div>
         </div>
       </aside>

@@ -194,11 +194,11 @@ const CoursesManagement = ({ showNotification }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl lg:text-2xl  text-gray-900 flex items-center gap-2">
             <FaChalkboardTeacher className="text-primary" />
             Courses Management
           </h1>
-          <p className="text-sm text-gray-600 mt-1 font-medium">
+          <p className="text-sm text-gray-600 mt-1 ">
             Manage your courses and curriculum with ease.
           </p>
         </div>
@@ -211,8 +211,8 @@ const CoursesManagement = ({ showNotification }) => {
             <FaBook size={20} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Approved</p>
-            <p className="text-2xl font-extrabold text-gray-900">{stats.totalCourses}</p>
+            <p className="text-[10px] text-gray-400  uppercase tracking-wider">Approved</p>
+            <p className="text-2xl  text-gray-900">{stats.totalCourses}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -220,8 +220,8 @@ const CoursesManagement = ({ showNotification }) => {
             <FaUsers size={20} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Students</p>
-            <p className="text-2xl font-extrabold text-gray-900">{stats.totalStudents}</p>
+            <p className="text-[10px] text-gray-400  uppercase tracking-wider">Students</p>
+            <p className="text-2xl  text-gray-900">{stats.totalStudents}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -229,15 +229,15 @@ const CoursesManagement = ({ showNotification }) => {
             <FaHourglassHalf size={20} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Requests</p>
-            <p className="text-2xl font-extrabold text-gray-900">{stats.pendingRequests}</p>
+            <p className="text-[10px] text-gray-400  uppercase tracking-wider">Requests</p>
+            <p className="text-2xl  text-gray-900">{stats.pendingRequests}</p>
           </div>
         </div>
       </div>
 
       {/* 1. Request Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <h3 className="text-lg  text-gray-900 mb-6 flex items-center gap-2">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <FaPlus size={16} />
           </div>
@@ -245,14 +245,14 @@ const CoursesManagement = ({ showNotification }) => {
         </h3>
         <div className="flex flex-col md:flex-row gap-6 items-end">
           <div className="w-full md:flex-1">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+            <label className="block text-[10px]  text-gray-400 uppercase tracking-widest mb-3">
               Select a course from database
             </label>
             <div className="relative group">
               <select
                 value={selectedCourseId}
                 onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="w-full p-4 pl-5 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none appearance-none bg-white font-medium text-gray-700 transition-all cursor-pointer"
+                className="w-full p-4 pl-5 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none appearance-none bg-white  text-gray-700 transition-all cursor-pointer"
               >
                 <option value="">-- Click to select a course --</option>
                 {allCatalogCourses.map((course) => {
@@ -277,12 +277,12 @@ const CoursesManagement = ({ showNotification }) => {
           <button
             onClick={handleSubmitRequest}
             disabled={submitting || !selectedCourseId}
-            className="w-full md:w-fit px-8 py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+            className="w-full md:w-fit px-8 py-4 bg-primary text-white  rounded-2xl hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
           >
             {submitting ? "Processing..." : "Submit Request"}
           </button>
         </div>
-        <p className="text-[10px] text-gray-400 font-medium mt-4 italic">
+        <p className="text-[10px] text-gray-400  mt-4 italic">
           * Only unassigned courses are shown. Pending requests are disabled.
         </p>
       </div>
@@ -290,11 +290,11 @@ const CoursesManagement = ({ showNotification }) => {
       {/* 2. My Courses Table (APPROVED ONLY) */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+          <h3 className=" text-gray-800 flex items-center gap-2">
             <FaBook className="text-gray-600" />
             My Approved Courses
           </h3>
-          <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">
+          <span className="text-xs  px-2 py-1 bg-green-100 text-green-800 rounded-full">
             Strictly Approved Only
           </span>
         </div>
@@ -303,11 +303,11 @@ const CoursesManagement = ({ showNotification }) => {
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Course Curriculum</th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
-                <th className="hidden sm:table-cell px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Learners</th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Action</th>
+                <th className="px-6 py-4 text-left text-[10px]  text-gray-400 uppercase tracking-widest">Course Curriculum</th>
+                <th className="px-6 py-4 text-left text-[10px]  text-gray-400 uppercase tracking-widest">Category</th>
+                <th className="hidden sm:table-cell px-6 py-4 text-left text-[10px]  text-gray-400 uppercase tracking-widest">Active Learners</th>
+                <th className="px-6 py-4 text-left text-[10px]  text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-right text-[10px]  text-gray-400 uppercase tracking-widest">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -352,14 +352,14 @@ const CoursesManagement = ({ showNotification }) => {
                           ID: {course.id}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-gray-600">
+                      <td className="px-6 py-4 text-sm  text-gray-600">
                         {course.category?.name || "—"}
                       </td>
-                      <td className="hidden sm:table-cell px-6 py-4 text-sm font-bold text-gray-900">
+                      <td className="hidden sm:table-cell px-6 py-4 text-sm  text-gray-900">
                         {course.students_count || 0}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs  bg-green-100 text-green-800">
                           <FaCheckCircle size={10} /> Approved
                         </span>
                       </td>
@@ -381,7 +381,7 @@ const CoursesManagement = ({ showNotification }) => {
                           className="px-0 py-0 border-b border-gray-100"
                         >
                           <div className="bg-gray-50 p-6 border-l-4 border-primary">
-                            <h4 className="text-sm font-bold text-gray-700 mb-3 ml-2 uppercase tracking-wide">
+                            <h4 className="text-sm  text-gray-700 mb-3 ml-2 uppercase tracking-wide">
                               Course Curriculum
                             </h4>
 
@@ -410,7 +410,7 @@ const CoursesManagement = ({ showNotification }) => {
                                       }}
                                     >
                                       <div className="flex items-center gap-3">
-                                        <span className="bg-blue-50 text-blue-600 text-xs font-bold w-6 h-6 flex items-center justify-center rounded">
+                                        <span className="bg-blue-50 text-blue-600 text-xs  w-6 h-6 flex items-center justify-center rounded">
                                           {module.order_index}
                                         </span>
                                         <span className="font-medium text-gray-800">
@@ -460,7 +460,7 @@ const CoursesManagement = ({ showNotification }) => {
                                                       <FaFileAlt className="text-blue-400" />
                                                     )}
                                                     <div className="flex flex-col">
-                                                      <span className="text-sm font-medium text-gray-700">
+                                                      <span className="text-sm  text-gray-700">
                                                         {lesson.title}
                                                       </span>
                                                       <span className="text-[10px] text-gray-400 uppercase tracking-wider">
@@ -501,7 +501,7 @@ const CoursesManagement = ({ showNotification }) => {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase ">
               <tr>
                 <th className="px-6 py-3 text-left">Course Name</th>
                 <th className="px-6 py-3 text-left">Date Requested</th>

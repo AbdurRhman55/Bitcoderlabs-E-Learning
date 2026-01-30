@@ -72,20 +72,26 @@ const Certificates = () => {
 
   const certificates = enrolledCourses.map(course => {
     const isCompleted = course.status === 'completed' || course.progress === 100;
-    const existingCert = earnedCertificates.find(c => c.course?.id === course.id);
+    const existingCert = earnedCertificates.find(c => String(c.course?.id) === String(course.id));
 
     return {
       id: course.id,
-      course: course.title,
-      issueDate: existingCert ? new Date(existingCert.issued_at).toLocaleDateString() : (isCompleted ? new Date().toLocaleDateString() : null),
-      instructor: course.instructor?.name || 'Bitcoderlabs Instructor',
-      duration: course.duration || 'N/A',
-      score: course.score || 'A',
-      certificateId: existingCert ? existingCert.certificate_number : (isCompleted ? 'READY TO GENERATE' : 'LOCKED'),
+      courseTitle: course.title,
+      // Map all data from existing certificate if available
+      certificate_number: existingCert?.certificate_number,
+      issueDate: existingCert ? existingCert.issue_date : (isCompleted ? new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null),
+      instructorName: existingCert?.instructor?.name || course.instructor?.name || 'Bitcoderlabs Instructor',
+      instructorTitle: existingCert?.instructor?.title || 'Course Mentor',
+      instructorImage: existingCert?.instructor?.image_url,
+      platformName: existingCert?.platform?.name || 'Bitcoderlabs',
+      platformLogo: existingCert?.platform?.logo_url || logo,
+      qrCodeUrl: existingCert?.verification?.qr_code_url || existingCert?.qr_code_url,
+      verificationUrl: existingCert?.verification?.url || existingCert?.verification_url,
+
       hasCertificate: !!existingCert,
       isLocked: !isCompleted,
       progress: course.progress || 0,
-      studentName: user?.name || "Student Name",
+      studentName: existingCert?.user?.name || user?.name || "Student Name",
       icon: (isCompleted || existingCert) ? (
         <FaAward className="mx-auto text-4xl text-primary" />
       ) : (
@@ -106,33 +112,37 @@ const Certificates = () => {
     setActiveCert(cert);
 
     // Give state a moment to update the hidden template
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const element = certificateRef.current;
     if (!element) return;
 
     try {
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 3, // High resolution for professional printing
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        allowTaint: true
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'landscape',
-        unit: 'px',
-        format: [canvas.width, canvas.height]
+        unit: 'mm',
+        format: 'a4'
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`Certificate-${cert.course.replace(/\s+/g, '-')}.pdf`);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.save(`Certificate-${cert.courseTitle.replace(/\s+/g, '-')}.pdf`);
     } catch (error) {
       console.error("Certificate generation failed", error);
+      Swal.fire('Error', 'Failed to generate PDF. Please try again.', 'error');
     } finally {
       setDownloadingId(null);
-      // Don't clear activeCert if it's being viewed in modal
       if (!isModalOpen) setActiveCert(null);
     }
   };
@@ -168,12 +178,18 @@ const Certificates = () => {
               <div key={cert.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200 group">
                 <div className="p-6">
                   <div className="text-4xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">{cert.icon}</div>
-                  <h3 className="font-semibold text-gray-900 text-center mb-2 line-clamp-1" title={cert.course}>{cert.course}</h3>
+                  <h3 className="font-semibold text-gray-900 text-center mb-2 line-clamp-1" title={cert.courseTitle}>{cert.courseTitle}</h3>
                   <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex justify-between">
                       <span>Instructor:</span>
-                      <span className="font-medium">{cert.instructor}</span>
+                      <span className="font-medium text-gray-900">{cert.instructorName}</span>
                     </div>
+                    {cert.certificate_number && (
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-gray-400">ID:</span>
+                        <span className="font-mono text-primary/70">{cert.certificate_number}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span>Issued:</span>
                       <span className="font-medium">{cert.issueDate || 'Pending'}</span>
@@ -188,13 +204,13 @@ const Certificates = () => {
                         <span>Course Progress</span>
                         <span>{cert.progress}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5">
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                         <div
                           className="bg-primary h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${cert.progress}%` }}
                         ></div>
                       </div>
-                      <button disabled className="w-full py-2 bg-gray-200 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center gap-2">
+                      <button disabled className="w-full py-2 bg-gray-200 text-gray-400 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center gap-2">
                         <FaRibbon /> Certificate Locked
                       </button>
                     </div>
@@ -204,7 +220,7 @@ const Certificates = () => {
                         <>
                           <button
                             onClick={() => handleViewCertificate(cert)}
-                            className="flex-1 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 border border-primary/20"
+                            className="flex-1 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-sm font-extrabold transition-all flex items-center justify-center gap-2 border border-primary/20"
                           >
                             <FaEye /> View
                           </button>
@@ -212,7 +228,7 @@ const Certificates = () => {
                             onClick={() => generatePDF(cert)}
                             disabled={downloadingId === cert.id}
                             title="Download Certificate"
-                            className="p-2 bg-gray-900 text-white hover:bg-black rounded-lg text-sm font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="p-2.5 bg-gray-900 text-white hover:bg-black rounded-lg text-sm font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
                           >
                             {downloadingId === cert.id ? (
                               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -237,12 +253,12 @@ const Certificates = () => {
           </div>
 
           {certificates.length === 0 && (
-            <div className="text-center py-12">
-              <div className="inline-block p-4 rounded-full bg-gray-50 mb-4">
-                <FaFileAlt className="text-4xl text-gray-400" />
+            <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+              <div className="inline-block p-4 rounded-full bg-white shadow-sm mb-4">
+                <FaFileAlt className="text-4xl text-gray-300" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No certificates yet</h3>
-              <p className="text-gray-600 mb-6">Complete courses to earn your official certificates.</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">No certificates found</h3>
+              <p className="text-gray-500 max-w-xs mx-auto">Complete your courses to earn your official certificates.</p>
             </div>
           )}
         </>
@@ -251,23 +267,28 @@ const Certificates = () => {
       {/* Modal for viewing certificate */}
       {isModalOpen && viewingCert && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[95vh]"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">{viewingCert.course}</h3>
-                <p className="text-sm text-gray-500">Certificate Preview</p>
+            <div className="p-5 border-b flex justify-between items-center bg-gray-50/80 backdrop-blur">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <FaAward className="text-2xl text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-900">{viewingCert.courseTitle}</h3>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Digital Certificate Preview</p>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => generatePDF(viewingCert)}
                   disabled={downloadingId === viewingCert.id}
-                  className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-colors flex items-center gap-2 shadow-sm"
+                  className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-black hover:bg-primary-dark transition-all flex items-center gap-2 shadow-xl shadow-primary/20"
                 >
                   {downloadingId === viewingCert.id ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -277,18 +298,17 @@ const Certificates = () => {
                 </button>
                 <button
                   onClick={closeModal}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                  className="p-2.5 hover:bg-gray-200 rounded-full transition-all text-gray-500"
                 >
-                  <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-6 bg-gray-200/50 flex justify-center items-start">
-              {/* Scale the certificate to fit the modal width */}
-              <div className="shadow-2xl origin-top scale-[0.4] sm:scale-[0.6] md:scale-[0.7] lg:scale-[0.8] xl:scale-[0.85]">
+            <div className="flex-1 overflow-auto p-12 bg-gray-900/10 flex justify-center items-start">
+              <div className="shadow-2xl origin-top scale-[0.4] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.7] xl:scale-[0.8]">
                 <CertificateTemplate cert={viewingCert} innerRef={certificateRef} />
               </div>
             </div>
@@ -296,7 +316,7 @@ const Certificates = () => {
         </div>
       )}
 
-      {/* Hidden Certificate Template for PDF Generation (only if modal is NOT open) */}
+      {/* Hidden Certificate Template for PDF Generation */}
       {!isModalOpen && activeCert && (
         <div className="fixed top-0 left-0 z-[-10]" style={{ opacity: 0, pointerEvents: 'none' }}>
           <CertificateTemplate cert={activeCert} innerRef={certificateRef} />
@@ -312,48 +332,27 @@ const CertificateTemplate = ({ cert, innerRef }) => {
     <div
       ref={innerRef}
       style={{
-        width: '1123px', // A4 Landscape width (approx)
-        height: '794px', // A4 Landscape height (approx)
+        width: '1123px', // A4 Landscape
+        height: '794px',
         backgroundColor: '#ffffff',
-        color: '#0f172a', // Slate 900
+        color: '#1a1a1a',
         fontFamily: "'Outfit', sans-serif",
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        border: '15px solid #1e293b'
       }}
     >
+      {/* --- Inner Gold Border --- */}
       <div style={{
         position: 'absolute',
-        top: '0', left: '0', right: '0', bottom: '0',
-        border: '20px solid #ffffff',
-        boxSizing: 'border-box',
+        inset: '10px',
+        border: '2px solid #b45309',
+        pointerEvents: 'none',
         zIndex: 1
-      }}>
-        <div style={{
-          width: '100%', height: '100%',
-          border: '4px solid #1e3a8a', // Dark Blue
-          padding: '4px',
-          position: 'relative',
-          boxSizing: 'border-box'
-        }}>
-          <div style={{
-            width: '100%', height: '100%',
-            border: '1px solid #b45309', // Dark Gold
-            backgroundColor: '#ffffff',
-            boxSizing: 'border-box'
-          }}></div>
-        </div>
-      </div>
+      }}></div>
 
-      {/* --- Corner Decorations --- */}
-      <div style={{ position: 'absolute', top: '24px', left: '24px', width: '80px', height: '80px', borderTop: '4px solid #1e3a8a', borderLeft: '4px solid #1e3a8a', zIndex: 2 }}></div>
-      <div style={{ position: 'absolute', top: '24px', right: '24px', width: '80px', height: '80px', borderTop: '4px solid #1e3a8a', borderRight: '4px solid #1e3a8a', zIndex: 2 }}></div>
-      <div style={{ position: 'absolute', bottom: '24px', left: '24px', width: '80px', height: '80px', borderBottom: '4px solid #1e3a8a', borderLeft: '4px solid #1e3a8a', zIndex: 2 }}></div>
-      <div style={{ position: 'absolute', bottom: '24px', right: '24px', width: '80px', height: '80px', borderBottom: '4px solid #1e3a8a', borderRight: '4px solid #1e3a8a', zIndex: 2 }}></div>
-
-
-      {/* --- Main Content --- */}
       <div style={{
         position: 'relative',
         zIndex: 10,
@@ -366,23 +365,22 @@ const CertificateTemplate = ({ cert, innerRef }) => {
         textAlign: 'center',
         boxSizing: 'border-box'
       }}>
-
-        {/* Header Section */}
+        {/* Header */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <img src={logo} alt="Logo" style={{ height: '60px', objectFit: 'contain' }} />
-            <span style={{ fontSize: '24px', fontWeight: '800', textTransform: 'uppercase', color: '#1e3a8a', letterSpacing: '2px' }}>
-              Bitcoderlabs Pvt Ltd
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
+            <img src={cert.platformLogo} alt="Logo" style={{ height: '70px', objectFit: 'contain' }} />
+            <span style={{ fontSize: '28px', fontWeight: '900', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '2px' }}>
+              {cert.platformName}
             </span>
           </div>
 
           <h1 style={{
-            fontSize: '64px',
+            fontSize: '68px',
             fontFamily: "'Playfair Display', serif",
-            color: '#1e3a8a',
+            color: '#1e293b',
             fontWeight: '900',
             textTransform: 'uppercase',
-            margin: '10px 0 0 0',
+            margin: '10px 0',
             letterSpacing: '4px'
           }}>
             Certificate
@@ -395,159 +393,104 @@ const CertificateTemplate = ({ cert, innerRef }) => {
             letterSpacing: '8px',
             margin: '0 0 20px 0'
           }}>
-            Of Completion
+            of Achievement
           </h2>
 
-          <div style={{ width: '400px', height: '1px', background: 'linear-gradient(90deg, transparent, #b45309, transparent)', marginBottom: '20px' }}></div>
+          <div style={{ width: '300px', height: '2px', backgroundColor: '#b45309', marginBottom: '25px' }}></div>
 
-          <p style={{ fontSize: '18px', color: '#64748b', fontStyle: 'italic', fontFamily: "'Playfair Display', serif", margin: '0' }}>
-            This certificate is proudly awarded to
+          <p style={{ fontSize: '20px', color: '#64748b', fontStyle: 'italic', margin: '0' }}>
+            This is to certify that
           </p>
-        </div>
 
-        {/* Student Name */}
-        <div style={{ margin: '20px 0', width: '100%' }}>
           <h2 style={{
             fontSize: '64px',
             fontFamily: "'Playfair Display', serif",
-            color: '#0f172a',
-            margin: '0',
+            color: '#1e293b',
+            margin: '15px 0',
             fontWeight: 'bold',
             borderBottom: '2px solid #e2e8f0',
-            paddingBottom: '10px',
-            width: '80%',
-            margin: '0 auto',
-            textAlign: 'center'
+            paddingBottom: '5px',
+            width: 'fit-content'
           }}>
             {cert.studentName}
           </h2>
-        </div>
 
-        {/* Course Details */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-          <p style={{ fontSize: '18px', color: '#64748b', fontStyle: 'italic', fontFamily: "'Playfair Display', serif", margin: '0' }}>
-            For successfully completing the professional curriculum of
+          <p style={{ fontSize: '20px', color: '#64748b', margin: '15px 0 0 0' }}>
+            has successfully completed the professional course
           </p>
           <h3 style={{
-            fontSize: '36px',
-            color: '#1e3a8a',
-            // margin: '10px 0',
-            fontWeight: '800'
+            fontSize: '42px',
+            color: '#1e293b',
+            fontWeight: '800',
+            margin: '5px 0'
           }}>
-            {cert.course}
+            {cert.courseTitle}
           </h3>
-          <p style={{ fontSize: '16px', color: '#475569', maxWidth: '700px', lineHeight: '1.5', margin: '0' }}>
-            Demonstrating dedication, technical proficiency, and excellence in the field of software development.
+          <p style={{ fontSize: '16px', color: '#475569', maxWidth: '850px', lineHeight: '1.6', margin: '10px 0' }}>
+            Demonstrating exceptional commitment, technical proficiency, and professional excellence in mastering
+            the comprehensive curriculum and meeting all assessment requirements.
           </p>
         </div>
 
-        {/* Signatures & Seal Grid */}
+        {/* Footer Grid */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 200px 1fr',
           width: '100%',
+          display: 'grid',
+          gridTemplateColumns: '1.5fr 1fr 1.5fr',
           alignItems: 'end',
           marginTop: '40px'
         }}>
-
-          {/* Director Signature */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: '32px', color: '#0f172a', marginBottom: '5px' }}>
-              Bitcoder Labs
-            </div>
-            <div style={{ height: '1px', backgroundColor: '#94a3b8', width: '200px', margin: '0 auto 5px auto' }}></div>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e3a8a', textTransform: 'uppercase' }}>
-              Director
-            </div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Bitcoderlabs Pvt Ltd</div>
+          {/* Metadata */}
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ height: '1px', backgroundColor: '#e2e8f0', width: '200px', marginBottom: '15px' }}></div>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0', fontFamily: 'monospace' }}>
+              CERTIFICATE ID: <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{cert.certificate_number}</span>
+            </p>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0', fontFamily: 'monospace' }}>
+              ISSUED ON: <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{cert.issueDate}</span>
+            </p>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0', fontFamily: 'monospace' }}>
+              VERIFY AT: <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{cert.verificationUrl?.replace('https://', '') || 'bitcoderlabs.com/verify'}</span>
+            </p>
           </div>
 
-          {/* Seal */}
-          <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '10px' }}>
+          {/* QR Code */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{
-              width: '140px',
-              height: '140px',
-              backgroundColor: '#ffffff',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '4px solid #b45309',
-              boxShadow: '0 0 0 4px #fff, 0 0 0 6px #b45309',
-              position: 'relative'
+              padding: '8px',
+              backgroundColor: '#fff',
+              border: '2px solid #f1f5f9',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
             }}>
-              <div style={{ position: 'absolute', inset: '6px', border: '1px dashed #b45309', borderRadius: '50%' }}></div>
-              <div style={{ textAlign: 'center' }}>
-                <FaAward style={{ fontSize: '48px', color: '#b45309', display: 'block', margin: '0 auto 5px auto' }} />
-                <span style={{ display: 'block', fontSize: '12px', fontWeight: '900', color: '#b45309', textTransform: 'uppercase' }}>Verified</span>
-              </div>
+              {cert.qrCodeUrl ? (
+                <img src={cert.qrCodeUrl} alt="Verification QR" style={{ width: '100px', height: '100px' }} />
+              ) : (
+                <QRCodeCanvas
+                  value={cert.verificationUrl || `https://bitcoderlabs.com/verify/${cert.certificate_number}`}
+                  size={100}
+                  level="H"
+                  includeMargin={false}
+                />
+              )}
             </div>
+            <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginTop: '8px' }}>
+              Scan to verify authenticity
+            </span>
           </div>
 
           {/* Instructor Signature */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: '32px', color: '#0f172a', marginBottom: '5px' }}>
-              {cert.instructor.split(' ')[0]} {/* Approximate signature */}
-            </div>
-            <div style={{ height: '1px', backgroundColor: '#94a3b8', width: '200px', margin: '0 auto 5px auto' }}></div>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e3a8a', textTransform: 'uppercase' }}>
-              Course Instructor
-            </div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>{cert.instructor}</div>
-          </div>
-
-        </div>
-
-        {/* Footer / QR Code Section */}
-        <div style={{
-          width: '100%',
-          borderTop: '1px solid #e2e8f0',
-          paddingTop: '20px',
-          marginTop: '10px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxSizing: 'border-box'
-        }}>
-          {/* Left: Certificate Info */}
-          <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-              CERTIFICATE ID: <span style={{ color: '#0f172a', fontWeight: 'bold' }}>{cert.certificateId}</span>
-            </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-              ISSUED ON: <span style={{ color: '#0f172a', fontWeight: 'bold' }}>{cert.issueDate}</span>
-            </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-              VERIFY AT: <span style={{ color: '#1e3a8a', fontWeight: 'bold' }}>bitcoderlabs.com/verify</span>
-            </div>
-          </div>
-
-          {/* Right: QR Code */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#1e3a8a', textTransform: 'uppercase', marginBottom: '2px' }}>
-                Scan to Verify
+          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            {cert.instructorImage ? (
+              <img src={cert.instructorImage} alt="Signature" style={{ height: '60px', width: '60px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #b45309', marginBottom: '5px' }} />
+            ) : (
+              <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: '32px', color: '#1e293b', marginBottom: '5px' }}>
+                {cert.instructorName}
               </div>
-              <div style={{ fontSize: '9px', color: '#64748b' }}>
-                Official Digital Certificate
-              </div>
-            </div>
-            <div style={{
-              padding: '6px',
-              backgroundColor: '#fff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <QRCodeCanvas
-                value={`https://bitcoderlabs.com/verify/${cert.certificateId}`}
-                size={70}
-                level="H"
-                includeMargin={false}
-              />
-            </div>
+            )}
+            <div style={{ height: '1px', backgroundColor: '#e2e8f0', width: '200px', marginBottom: '10px' }}></div>
+            <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>{cert.instructorName}</p>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{cert.instructorTitle}</p>
           </div>
         </div>
       </div>

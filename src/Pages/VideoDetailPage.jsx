@@ -354,132 +354,28 @@ const VideoDetailPage = () => {
           checkErr,
         );
       }
-      // Fetch course data to get total lessons count
-      const courseResponse = await apiClient.getCourseById(courseId);
-      const course =
-        courseResponse.data?.data || courseResponse.data || courseResponse;
-
-      // Calculate total lessons across all modules
-      let totalLessons = 0;
-      if (course.modules && Array.isArray(course.modules)) {
-        course.modules.forEach((module) => {
-          const lessons = Array.isArray(module.lessons)
-            ? module.lessons
-            : Array.isArray(module.lessonsList)
-              ? module.lessonsList
-              : Array.isArray(module.course_lessons)
-                ? module.course_lessons
-                : [module];
-          totalLessons += lessons.length;
-        });
-      }
-
-      // Calculate progress increment per lesson
-      const progressPerLesson = totalLessons > 0 ? 100 / totalLessons : 10;
-
-      console.log(`📚 Total lessons in course: ${totalLessons}`);
-      console.log(`📊 Progress per lesson: ${progressPerLesson.toFixed(2)}%`);
-
-      let currentModule = null;
-      let currentModuleId = null;
-
-      if (course.modules && Array.isArray(course.modules)) {
-        currentModule = course.modules.find((m) => {
-          const lessons = Array.isArray(m.lessons)
-            ? m.lessons
-            : Array.isArray(m.lessonsList)
-              ? m.lessonsList
-              : Array.isArray(m.course_lessons)
-                ? m.course_lessons
-                : [m];
-
-          return lessons.some((l) => {
-            const lId = (l.id || l.lesson_id || l._id)?.toString();
-            return lId === lessonId;
-          });
-        });
-
-        if (currentModule) {
-          currentModuleId = currentModule.id;
-          const moduleLessons = Array.isArray(currentModule.lessons)
-            ? currentModule.lessons
-            : Array.isArray(currentModule.lessonsList)
-              ? currentModule.lessonsList
-              : Array.isArray(currentModule.course_lessons)
-                ? currentModule.course_lessons
-                : [];
-
-          const totalModuleLessons = moduleLessons.length;
-          const moduleProgressIncrement =
-            totalModuleLessons > 0 ? 100 / totalModuleLessons : 100;
-
-          // Get current module progress (optimistic or from data if available)
-          const currentModuleProgress = currentModule.progress_percentage || 0;
-          const newModuleProgress = Math.min(
-            100,
-            Math.round(currentModuleProgress + moduleProgressIncrement),
-          );
-
-          console.log(`📘 Module ID: ${currentModuleId}`);
-          console.log(`📘 Total Lessons in Module: ${totalModuleLessons}`);
-          console.log(
-            `📘 Module Progress Increment: ${moduleProgressIncrement.toFixed(2)}%`,
-          );
-          console.log(`📘 New Module Progress: ${newModuleProgress}%`);
-
-          // Update Module Progress API Call
-          // NOTE: This endpoint (course-modules/{id}) is restricted to instructors (returns 403 for students).
-          // We cannot persist module-level progress without a specific student endpoint (e.g., module_user table).
-          // For now, we only log the calculation but do not attempt the unauthorized API call.
-          /*
-                    try {
-                        if (currentModuleId) {
-                            await apiClient.updateModuleProgress(currentModuleId, newModuleProgress);
-                            console.log("✅ Module progress updated successfully");
-                        }
-                    } catch (modErr) {
-                        console.error("⚠️ Failed to update module progress:", modErr);
-                    }
-                    */
-        }
-      }
-      // --- END MODULE PROGRESS CALCULATION ---
-
-      // Fetch current enrollment to get actual progress
-      const enrollmentResponse = await apiClient.getMyEnrollments();
-      const enrollments = Array.isArray(enrollmentResponse)
-        ? enrollmentResponse
-        : enrollmentResponse.data || [];
-      const currentEnrollment = enrollments.find((e) => e.id === enrollmentId);
-
-      if (!currentEnrollment) {
-        console.error("Enrollment not found in current data");
-        return;
-      }
-
-      const currentProgress = currentEnrollment.progress_percentage || 0;
-      const newProgress = Math.min(
-        100,
-        Math.round(currentProgress + progressPerLesson),
-      );
-
-      console.log(`Current progress: ${currentProgress}%`);
-      console.log(`New progress: ${newProgress}%`);
-
-      // Persist lesson completion and enrollment progress
+      // --- PERSIST PROGRESS ---
+      // 1. Mark lesson as completed on server
       try {
         await apiClient.updateUserProgress(lessonId, true, 0);
+        console.log("✅ Lesson marked as completed on server");
       } catch (markErr) {
         console.warn("Failed to mark lesson completed on server:", markErr);
       }
 
-      try {
-        await apiClient.updateProgress(enrollmentId, newProgress);
-      } catch (enrErr) {
-        console.warn("Failed to persist enrollment progress:", enrErr);
-      }
+      // 2. Fetch latest enrollment to get the accurate server-calculated progress
+      // This solves the 99% vs 100% rounding issues by using the server's source of truth.
+      const latestEnrollResponse = await apiClient.getMyEnrollments();
+      const latestEnrollments = Array.isArray(latestEnrollResponse)
+        ? latestEnrollResponse
+        : (latestEnrollResponse && latestEnrollResponse.data) || [];
 
-      // Update local state/store optimistically
+      const updatedEnrollment = latestEnrollments.find(e => String(e.id) === String(enrollmentId));
+      const newProgress = updatedEnrollment ? (updatedEnrollment.progress_percentage || 0) : 0;
+
+      console.log(`📊 Progress updated by server: ${newProgress}%`);
+
+      // Update local state/store
       dispatch(
         updateCourseProgress({
           enrollmentId,
@@ -487,9 +383,60 @@ const VideoDetailPage = () => {
         }),
       );
 
+      // --- GENERATE CERTIFICATE ON COMPLETION ---
+      if (newProgress >= 100) {
+        try {
+          console.log("🎓 Course completed (100%)! Certificate should be ready...");
+          const certResponse = await apiClient.generateCertificate(courseId);
+          console.log("✅ Certificate status:", certResponse);
+
+          Swal.fire({
+            title: '🎉 Congratulations!',
+            html: `
+              <div style="padding: 10px;">
+                <p style="font-size: 1.1rem; color: #444;">You have successfully completed <b>${videoData?.title || 'this course'}</b>!</p>
+                <div style="font-size: 3.5rem; margin: 25px 0;">🎓</div>
+                <p style="color: #666;">Your hard work has paid off. Your official certificate is now available.</p>
+              </div>
+            `,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-certificate"></i> View Certificate',
+            cancelButtonText: 'Continue Learning',
+            confirmButtonColor: '#c9a227',
+            cancelButtonColor: '#e0e0e0',
+            buttonsStyling: true,
+            customClass: {
+              confirmButton: 'btn btn-primary',
+              cancelButton: 'btn btn-secondary text-dark'
+            },
+            background: '#fff',
+            backdrop: `
+              rgba(0,0,123,0.4)
+              url("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHY1YmZ1NGRwZHA5Z3B3Z2p3ZWp3ZWp3ZWp3ZWp3ZWp3ZWp3ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/3o7TKDkDbIDJieKbVm/giphy.gif")
+              left top
+              no-repeat
+            `
+          }).then((result) => {
+            if (result.isConfirmed) {
+              navigate("/student-dashboard/certificates");
+            }
+          });
+          return;
+        } catch (certErr) {
+          console.error("⚠️ Certificate check/generation failed:", certErr);
+          Swal.fire({
+            title: "Certificate Pending",
+            text: certErr.message || "We encountered an issue generating your certificate. Please contact support or try again later from your dashboard.",
+            icon: "warning",
+            confirmButtonColor: "#3baee9",
+          });
+        }
+      }
+
       Swal.fire({
         title: "Lesson Completed!",
-        text: `Progress updated: ${currentProgress}% → ${newProgress}%`,
+        text: `Progress updated: ${newProgress}%`,
         icon: "success",
         toast: true,
         position: "top-end",

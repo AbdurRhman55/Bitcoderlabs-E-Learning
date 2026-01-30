@@ -62,8 +62,8 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">Analytics Dashboard</h1>
-                    <p className="text-sm text-gray-600 mt-1 font-medium">Real-time performance metrics for your instruction impact.</p>
+                    <h1 className="text-xl lg:text-2xl  text-gray-900 tracking-tight">Analytics Dashboard</h1>
+                    <p className="text-sm text-gray-600 mt-1 ">Real-time performance metrics for your instruction impact.</p>
                 </div>
             </div>
 
@@ -74,12 +74,12 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                         <div className="p-3 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                             <FaUsers size={20} />
                         </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${analyticsData.studentsChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                        <span className={`text-[10px]  px-2.5 py-1 rounded-full ${analyticsData.studentsChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             {analyticsData.studentsChange}
                         </span>
                     </div>
-                    <p className="text-3xl font-extrabold text-gray-900 leading-none mb-2">{analyticsData.totalStudents.toLocaleString()}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Active Students</p>
+                    <p className="text-3xl  text-gray-900 leading-none mb-2">{analyticsData.totalStudents.toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-400  uppercase tracking-widest">Total Active Students</p>
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group">
@@ -87,12 +87,12 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                         <div className="p-3 rounded-xl bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
                             <FaClock size={20} />
                         </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${analyticsData.hoursChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                        <span className={`text-[10px]  px-2.5 py-1 rounded-full ${analyticsData.hoursChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             {analyticsData.hoursChange}
                         </span>
                     </div>
-                    <p className="text-3xl font-extrabold text-gray-900 leading-none mb-2">{analyticsData.totalWatchHours}h</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Instruction Hours</p>
+                    <p className="text-3xl  text-gray-900 leading-none mb-2">{analyticsData.totalWatchHours}h</p>
+                    <p className="text-[10px] text-gray-400  uppercase tracking-widest">Instruction Hours</p>
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group sm:col-span-2 lg:col-span-1">
@@ -100,12 +100,12 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                         <div className="p-3 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-300">
                             <FaStar size={20} />
                         </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${analyticsData.ratingChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                        <span className={`text-[10px]  px-2.5 py-1 rounded-full ${analyticsData.ratingChange.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                             {analyticsData.ratingChange}
                         </span>
                     </div>
-                    <p className="text-3xl font-extrabold text-gray-900 leading-none mb-2">{analyticsData.avgRating.toFixed(1)}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Global Satisfaction</p>
+                    <p className="text-3xl  text-gray-900 leading-none mb-2">{analyticsData.avgRating.toFixed(1)}</p>
+                    <p className="text-[10px] text-gray-400  uppercase tracking-widest">Global Satisfaction</p>
                 </div>
             </div>
 
@@ -114,17 +114,17 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                 <div className="lg:col-span-2">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-medium text-gray-800">Performance Overview</h3>
+                            <h3 className="text-lg text-gray-800">Performance Overview</h3>
                         </div>
 
                         <div className="space-y-6">
                             {performanceMetrics.map((metric, index) => (
                                 <div key={index} className="space-y-2">
                                     <div className="flex justify-between items-center">
-                                        <span className="font-medium text-gray-800">{metric.metric}</span>
+                                        <span className=" text-gray-800">{metric.metric}</span>
                                         <div className="flex items-center">
                                             <span className={`text-xl font-bold mr-2 ${metric.color}`}>{Math.round(metric.value)}%</span>
-                                            <span className={`text-sm font-medium ${metric.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                                            <span className={`text-sm  ${metric.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
                                                 {metric.change}
                                             </span>
                                         </div>
@@ -148,7 +148,7 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
 
                 {/* Top Performing Courses */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-medium text-gray-800 mb-6">Top Performing Courses</h3>
+                    <h3 className="text-lg  text-gray-800 mb-6">Top Performing Courses</h3>
                     <div className="space-y-4">
                         {topPerformingCourses.length > 0 ? (
                             topPerformingCourses.map((course, index) => (
@@ -167,7 +167,7 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                                         </div>
                                         <div>
                                             <span>Rank:</span>
-                                            <span className="font-medium ml-2 text-primary">#{index + 1}</span>
+                                            <span className=" ml-2 text-primary">#{index + 1}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -184,7 +184,7 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
             {/* Student Engagement & Activity Section (Simplified to hide dummy data) */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-medium text-gray-800">Recent Statistical Insights</h3>
+                    <h3 className="text-lg  text-gray-800">Recent Statistical Insights</h3>
                     <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">Last updated: Just now</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -193,8 +193,8 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                             <FaChartBar />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-blue-800">Course Reach</p>
-                            <p className="text-xl font-bold text-blue-900">{analyticsData.totalStudents} Global Students</p>
+                            <p className="text-sm  text-blue-800">Course Reach</p>
+                            <p className="text-xl  text-blue-900">{analyticsData.totalStudents} Global Students</p>
                         </div>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg flex items-center gap-4">
@@ -202,8 +202,8 @@ const AnalyticsTab = ({ stats = {}, courses = [] }) => {
                             <FaStar />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-green-800">Quality Index</p>
-                            <p className="text-xl font-bold text-green-900">{analyticsData.avgRating.toFixed(1)} Avg. Star Rating</p>
+                            <p className="text-sm  text-green-800">Quality Index</p>
+                            <p className="text-xl  text-green-900">{analyticsData.avgRating.toFixed(1)} Avg. Star Rating</p>
                         </div>
                     </div>
                 </div>

@@ -79,7 +79,7 @@ const MyCourses = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Courses</h1>
+          <h1 className="text-2xl text-gray-900">My Courses</h1>
           <p className="text-gray-600 mt-1">Manage and track your learning progress</p>
         </div>
         <Link to="/courses" className="mt-4 sm:mt-0 inline-block bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors duration-200">
@@ -94,7 +94,7 @@ const MyCourses = () => {
             key={filter.id}
             onClick={() => setActiveFilter(filter.id)}
             className={`
-              px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-200
+              px-4 py-2 rounded-lg text-sm  whitespace-nowrap transition-colors duration-200
               ${activeFilter === filter.id
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
@@ -138,7 +138,7 @@ const MyCourses = () => {
 
                 <span
                   className={`
-                    px-2 py-1 text-xs font-medium rounded-full capitalize
+                    px-2 py-1 text-xs rounded-full capitalize
                     ${course.status === 'completed'
                       ? 'bg-green-100 text-green-800'
                       : course.status === 'pending'
@@ -152,7 +152,7 @@ const MyCourses = () => {
                 </span>
               </div>
 
-              <h3 className="font-semibold text-gray-900 mb-2 truncate" title={course.title}>{course.title}</h3>
+              <h3 className=" text-gray-900 mb-2 truncate" title={course.title}>{course.title}</h3>
               <p className="text-sm text-gray-600 mb-4">by {getInstructorName(course.instructor)}</p>
 
               {/* Progress */}
@@ -191,7 +191,7 @@ const MyCourses = () => {
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
               <button
                 className={`
-                  w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors duration-200
+                  w-full py-2 px-4 rounded-lg text-sm transition-colors duration-200
                   ${course.status === 'completed'
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     : course.status === 'pending'
@@ -219,7 +219,7 @@ const MyCourses = () => {
       {filteredCourses.length === 0 && (
         <div className="text-center py-12">
           <FaBook className="text-6xl text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
+          <h3 className="text-lg  text-gray-900 mb-2">No courses found</h3>
           <p className="text-gray-600">Try selecting a different filter or browse new courses.</p>
         </div>
       )}
