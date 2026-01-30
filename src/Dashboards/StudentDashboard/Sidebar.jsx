@@ -64,30 +64,47 @@ const Sidebar = ({
             </button>
           </div>
 
-          {/* Profile Section (Added for professional touch) */}
-          <div className="px-6 py-8 text-center border-b border-white/5">
-            <div className="relative inline-block group">
-              <div className="w-20 h-20 mx-auto rounded-3xl overflow-hidden ring-4 ring-primary/20 transition-transform group-hover:scale-105 shadow-2xl">
-                {userData.avatar ? (
-                  <img
-                    src={userData.avatar}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-2xl font-black">
-                    {userData.name.charAt(0)}
-                  </div>
-                )}
+          {/* Clean Profile Section */}
+          <div className="px-6 py-5 flex flex-col items-center border-b border-white/5">
+            <div className="relative group flex flex-col items-center">
+              {/* Avatar with simple, elegant border */}
+              <div className="w-24 h-24 rounded-full bg-white p-1 shadow-xl transition-all duration-300 hover:shadow-primary/20 hover:scale-105">
+                <div className="w-full h-full rounded-full overflow-hidden bg-gray-50 flex items-center justify-center border border-gray-100">
+                  {userData.avatar ? (
+                    <img
+                      src={userData.avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-white text-3xl font-bold">
+                      {userData.name.charAt(0)}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-primary-dark rounded-full"></div>
+
+              {/* Minimal Status Indicator */}
+              <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 border-2 border-primary-dark rounded-full shadow-sm"></div>
             </div>
-            <h3 className="mt-4 text-white font-bold tracking-tight">{userData.name}</h3>
-            <p className="text-[10px] text-white font-black uppercase tracking-[0.2em] mt-1">{userData.level} Learner</p>
+
+            {/* Clear, Minimal User Info */}
+            <div className="mt-2 text-center">
+              <h3 className="text-base font-bold text-white tracking-tight">
+                {userData.name}
+              </h3>
+              {/* <div className="mt-1 flex items-center justify-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/60"></span>
+                <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">
+                  {userData.level} Learner
+                </p>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/60"></span>
+              </div> */}
+            </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1.5">
+          <nav className="flex-1 px-4 py-2 space-y-1.5">
             <div className="mb-4 px-4">
               <p className="text-[10px] font-bold text-white uppercase tracking-widest">Student Portal</p>
             </div>

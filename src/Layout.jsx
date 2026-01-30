@@ -23,6 +23,7 @@ import StudentDashboard from "./Pages/StudentDashboard";
 import TeacherProfile from "./Dashboards/TeacherProfile/TeacherProfile"
 import TeacherMainDashboard from "./Dashboards/TeacherDashboard/TeacherMainDashboard";
 import VideoDetailPage from "./Pages/VideoDetailPage";
+import VerifyCertificate from "./Pages/VerifyCertificate";
 
 
 
@@ -72,6 +73,8 @@ function Layout() {
         <Route path="/studentdashboard" element={<StudentDashboard />} />
         <Route path="/teacherprofile" element={<TeacherProfile />} />
         <Route path="/teachermaindashboard" element={<TeacherMainDashboard />} />
+        <Route path="/verify" element={<VerifyCertificate />} />
+        <Route path="/verify/:id" element={<VerifyCertificate />} />
       </Routes>
 
       {!hideNavFooter && <Footer />}

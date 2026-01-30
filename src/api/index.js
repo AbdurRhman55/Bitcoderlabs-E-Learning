@@ -679,6 +679,30 @@ class ApiClient {
     }
     return [];
   }
+
+  // Certificate Endpoints
+  async generateCertificate(courseId) {
+    return this.request("/certificates/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        course_id: courseId
+      }),
+    });
+  }
+
+  async getMyCertificates(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/certificates/my${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async getCertificateById(id) {
+    return this.request(`/certificates/${id}`);
+  }
+
+  async verifyCertificate(certificateNumber) {
+    // This is a public endpoint
+    return this.request(`/certificates/verify/${certificateNumber}`);
+  }
 }
 
 export const apiClient = new ApiClient();

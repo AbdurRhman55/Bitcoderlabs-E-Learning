@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaMapMarkerAlt,
   FaPhone,
@@ -135,7 +136,9 @@ export default function Footer() {
                 . All rights reserved.
               </p>
 
-              <div className="flex items-center gap-4 text-gray-500 text-sm">
+              <div className="flex items-center gap-6 text-gray-500 text-sm">
+                <Link to="/verify" className="hover:text-primary transition-colors font-medium">Verify Certificate</Link>
+                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                 <span>Empowering developers worldwide</span>
                 <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                 <span>Code • Learn • Grow</span>

@@ -12,7 +12,7 @@ export default {
         "primary-dark": "#2a9fd8",
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Outfit', 'sans-serif'],
         serif: ['Playfair Display', 'serif'],
         dancing: ['Dancing Script', 'cursive'],
       },

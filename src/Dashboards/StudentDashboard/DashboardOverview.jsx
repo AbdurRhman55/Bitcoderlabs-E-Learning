@@ -198,7 +198,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
   return (
     <div className="max-w-full mx-auto space-y-8 pb-10">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      {/* <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
             Dashboard Overview
@@ -216,7 +216,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
             Find New Courses
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -227,10 +227,10 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 mb-3">
+                <p className="text-sm  text-gray-600 mb-3">
                   {stat.label}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-900 tracking-tight">
+                <h3 className="text-3xl  text-gray-900 tracking-tight">
                   {stat.value}
                 </h3>
               </div>
@@ -248,13 +248,13 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
         {/* Left Column: Learning Progress */}
         <div className="lg:col-span-8 space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+            <h2 className="text-xl text-gray-900 flex items-center gap-3">
               <div className="w-1 h-6 bg-primary rounded-full"></div>
               Learning Progress
             </h2>
             <button
               onClick={() => setActiveSection("courses")}
-              className="text-sm font-bold text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
+              className="text-sm  text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
             >
               Manage Courses
               <FiChevronRight />
@@ -281,7 +281,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors cursor-pointer">
+                      <h3 className="text-lg  text-gray-900 group-hover:text-primary transition-colors cursor-pointer">
                         {course.title}
                       </h3>
                       <p className="text-sm text-gray-500 font-medium mt-1">
@@ -290,10 +290,10 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                     </div>
                     <div className="space-y-3 mt-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <span className="text-[10px]  text-gray-400 uppercase tracking-widest">
                           Progress
                         </span>
-                        <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                        <span className="text-xs  text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                           {course.progress}%
                         </span>
                       </div>
@@ -309,10 +309,10 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                   </div>
                   <div className="md:w-32 flex flex-row md:flex-col justify-between items-center md:items-end border-t md:border-t-0 md:border-l border-gray-50 pt-4 md:pt-0 md:pl-4">
                     <div className="hidden md:block text-right mb-4">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      <p className="text-[10px]  text-gray-400 uppercase tracking-widest">
                         Est. Time
                       </p>
-                      <p className="text-sm font-bold text-gray-700">
+                      <p className="text-sm  text-gray-700">
                         {course.id % 2 === 0 ? "8.5" : "12.2"}h
                       </p>
                     </div>
@@ -352,7 +352,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg mb-1 flex items-center gap-2">
+                <h3 className="text-gray-900 text-lg mb-1 flex items-center gap-2">
                   <FiBarChart2 className="text-primary" />
                   Weekly Measurement
                 </h3>
@@ -363,7 +363,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="text-xs font-bold text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 outline-none focus:border-primary transition-colors cursor-pointer"
+                className="text-xs  text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 outline-none focus:border-primary transition-colors cursor-pointer"
               >
                 <option value="this_week">This Week</option>
                 <option value="last_week" disabled>Last Week</option>
@@ -401,8 +401,8 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                     },
                     tooltip: {
                       backgroundColor: "#1f2937",
-                      titleFont: { size: 13, family: "Inter" },
-                      bodyFont: { size: 12, family: "Inter" },
+                      titleFont: { size: 13, family: "Outfit" },
+                      bodyFont: { size: 12, family: "Outfit" },
                       padding: 10,
                       cornerRadius: 8,
                       displayColors: false,
@@ -420,7 +420,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                         drawBorder: false,
                       },
                       ticks: {
-                        font: { size: 10, family: "Inter" },
+                        font: { size: 10, family: "Outfit" },
                         color: "#9ca3af",
                         padding: 10,
                       },
@@ -431,7 +431,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                         display: false,
                       },
                       ticks: {
-                        font: { size: 11, family: "Inter", weight: "500" },
+                        font: { size: 11, family: "Outfit", weight: "500" },
                         color: "#6b7280",
                       },
                     },
@@ -450,8 +450,8 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                   </span>
                 </div>
                 <div className="flex items-end justify-between">
-                  <span className="text-xl font-bold text-gray-900">{chartData.total}h</span>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/50 px-1.5 py-0.5 rounded">
+                  <span className="text-xl  text-gray-900">{chartData.total}h</span>
+                  <span className="text-[10px]  text-emerald-600 bg-emerald-100/50 px-1.5 py-0.5 rounded">
                     +12%
                   </span>
                 </div>
@@ -459,19 +459,19 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
               <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  <span className="text-[10px]  text-gray-400 uppercase tracking-wider">
                     Daily Avg
                   </span>
                 </div>
                 <div className="flex items-end justify-between">
-                  <span className="text-xl font-bold text-gray-900">{chartData.avg}h</span>
+                  <span className="text-xl  text-gray-900">{chartData.avg}h</span>
                 </div>
               </div>
             </div>
 
             {/* Minimal Active Courses List */}
             <div className="mt-6 pt-5 border-t border-gray-100 space-y-3">
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+              <h4 className="text-xs  text-gray-400 uppercase tracking-widest mb-3">
                 Active Priority
               </h4>
               {(enrolledCourses || [])
@@ -484,15 +484,15 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${idx === 0
-                            ? "bg-primary/10 text-primary"
-                            : "bg-gray-100 text-gray-500"
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs  ${idx === 0
+                          ? "bg-primary/10 text-primary"
+                          : "bg-gray-100 text-gray-500"
                           }`}
                       >
                         {idx + 1}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-primary transition-colors">
+                        <p className="text-sm  text-gray-800 line-clamp-1 group-hover:text-primary transition-colors">
                           {course.title}
                         </p>
                         <p className="text-[10px] text-gray-400 font-medium">
@@ -517,7 +517,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
           {/* Premium Call to Action */}
           <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-2xl text-white shadow-xl relative overflow-hidden group">
             <div className="relative z-10">
-              <h4 className="font-bold text-lg mb-2 text-black leading-tight">
+              <h4 className=" text-lg mb-2 text-black leading-tight">
                 Elite Mentorship
               </h4>
               <p className="text-[11px] text-gray-400 font-medium mb-5 leading-relaxed">

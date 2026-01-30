@@ -50,11 +50,11 @@ const UserDashboard = () => {
   const avgProgress =
     totalEnrolled > 0
       ? Math.round(
-          enrolledCoursesList.reduce(
-            (acc, curr) => acc + (curr.progress || 0),
-            0,
-          ) / totalEnrolled,
-        )
+        enrolledCoursesList.reduce(
+          (acc, curr) => acc + (curr.progress || 0),
+          0,
+        ) / totalEnrolled,
+      )
       : 0;
 
   const userData = {
@@ -64,9 +64,9 @@ const UserDashboard = () => {
     avatar: user?.avatar || null,
     joinDate: user?.created_at
       ? new Date(user.created_at).toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        })
+        month: "long",
+        year: "numeric",
+      })
       : "March 2024",
     title: user?.role === "student" ? "Student" : user?.role || "Learner",
     bio:
@@ -182,10 +182,10 @@ const UserDashboard = () => {
                 </button>
 
                 <div className="hidden sm:block">
-                  <h1 className="text-lg lg:text-xl font-extrabold text-gray-900 tracking-tight">
+                  <h1 className="text-lg lg:text-xl text-gray-900">
                     Student Dashboard
                   </h1>
-                  <p className="text-xs text-primary font-bold uppercase tracking-widest mt-0.5">
+                  <p className="text-xs text-primary  uppercase tracking-widest mt-0.5">
                     Welcome back, {userData.name}!
                   </p>
                 </div>
