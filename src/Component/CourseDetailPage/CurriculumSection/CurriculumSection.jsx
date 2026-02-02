@@ -67,20 +67,18 @@ const CurriculumSection = ({ course, isEnrolled }) => {
 
     const totalLessonsCount = lessonsList.length;
     const completedCount = lessonsList.filter((l) => l.completed).length;
-    // Calculate dynamic progress if lessons exist, else default to backend value or 0
-    const dynamicProgress =
-      totalLessonsCount > 0
-        ? Math.round((completedCount / totalLessonsCount) * 100)
-        : module.progress_percentage || 0;
+    // Use backend's progress_percentage directly - backend handles correct calculation
+    // based on actual completed lessons, including cascading updates to course progress
+    const moduleProgress = module.progress_percentage || 0;
 
     return {
       ...module,
       id: module.id,
       title: module.title,
       description: module.description,
-      lessons: totalLessonsCount, // Use accurate count
+      lessons: totalLessonsCount,
       duration: module.duration,
-      progress: dynamicProgress, // Use calculated progress
+      progress: moduleProgress,
       // expose counts for UI (completed / total)
       completedLessons: completedCount,
       totalLessons: totalLessonsCount,
