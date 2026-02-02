@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { QRCodeCanvas } from 'qrcode.react';
-import logo from '../../assets/logo.png';
+import companyLogo from '../../assets/bitcoderlabs-logo.png';
 
 const Certificates = () => {
   const enrolledCourses = useSelector(selectMyCourses);
@@ -15,6 +15,7 @@ const Certificates = () => {
   const [downloadingId, setDownloadingId] = useState(null);
   const certificateRef = useRef(null);
   const [activeCert, setActiveCert] = useState(null);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingCert, setViewingCert] = useState(null);
 
@@ -25,14 +26,13 @@ const Certificates = () => {
     fetchEarnedCertificates();
   }, []);
 
+  const qrRef = useRef(null);
+
   const fetchEarnedCertificates = async () => {
     try {
       setLoading(true);
       const res = await apiClient.getMyCertificates();
-      console.log('[Certificates] API Response:', res);
-      console.log('[Certificates] Data path:', res?.data);
       const certs = res?.data?.certificates || [];
-      console.log('[Certificates] Extracted certificates:', certs);
       setEarnedCertificates(certs);
     } catch (error) {
       console.error("Failed to fetch certificates:", error);
@@ -84,21 +84,26 @@ const Certificates = () => {
     return {
       id: course.id,
       courseTitle: course.title,
-      // Map all data from existing certificate if available
       certificate_number: existingCert?.certificate_number,
-      issueDate: existingCert ? existingCert.issue_date : (isCompleted ? new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : null),
+      issueDate: existingCert ? new Date(existingCert.issue_date).toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }) : (isCompleted ? new Date().toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }) : null),
       instructorName: existingCert?.instructor?.name || course.instructor?.name || 'Bitcoderlabs Instructor',
-      instructorTitle: existingCert?.instructor?.title || 'Course Mentor',
-      instructorImage: existingCert?.instructor?.image_url,
+      instructorTitle: existingCert?.instructor?.title || 'Director of Certification',
       platformName: existingCert?.platform?.name || 'Bitcoderlabs',
-      platformLogo: existingCert?.platform?.logo_url || logo,
       qrCodeUrl: existingCert?.verification?.qr_code_url || existingCert?.qr_code_url,
       verificationUrl: existingCert?.verification?.url || existingCert?.verification_url,
+      studentName: existingCert?.user?.name || user?.name || "Student Name",
 
       hasCertificate: !!existingCert,
       isLocked: !isCompleted,
       progress: course.progress || 0,
-      studentName: existingCert?.user?.name || user?.name || "Student Name",
       icon: (isCompleted || existingCert) ? (
         <FaAward className="mx-auto text-4xl text-primary" />
       ) : (
@@ -118,36 +123,53 @@ const Certificates = () => {
     setDownloadingId(cert.id);
     setActiveCert(cert);
 
-    // Give state a moment to update the hidden template
-    await new Promise(resolve => setTimeout(resolve, 500));
-
+    await new Promise((resolve) => setTimeout(resolve, 800));
     const element = certificateRef.current;
+    console.log(element);
     if (!element) return;
 
     try {
+      // 1️ Find QR canvas inside the certificate
+      const qrCanvas = element.querySelector("canvas");
+      console.log(qrCanvas);
+      console.log("jshdgfa");
+
+      // ✅ QR FIX FOR PDF
+      if (qrRef.current) {
+        const qrCanvas = qrRef.current.querySelector("canvas");
+
+        if (qrCanvas) {
+          const qrImg = document.createElement("img");
+          qrImg.src = qrCanvas.toDataURL("image/png");
+          qrImg.width = qrCanvas.width;
+          qrImg.height = qrCanvas.height;
+
+          qrCanvas.parentNode.replaceChild(qrImg, qrCanvas);
+        }
+      }
+
+      // 2️⃣ Capture certificate
       const canvas = await html2canvas(element, {
-        scale: 3, // High resolution for professional printing
+        scale: 4,
         useCORS: true,
+        backgroundColor: "#ffffff",
         logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true
+        removeContainer: true,
       });
 
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgData = canvas.toDataURL("image/png", 1.0);
+
       const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
+        orientation: "landscape",
+        unit: "px",
+        format: [canvas.width, canvas.height],
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`Certificate-${cert.courseTitle.replace(/\s+/g, '-')}.pdf`);
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save(`Certificate-${cert.courseTitle.replace(/\s+/g, "-")}.pdf`);
     } catch (error) {
       console.error("Certificate generation failed", error);
-      Swal.fire('Error', 'Failed to generate PDF. Please try again.', 'error');
+      Swal.fire("Error", "Failed to generate PDF. Please try again.", "error");
     } finally {
       setDownloadingId(null);
       if (!isModalOpen) setActiveCert(null);
@@ -258,16 +280,6 @@ const Certificates = () => {
               </div>
             ))}
           </div>
-
-          {certificates.length === 0 && (
-            <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-              <div className="inline-block p-4 rounded-full bg-white shadow-sm mb-4">
-                <FaFileAlt className="text-4xl text-gray-300" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">No certificates found</h3>
-              <p className="text-gray-500 max-w-xs mx-auto">Complete your courses to earn your official certificates.</p>
-            </div>
-          )}
         </>
       )}
 
@@ -314,8 +326,8 @@ const Certificates = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-12 bg-gray-900/10 flex justify-center items-start">
-              <div className="shadow-2xl origin-top scale-[0.4] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.7] xl:scale-[0.8]">
+            <div className="flex-1 overflow-auto p-12 bg-gray-100 flex justify-center items-start">
+              <div className="origin-top">
                 <CertificateTemplate cert={viewingCert} innerRef={certificateRef} />
               </div>
             </div>
@@ -325,7 +337,14 @@ const Certificates = () => {
 
       {/* Hidden Certificate Template for PDF Generation */}
       {!isModalOpen && activeCert && (
-        <div className="fixed top-0 left-0 z-[-10]" style={{ opacity: 0, pointerEvents: 'none' }}>
+        <div
+          className="fixed top-0 left-0"
+          style={{
+            opacity: 1,
+            visibility: "hidden",
+            pointerEvents: "none",
+          }}
+        >
           <CertificateTemplate cert={activeCert} innerRef={certificateRef} />
         </div>
       )}
@@ -333,171 +352,126 @@ const Certificates = () => {
   );
 };
 
-// Extracted Template for reuse
+// Certificate Template Component
 const CertificateTemplate = ({ cert, innerRef }) => {
   return (
     <div
       ref={innerRef}
+      className="relative w-[1123px] h-[794px] flex overflow-hidden"
       style={{
-        width: '1123px', // A4 Landscape
-        height: '794px',
+        boxShadow: 'inset 0 0 0 12px #2a9fd8, inset 0 0 0 24px #000000',
+        background: 'linear-gradient(to right, #f3f4f6 0%, #f3f4f6 35%, white 35%, white 100%)',
         backgroundColor: '#ffffff',
-        color: '#1a1a1a',
-        fontFamily: "'Outfit', sans-serif",
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        boxSizing: 'border-box',
-        border: '15px solid #1e293b'
+        fontFamily: 'Arial, sans-serif'
       }}
     >
-      {/* --- Inner Gold Border --- */}
-      <div style={{
-        position: 'absolute',
-        inset: '10px',
-        border: '2px solid #b45309',
-        pointerEvents: 'none',
-        zIndex: 1
-      }}></div>
-
-      <div style={{
-        position: 'relative',
-        zIndex: 10,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '60px 80px 40px 80px',
-        textAlign: 'center',
-        boxSizing: 'border-box'
-      }}>
-        {/* Header */}
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
-            <img src={cert.platformLogo} alt="Logo" style={{ height: '70px', objectFit: 'contain' }} />
-            <span style={{ fontSize: '28px', fontWeight: '900', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '2px' }}>
-              {cert.platformName}
-            </span>
+      {/* Left Section */}
+      <div className="relative w-[35%] flex items-center justify-center">
+        <div>
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[419px] flex flex-col items-center pt-32"
+            style={{ backgroundColor: '#2a9fd8' }}
+          >
+            <div
+              className="w-44 h-44 bg-white rounded-full flex items-center justify-center relative shadow-md"
+              style={{ backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+            >
+              <div className="w-24 h-24 rounded-full flex items-center justify-center z-10 overflow-hidden">
+                <img
+                  src={companyLogo}
+                  alt="Company Logo"
+                  className="w-20 h-20 object-contain"
+                />
+              </div>
+            </div>
           </div>
-
-          <h1 style={{
-            fontSize: '68px',
-            fontFamily: "'Playfair Display', serif",
-            color: '#1e293b',
-            fontWeight: '900',
-            textTransform: 'uppercase',
-            margin: '10px 0',
-            letterSpacing: '4px'
-          }}>
-            Certificate
-          </h1>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: '400',
-            color: '#b45309',
-            textTransform: 'uppercase',
-            letterSpacing: '8px',
-            margin: '0 0 20px 0'
-          }}>
-            of Achievement
-          </h2>
-
-          <div style={{ width: '300px', height: '2px', backgroundColor: '#b45309', marginBottom: '25px' }}></div>
-
-          <p style={{ fontSize: '20px', color: '#64748b', fontStyle: 'italic', margin: '0' }}>
-            This is to certify that
+          <div className="relative mt-35">
+            <div
+              className="w-0 h-0 border-l-[64px] border-l-transparent border-r-[64px] border-r-transparent border-t-[100px]"
+              style={{ borderTopColor: '#2a9fd8' }}
+            ></div>
+          </div>
+        </div>
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-center w-64">
+          <p className="text-3xl font-semibold mb-4" style={{ color: '#374151' }}>
+            {cert.issueDate || '16th July, 2023'}
           </p>
+          <div className="w-48 mx-auto pt-2" style={{ borderTop: '2px solid #9ca3af' }}>
+            <p className="text-base font-medium" style={{ color: '#4b5563' }}>Date of Award</p>
+          </div>
+        </div>
+      </div>
 
-          <h2 style={{
-            fontSize: '64px',
-            fontFamily: "'Playfair Display', serif",
-            color: '#1e293b',
-            margin: '15px 0',
-            fontWeight: 'bold',
-            borderBottom: '2px solid #e2e8f0',
-            paddingBottom: '5px',
-            width: 'fit-content'
-          }}>
+      {/* Right Content Section */}
+      <div className="w-[65%] flex flex-col py-12 px-16">
+        <div className="flex items-start justify-end mb-16">
+          <div className="text-right">
+            <h1 className="text-3xl font-bold mb-1" style={{ color: '#374151', letterSpacing: '0.02em' }}>
+              {cert.platformName || 'Bitcoderlabs'}
+            </h1>
+            <p className="text-sm tracking-[0.25em] uppercase font-light" style={{ color: '#6b7280' }}>
+              EMPOWER YOURSELF
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-10">
+          <h2 className="text-5xl font-light tracking-wide" style={{ color: '#4b5563', fontFamily: 'Georgia, serif' }}>
+            CERTIFICATE
+          </h2>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-6xl font-bold uppercase tracking-wide" style={{ color: '#1f2937' }}>
             {cert.studentName}
-          </h2>
-
-          <p style={{ fontSize: '20px', color: '#64748b', margin: '15px 0 0 0' }}>
-            has successfully completed the professional course
-          </p>
-          <h3 style={{
-            fontSize: '42px',
-            color: '#1e293b',
-            fontWeight: '800',
-            margin: '5px 0'
-          }}>
-            {cert.courseTitle}
           </h3>
-          <p style={{ fontSize: '16px', color: '#475569', maxWidth: '850px', lineHeight: '1.6', margin: '10px 0' }}>
-            Demonstrating exceptional commitment, technical proficiency, and professional excellence in mastering
-            the comprehensive curriculum and meeting all assessment requirements.
+        </div>
+
+        <div className="mb-6">
+          <p className="text-lg leading-relaxed" style={{ color: '#4b5563' }}>
+            has received this award for successfully<br />
+            completing the course:
           </p>
         </div>
 
-        {/* Footer Grid */}
-        <div style={{
-          width: '100%',
-          display: 'grid',
-          gridTemplateColumns: '1.5fr 1fr 1.5fr',
-          alignItems: 'end',
-          marginTop: '40px'
-        }}>
-          {/* Metadata */}
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ height: '1px', backgroundColor: '#e2e8f0', width: '200px', marginBottom: '15px' }}></div>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0', fontFamily: 'monospace' }}>
-              CERTIFICATE ID: <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{cert.certificate_number}</span>
-            </p>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0', fontFamily: 'monospace' }}>
-              ISSUED ON: <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{cert.issueDate}</span>
-            </p>
-            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0', fontFamily: 'monospace' }}>
-              VERIFY AT: <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{cert.verificationUrl?.replace('https://', '') || 'bitcoderlabs.com/verify'}</span>
-            </p>
-          </div>
+        <div className="mb-16">
+          <h4 className="text-3xl font-bold leading-snug" style={{ color: '#1f2937' }}>
+            {cert.courseTitle}
+          </h4>
+        </div>
 
-          {/* QR Code */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{
-              padding: '8px',
-              backgroundColor: '#fff',
-              border: '2px solid #f1f5f9',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-            }}>
-              {cert.qrCodeUrl ? (
-                <img src={cert.qrCodeUrl} alt="Verification QR" style={{ width: '100px', height: '100px' }} />
-              ) : (
+        {/* Footer */}
+        <div className="mt-auto flex items-end justify-between">
+          <div className="flex-shrink-0">
+            <p className="text-sm mb-2" style={{ color: '#4b5563' }}>
+              To verify:
+            </p>
+
+            {!cert.qrCodeUrl && (
+              <div ref={qrRef}>
                 <QRCodeCanvas
-                  value={cert.verificationUrl || `https://bitcoderlabs.com/verify/${cert.certificate_number}`}
-                  size={100}
+                  value={
+                    cert.verificationUrl ||
+                    `https://bitcoderlabs.com/verify/${cert.certificate_number || 'cert'}`
+                  }
+                  size={80}
                   level="H"
-                  includeMargin={false}
                 />
-              )}
-            </div>
-            <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginTop: '8px' }}>
-              Scan to verify authenticity
-            </span>
-          </div>
-
-          {/* Instructor Signature */}
-          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            {cert.instructorImage ? (
-              <img src={cert.instructorImage} alt="Signature" style={{ height: '60px', width: '60px', objectFit: 'cover', borderRadius: '50%', border: '2px solid #b45309', marginBottom: '5px' }} />
-            ) : (
-              <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: '32px', color: '#1e293b', marginBottom: '5px' }}>
-                {cert.instructorName}
               </div>
             )}
-            <div style={{ height: '1px', backgroundColor: '#e2e8f0', width: '200px', marginBottom: '10px' }}></div>
-            <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>{cert.instructorName}</p>
-            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{cert.instructorTitle}</p>
+
+            {cert.qrCodeUrl && (
+              <img
+                src={cert.qrCodeUrl}
+                alt="QR Code"
+                className="w-24 h-24"
+                crossOrigin="anonymous"
+              />
+            )}
+
+            <p className="text-xs font-mono mt-2" style={{ color: '#4b5563' }}>
+              {cert.certificate_number || '2327-27963446'}
+            </p>
           </div>
         </div>
       </div>
