@@ -29,8 +29,11 @@ const Certificates = () => {
     try {
       setLoading(true);
       const res = await apiClient.getMyCertificates();
-      // res.data.data because the API returns a paginated structure
-      setEarnedCertificates(res?.data?.data || []);
+      console.log('[Certificates] API Response:', res);
+      console.log('[Certificates] Data path:', res?.data);
+      const certs = res?.data?.certificates || [];
+      console.log('[Certificates] Extracted certificates:', certs);
+      setEarnedCertificates(certs);
     } catch (error) {
       console.error("Failed to fetch certificates:", error);
     } finally {
@@ -59,7 +62,11 @@ const Certificates = () => {
           timer: 2000,
           showConfirmButton: false
         });
-        fetchEarnedCertificates();
+        if (res.data?.certificate) {
+          setEarnedCertificates(prev => [...prev, res.data.certificate]);
+        } else {
+          fetchEarnedCertificates();
+        }
       }
     } catch (error) {
       Swal.fire({
