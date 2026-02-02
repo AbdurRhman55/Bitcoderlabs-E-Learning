@@ -710,6 +710,12 @@ class ApiClient {
     // This is a public endpoint
     return this.request(`/certificates/verify/${certificateNumber}`);
   }
+
+  async getCertificateQrCode(certificateId) {
+    const token = this.getToken();
+    const baseUrl = this.getBaseUrl();
+    return `${baseUrl}/certificates/${certificateId}/qr`;
+  }
 }
 
 export const apiClient = new ApiClient();

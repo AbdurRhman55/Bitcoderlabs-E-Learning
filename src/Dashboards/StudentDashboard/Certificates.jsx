@@ -21,12 +21,34 @@ const Certificates = () => {
 
   const [earnedCertificates, setEarnedCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [qrCodeUrls, setQrCodeUrls] = useState({});
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchEarnedCertificates();
   }, []);
 
-  const qrRef = useRef(null);
+  const fetchQrCodeBlob = async (certificateId) => {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost/api/v1';
+      const response = await fetch(`${baseUrl}/certificates/${certificateId}/qr`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'image/svg+xml',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setQrCodeUrls(prev => ({ ...prev, [certificateId]: url }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch QR code:', error);
+    }
+  };
 
   const fetchEarnedCertificates = async () => {
     try {
@@ -34,6 +56,11 @@ const Certificates = () => {
       const res = await apiClient.getMyCertificates();
       const certs = res?.data?.certificates || [];
       setEarnedCertificates(certs);
+      certs.forEach(cert => {
+        if (cert.id && !qrCodeUrls[cert.id]) {
+          fetchQrCodeBlob(cert.id);
+        }
+      });
     } catch (error) {
       console.error("Failed to fetch certificates:", error);
     } finally {
@@ -83,6 +110,7 @@ const Certificates = () => {
 
     return {
       id: course.id,
+      certificateId: existingCert?.id,
       courseTitle: course.title,
       certificate_number: existingCert?.certificate_number,
       issueDate: existingCert ? new Date(existingCert.issue_date).toLocaleDateString('en-US', {
@@ -97,7 +125,7 @@ const Certificates = () => {
       instructorName: existingCert?.instructor?.name || course.instructor?.name || 'Bitcoderlabs Instructor',
       instructorTitle: existingCert?.instructor?.title || 'Director of Certification',
       platformName: existingCert?.platform?.name || 'Bitcoderlabs',
-      qrCodeUrl: existingCert?.verification?.qr_code_url || existingCert?.qr_code_url,
+      qrCodeUrl: qrCodeUrls[existingCert?.id] || null,
       verificationUrl: existingCert?.verification?.url || existingCert?.verification_url,
       studentName: existingCert?.user?.name || user?.name || "Student Name",
 
@@ -129,24 +157,10 @@ const Certificates = () => {
     if (!element) return;
 
     try {
-      // 1️ Find QR canvas inside the certificate
+      // 1️⃣ Find QR canvas inside the certificate
       const qrCanvas = element.querySelector("canvas");
       console.log(qrCanvas);
       console.log("jshdgfa");
-
-      // ✅ QR FIX FOR PDF
-      if (qrRef.current) {
-        const qrCanvas = qrRef.current.querySelector("canvas");
-
-        if (qrCanvas) {
-          const qrImg = document.createElement("img");
-          qrImg.src = qrCanvas.toDataURL("image/png");
-          qrImg.width = qrCanvas.width;
-          qrImg.height = qrCanvas.height;
-
-          qrCanvas.parentNode.replaceChild(qrImg, qrCanvas);
-        }
-      }
 
       // 2️⃣ Capture certificate
       const canvas = await html2canvas(element, {
@@ -448,7 +462,7 @@ const CertificateTemplate = ({ cert, innerRef }) => {
             </p>
 
             {!cert.qrCodeUrl && (
-              <div ref={qrRef}>
+              <div>
                 <QRCodeCanvas
                   value={
                     cert.verificationUrl ||
