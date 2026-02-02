@@ -8,31 +8,6 @@ import Button from '../../UI/Button';
 export default function ProfessionalContact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  if (isSubmitted) {
-    return (
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="bg-white rounded-3xl p-12 shadow-2xl border border-blue-200">
-            <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaCheckCircle className="text-white text-3xl" />
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">Message Sent!</h3>
-            <p className="text-gray-600 mb-8 text-lg">
-              We've received your message and will get back to you within 24 hours.
-            </p>c
-            <Button
-              onClick={() => setIsSubmitted(false)}
-              text="Send Another Message"
-              variant="squarefull"
-              size="md"
-              className="mt-4"
-            />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
       <div className="max-w-6xl mx-auto">
@@ -53,9 +28,9 @@ export default function ProfessionalContact() {
         <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
           {/* Left Side - Company Information */}
           <ContactInformation />
-          
+
           {/* Right Side - Contact Form */}
-          <RightForm onFormSubmit={() => setIsSubmitted(true)} />
+          <RightForm onFormSubmit={() => { }} />
         </div>
       </div>
     </section>

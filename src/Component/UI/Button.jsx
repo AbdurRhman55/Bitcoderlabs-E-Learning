@@ -22,8 +22,8 @@ export default function Button({
     link: "cursor-pointer text-[#3baee9] hover:text-primary-dark bg-transparent shadow-none",
     square:
       "cursor-pointer bg-primary text-white rounded-md hover:bg-primary-dark shadow-md",
-    
-    squarefull:"cursor-pointer bg-primary text-white rounded-xl hover:bg-primary-dark shadow-md w-full",
+
+    squarefull: "cursor-pointer bg-primary text-white rounded-xl hover:bg-primary-dark shadow-md w-full",
 
     squareOutline:
       "cursor-pointer bg-white text-primary border-2 border-primary rounded-md hover:bg-gray-50 shadow-md",
@@ -75,9 +75,8 @@ export default function Button({
   return (
     <button
       onClick={onClick}
-      className={`${base} ${variants[variant] || variants[type]} ${
-        sizes[size] || ""
-      } ${round[rounded] || ""} ${className}`}
+      className={`${base} ${variants[variant] || variants[type]} ${sizes[size] || ""
+        } ${round[rounded] || ""} ${className}`}
     >
       {getIcon()}
       {text && <span>{text}</span>}

@@ -559,6 +559,13 @@ class ApiClient {
     return this.request(`/contact-messages${queryString ? `?${queryString}` : ""}`);
   }
 
+  async submitContactMessage(contactData) {
+    return this.request("/contact-messages", {
+      method: "POST",
+      body: JSON.stringify(contactData),
+    });
+  }
+
   // Enrollments Management
   async getEnrollments(params = {}) {
     const queryString = new URLSearchParams(params).toString();

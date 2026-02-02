@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import SideBar from "./SideBar";
-import {comments,codeExamples,learningObjectives,tabs} from "../../../Data/BlogDetailAarray"
+import { comments, codeExamples, learningObjectives, tabs } from "../../../Data/BlogDetailAarray"
 import {
   FaBook,
   FaCheck,
@@ -63,11 +63,10 @@ const BlogDetailPage = () => {
                 </button>
                 <button
                   onClick={() => setIsBookmarked(!isBookmarked)}
-                  className={`px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 ${
-                    isBookmarked
-                      ? "bg-primary-dark text-white"
-                      : "bg-white text-gray-700 border border-gray-200"
-                  }`}
+                  className={`px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 ${isBookmarked
+                    ? "bg-primary-dark text-white"
+                    : "bg-white text-gray-700 border border-gray-200"
+                    }`}
                 >
                   <FaBookmark
                     className={
@@ -79,7 +78,7 @@ const BlogDetailPage = () => {
               </div>
             </div>
 
-            
+
 
             {/* Learning Objectives */}
             <div className="bg-blue-50 rounded-3xl border border-blue-200 p-8">
@@ -203,11 +202,10 @@ const BlogDetailPage = () => {
                       <div className="flex gap-4">
                         <div className="relative">
                           <div
-                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white ${
-                              comment.isInstructor
-                                ? "bg-gradient-to-br from-green-500 to-emerald-600"
-                                : "bg-gradient-to-br from-blue-500 to-blue-600"
-                            }`}
+                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white ${comment.isInstructor
+                              ? "bg-gradient-to-br from-green-500 to-emerald-600"
+                              : "bg-gradient-to-br from-blue-500 to-blue-600"
+                              }`}
                           >
                             {comment.avatar}
                           </div>

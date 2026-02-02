@@ -26,10 +26,10 @@ export default function ContactInfo() {
 
         <div className="space-y-4">
           {[
-            { icon: FaPhone, label: "Phone", value: "+1 (555) 123-4567" },
-            { icon: FaEnvelope, label: "Email", value: "hello@learnwithus.com" },
-            { icon: FaMapMarkerAlt, label: "Address", value: "123 Learning Street" },
-            { icon: FaBuilding, label: "Location", value: "Education City" },
+            { icon: FaPhone, label: "Phone", value: "+92 333 9277021" },
+            { icon: FaEnvelope, label: "Email", value: "info@bitcoderlabs.com" },
+            { icon: FaMapMarkerAlt, label: "Address", value: "SBBWU Peshawar IT Park Bitcoderlabs Pvt Ltd" },
+            { icon: FaBuilding, label: "Location", value: "Peshawar" },
           ].map((item, index) => (
             <div
               key={index}
@@ -75,7 +75,7 @@ export default function ContactInfo() {
           <div className="flex gap-3">
             {socialLinks.map((social, index) => {
               const SocialIcon = iconComponents[social.icon];
-              if (!SocialIcon) return null; // 👈 prevents undefined icons
+              if (!SocialIcon) return null;
               return (
                 <a
                   key={index}
