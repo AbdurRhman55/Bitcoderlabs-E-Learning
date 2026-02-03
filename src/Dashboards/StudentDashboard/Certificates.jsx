@@ -435,7 +435,7 @@ const CertificateTemplate = ({ cert, innerRef }) => {
                   alt="Company Logo"
                   className="w-20 h-20 object-contain"
                   crossOrigin="anonymous"
-                  onLoad={() => {}}
+                  onLoad={() => { }}
                 />
               </div>
             </div>
