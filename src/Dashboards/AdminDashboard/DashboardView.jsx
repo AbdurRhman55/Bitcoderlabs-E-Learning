@@ -76,12 +76,12 @@ const NotificationImage = ({ notif }) => {
   return (
     <div
       className={`w-full h-full flex items-center justify-center ${notif.type === "teacher"
-          ? "bg-amber-100 text-amber-600"
-          : notif.type === "enrollment"
-            ? "bg-green-100 text-green-600"
-            : notif.type === "contact"
-              ? "bg-indigo-100 text-indigo-600"
-              : "bg-blue-100 text-blue-600"
+        ? "bg-amber-100 text-amber-600"
+        : notif.type === "enrollment"
+          ? "bg-green-100 text-green-600"
+          : notif.type === "contact"
+            ? "bg-indigo-100 text-indigo-600"
+            : "bg-blue-100 text-blue-600"
         }`}
     >
       {notif.type === "teacher" ? (
@@ -172,12 +172,12 @@ function NotificationSidebar({
                       <div className="mt-2 flex items-center gap-2">
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${notif.type === "teacher"
-                              ? "bg-amber-100 text-amber-700"
-                              : notif.type === "enrollment"
-                                ? "bg-green-100 text-green-700"
-                                : notif.type === "contact"
-                                  ? "bg-indigo-100 text-indigo-700"
-                                  : "bg-blue-100 text-blue-700"
+                            ? "bg-amber-100 text-amber-700"
+                            : notif.type === "enrollment"
+                              ? "bg-green-100 text-green-700"
+                              : notif.type === "contact"
+                                ? "bg-indigo-100 text-indigo-700"
+                                : "bg-blue-100 text-blue-700"
                             }`}
                         >
                           {notif.type === "teacher"
@@ -376,25 +376,54 @@ function DashboardCards() {
     );
   }
 
+  const getGradient = (index) => {
+    const gradients = [
+      "from-primary to-primary-dark",
+    ];
+    return gradients[index % gradients.length];
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} hover>
-            <div className=" flex justify-between items-start">
-              <div>
-                <p className="text-gray-500 text-sm">{stat.title}</p>
-                <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                <p className="text-primary-dark text-sm mt-2 font-medium">
-                  {stat.change}
-                </p>
+          <div
+            key={index}
+            className={`relative overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${getGradient(index)}`}
+          >
+            {/* Decorative Shapes for that "Clean Professional" look */}
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
+            <div className="absolute bottom-0 right-0 -mb-4 -mr-4 h-24 w-24 rounded-full bg-white/10" />
+
+            <div className="relative z-10 flex flex-col justify-between h-full">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-white text-xs font-semibold uppercase tracking-wider">
+                    {stat.title}
+                  </p>
+                  <p className="text-white/60 text-[10px] mt-1 font-medium">
+                    Monthly Overview
+                  </p>
+                </div>
+                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md shadow-inner">
+                  {React.cloneElement(stat.icon, { size: 18, className: "text-white" })}
+                </div>
               </div>
-              <div className="p-2 bg-primary rounded-xl text-white">
-                {stat.icon}
+
+              <div className="mt-8 flex justify-between items-end">
+                <div className="flex flex-col">
+                  <span className="text-white/90 text-[10px]  uppercase">Growth</span>
+                  <span className="text-white  text-sm bg-white/20 px-2 py-0.5 rounded-full inline-block mt-1">
+                    {stat.change}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-4xl   drop-shadow-sm">{stat.value}</p>
+                </div>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
@@ -402,10 +431,10 @@ function DashboardCards() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <Card className="xl:col-span-2">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-lg text-gray-900">
+            <h3 className=" text-lg text-gray-900">
               Revenue Overview
             </h3>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark cursor-pointer transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm  rounded-lg hover:bg-primary-dark cursor-pointer transition-colors">
               <Download size={16} />
               Export
             </button>
@@ -413,15 +442,15 @@ function DashboardCards() {
           <div className="h-64 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl flex flex-col items-center justify-center">
             <BarChart3 size={48} className="text-primary-dark mb-3" />
             <p className="text-gray-600">Revenue chart visualization</p>
-            <h2 className="text-2xl font-bold mt-2 text-gray-900">$24,580</h2>
-            <p className="text-primary-dark text-sm font-medium mt-1">
+            <h2 className="text-2xl  mt-2 text-gray-900">$24,580</h2>
+            <p className="text-primary-dark text-sm  mt-1">
               +18% from last month
             </p>
           </div>
         </Card>
 
         <Card>
-          <h3 className="font-bold text-lg text-gray-900 mb-4">
+          <h3 className=" text-lg text-gray-900 mb-4">
             Recent Activities
           </h3>
 
@@ -438,9 +467,9 @@ function DashboardCards() {
 
                   <div className="min-w-0">
                     <p className="text-sm text-gray-800">
-                      <span className="font-medium">{act.user}</span>{" "}
+                      <span className="">{act.user}</span>{" "}
                       {act.action}{" "}
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-medium text-gray-900">
                         {act.course}
                       </span>
                     </p>

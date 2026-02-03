@@ -159,6 +159,11 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           } else if (key === 'is_featured' || key === 'is_active') {
             // Convert boolean to integer for Laravel validation
             formData.append(key, value ? '1' : '0');
+          } else if (key === 'instructor_id' && !value) {
+            // Fallback for required instructor_id
+            if (instructors.length > 0) {
+              formData.append('instructor_id', instructors[0].id.toString());
+            }
           } else if (value !== null && value !== undefined && (value !== '' || isRequiredField)) {
             // For numeric fields, ensure they have a value even if 0
             if (key === 'reviews_count' || key === 'students_count' || key === 'rating' || key === 'price' || key === 'original_price') {
@@ -201,7 +206,9 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
           rating: cleanCourse.rating ? parseFloat(cleanCourse.rating) : 0,
           reviews_count: cleanCourse.reviews_count ? parseInt(cleanCourse.reviews_count) : 0,
           students_count: cleanCourse.students_count ? parseInt(cleanCourse.students_count) : 0,
-          instructor_id: cleanCourse.instructor_id ? parseInt(cleanCourse.instructor_id) : undefined,
+          instructor_id: cleanCourse.instructor_id
+            ? parseInt(cleanCourse.instructor_id)
+            : (instructors.length > 0 ? instructors[0].id : undefined),
           category_id: cleanCourse.category_id ? parseInt(cleanCourse.category_id) : undefined,
           is_featured: Boolean(cleanCourse.is_featured),
           is_active: Boolean(cleanCourse.is_active),
@@ -495,7 +502,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
         </div>
 
         {/* Featured Toggle */}
-        <div className="flex items-center justify-end">
+        {/* <div className="flex items-center justify-end">
           <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
             <input
               type="checkbox"
@@ -512,7 +519,7 @@ export default function AddCourseForm({ onSubmit, onClose, initialData = null })
               Featured Course
             </label>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Course Status */}

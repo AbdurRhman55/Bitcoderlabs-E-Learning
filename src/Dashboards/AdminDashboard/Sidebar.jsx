@@ -54,12 +54,12 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
 
 
       {/* Toggle */}
-      <button
+      {/* <button
         className={`absolute top-4 cursor-pointer p-2 rounded-full ${open ? "left-54" : "left-6"}`}
         onClick={() => setOpen(!open)}
       >
         {open ? <X size={18} /> : <Menu size={18} />}
-      </button>
+      </button> */}
 
       {/* Logo */}
       <div className="flex items-center gap-3 mb-10 mt-10">

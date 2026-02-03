@@ -2,81 +2,82 @@ import React, { useEffect, useState } from "react";
 import CourseCard from "./CourseCards";
 import { dummyCourses } from "../../../../Data/Courses.Array";
 import Button from "../../UI/Button";
-import { FaGraduationCap, FaFilter, FaThLarge, FaList } from "react-icons/fa";
-import Filter from "../Filter/FIlter";
+import { FaGraduationCap, FaThLarge, FaList } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCourses, selectCourses } from '../../../../slices/courseSlice';
 
+import { motion } from "framer-motion";
+
 export default function CourseGrid() {
   const [layout, setLayout] = useState("grid");
-  const [showFilter, setShowFilter] = useState(false); // for mobile slide filter
   const dispatch = useDispatch();
   const course = useSelector(selectCourses);
   const loading = useSelector((state) => state.courses.loading);
   const error = useSelector((state) => state.courses.error);
-
-  console.log("===courses", course);
 
   useEffect(() => {
     dispatch(fetchCourses());
   }, [dispatch]);
 
   return (
-    <section className="bg-gray-50 py-10  relative overflow-hidden">
+    <section className="bg-gray-50 py-10 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative">
         {/* ===== Header ===== */}
-        <div className="flex justify-between items-center mb-8 lg:mx-7 mx-1 ">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FaGraduationCap className="text-primary text-4xl" />
-            Available Courses
-          </h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 lg:mx-7 gap-4">
+          <div className="flex flex-col">
+            <h2 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+              <FaGraduationCap className="text-primary" />
+              Available Courses
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 ml-1">Explore our latest course offerings</p>
+          </div>
 
-          <div className="flex items-center gap-3">
-            {/* Filter Button */}
-            <Button
-              variant="outline"
-              size="xs"
-              icon={<FaFilter className="w-5 h-7 " />}
-              onClick={() => setShowFilter(!showFilter)}
-              className={`rounded-full cursor-pointer transition-all duration-300 ${showFilter ? "bg-gray-200" : "bg-white"
-                }`}
-            />
-
-            {/* Layout Toggle */}
-            <div className="hidden lg:block">
-              <Button
-                variant="outline"
-                size="xs"
-                icon={
-                  layout === "grid" ? (
-                    <FaList className="w-5 h-7 cursor-pointer" />
-                  ) : (
-                    <FaThLarge className="w-5 h-7 cursor-pointer" />
-                  )
-                }
-                onClick={() =>
-                  setLayout((prev) => (prev === "grid" ? "list" : "grid"))
-                }
-                className="p-2 rounded-full"
+          <div className="flex items-center gap-3 bg-white p-1 rounded-2xl shadow-sm border border-gray-100">
+            {/* Professional Layout Switcher */}
+            <div className="flex relative bg-gray-100/80 rounded-xl p-1 w-40 sm:w-48 overflow-hidden">
+              {/* Animated Sliding Pill */}
+              <motion.div
+                className="absolute top-1 bottom-1 left-1 bg-primary rounded-lg shadow-sm"
+                initial={false}
+                animate={{
+                  x: layout === "grid" ? "0%" : "100%",
+                }}
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                style={{ width: "calc(50% - 4px)" }}
               />
+
+              {/* Option: Grid */}
+              <button
+                onClick={() => setLayout("grid")}
+                className={`flex-1 relative z-10 flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-bold transition-colors duration-300 cursor-pointer ${layout === "grid" ? "text-white" : "text-gray-500 hover:text-gray-800"
+                  }`}
+              >
+                <FaThLarge className="text-sm" />
+                <span>Grid</span>
+              </button>
+
+              {/* Option: List */}
+              <button
+                onClick={() => setLayout("list")}
+                className={`flex-1 relative z-10 flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-bold transition-colors duration-300 cursor-pointer ${layout === "list" ? "text-white" : "text-gray-500 hover:text-gray-800"
+                  }`}
+              >
+                <FaList className="text-sm" />
+                <span>List</span>
+              </button>
             </div>
           </div>
         </div>
 
         {/* ===== Main Section ===== */}
-
         <div className="flex gap-8 lg:ml-5 items-start transition-all duration-500 ease-in-out">
-          {/* Left: Courses */}
-
+          {/* Courses */}
           <div className="flex-1 transition-all duration-500">
             <div
               className={
                 layout === "grid"
-                  ? `grid gap-6 ${showFilter
-                    ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                    : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-                  }`
+                  ? "grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
                   : "space-y-6"
               }
             >
@@ -85,41 +86,8 @@ export default function CourseGrid() {
               ))}
             </div>
           </div>
-
-          {/* Right: Filter (visible on large screen only) */}
-          <div
-            className={`hidden lg:block transition-all duration-500 ease-in-out transform ${showFilter
-              ? "opacity-100 translate-x-0 w-80"
-              : "opacity-0 -translate-x-10 w-0 overflow-hidden"
-              }`}
-          >
-            <div className="sticky top-24">
-              <Filter />
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/*  Mobile Filter Drawer */}
-      <div
-        className={`fixed top-0 right-0 h-full bg-white shadow-2xl transform transition-transform duration-500 ease-in-out z-50 lg:hidden ${showFilter ? "translate-x-0" : "translate-x-full"
-          }`}
-      >
-        <div className="p-4 h-full overflow-y-auto">
-          <Filter />
         </div>
       </div>
-
-      {/* Dark Overlay when Filter is Open */}
-      {
-        showFilter && (
-          <div
-            className="fixed inset-0 bg-black/70 z-40 lg:hidden"
-            onClick={() => setShowFilter(false)}
-          ></div>
-        )
-      }
-    </section >
+    </section>
   );
 }

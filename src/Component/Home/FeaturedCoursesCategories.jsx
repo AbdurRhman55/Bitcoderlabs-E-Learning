@@ -25,24 +25,15 @@ export default function FilteredCourses() {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all"); // all, career, popular, trending
-  const [activeCategory, setActiveCategory] = useState("all");
 
-  // Sample categories for filtering
-  const categories = [
-    { id: "all", name: "All Courses", icon: FaCode },
-    { id: "web", name: "Web Development", icon: FaCode },
-    { id: "design", name: "Design", icon: FaPaintBrush },
-    { id: "business", name: "Business", icon: FaBriefcase },
-    { id: "data", name: "Data Science", icon: FaChartLine },
-  ];
 
   // Filter buttons
   const filters = [
     { id: "all", name: "All Courses", icon: FaCode, color: "bg-primary text-white" },
-    { id: "career", name: "Career", icon: FaBriefcase, color: "bg-green-100 text-green-700" },
-    { id: "popular", name: "Most Popular", icon: FaFire, color: "bg-red-100 text-red-700" },
-    { id: "trending", name: "Trending Now", icon: FaRocket, color: "bg-purple-100 text-purple-700" },
-    { id: "featured", name: "Featured", icon: FaStar, color: "bg-yellow-100 text-yellow-700" },
+    { id: "career", name: "Career", icon: FaBriefcase, color: "bg-primary text-white" },
+    { id: "popular", name: "Most Popular", icon: FaFire, color: "bg-primary text-white" },
+    { id: "trending", name: "Trending Now", icon: FaRocket, color: "bg-primary text-white" },
+    { id: "featured", name: "Featured", icon: FaStar, color: "bg-primary text-white" },
   ];
 
   useEffect(() => {
@@ -114,35 +105,9 @@ export default function FilteredCourses() {
         break;
     }
 
-    // Apply category filter
-    if (activeCategory !== "") {
-      result = result.filter(course => {
-        const categoryName = course.category?.name?.toLowerCase() || "";
-        switch (activeCategory) {
-          case "web":
-            return categoryName.includes("web") ||
-              categoryName.includes("programming") ||
-              categoryName.includes("development");
-          case "design":
-            return categoryName.includes("design") ||
-              categoryName.includes("ui") ||
-              categoryName.includes("ux");
-          case "business":
-            return categoryName.includes("business") ||
-              categoryName.includes("marketing") ||
-              categoryName.includes("finance");
-          case "data":
-            return categoryName.includes("data") ||
-              categoryName.includes("analytics") ||
-              categoryName.includes("science");
-          default:
-            return true;
-        }
-      });
-    }
 
-    setFilteredCourses(result.slice(0, 4)); // Show top 8 results
-  }, [courses, activeFilter, activeCategory]);
+    setFilteredCourses(result.slice(0, 4)); // Show top 4 results
+  }, [courses, activeFilter]);
 
   const getCourseIcon = (course) => {
     const categoryName = course.category?.name?.toLowerCase() || "";
@@ -198,7 +163,7 @@ export default function FilteredCourses() {
                 : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
                 }`}
             >
-              <Icon className={`${isActive ? 'text-white' : filter.color.split(' ')[1]}`} />
+              <Icon className={`${isActive ? 'text-white' : ''}`} />
               <span className={isActive ? 'text-white' : ''}>{filter.name}</span>
               {isActive && (
                 <span className="ml-2 w-2 h-2 bg-white rounded-full"></span>
@@ -208,27 +173,6 @@ export default function FilteredCourses() {
         })}
       </div>
 
-      {/* Category Filter */}
-      {/* <div className="flex flex-wrap gap-2 justify-center mb-10">
-        {categories.map((category) => {
-          const Icon = category.icon;
-          const isActive = activeCategory === category.id;
-
-          return (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-all ${isActive
-                ? 'bg-primary text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              <Icon size={16} />
-              <span>{category.name}</span>
-            </button>
-          );
-        })}
-      </div> */}
 
       {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -246,7 +190,6 @@ export default function FilteredCourses() {
             <button
               onClick={() => {
                 setActiveFilter("all");
-                setActiveCategory("all");
               }}
               className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
             >

@@ -290,11 +290,11 @@ export default function TeachersTable() {
                   <h3 className="text-3xl font-extrabold text-gray-900">
                     {selectedTeacher.name}
                   </h3>
-                  {selectedTeacher.title && (
+                  {/* {selectedTeacher.title && (
                     <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider">
                       {selectedTeacher.title}
                     </span>
-                  )}
+                  )} */}
                 </div>
 
                 <p className="text-gray-600 mb-4 max-w-xl">
