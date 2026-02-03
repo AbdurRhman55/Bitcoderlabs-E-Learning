@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserAvatar, updateProfile } from '../../../slices/AuthSlice';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const Settings = ({ userData }) => {
   const dispatch = useDispatch();
@@ -50,13 +51,23 @@ const Settings = ({ userData }) => {
     if (file) {
       // Validate file type
       if (!file.type.match('image.*')) {
-        alert('Please select an image file');
+        Swal.fire({
+          title: 'Invalid File',
+          text: 'Please select an image file',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('File size too large. Maximum size is 5MB');
+        Swal.fire({
+          title: 'File Too Large',
+          text: 'File size too large. Maximum size is 5MB',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
         return;
       }
 
@@ -84,9 +95,19 @@ const Settings = ({ userData }) => {
           bio: formData.bio
         }
       })).unwrap();
-      alert('Profile updated successfully!');
+      Swal.fire({
+        title: 'Profile Updated!',
+        text: 'Your profile details have been saved successfully.',
+        icon: 'success',
+        confirmButtonColor: '#3baee9'
+      });
     } catch (err) {
-      alert('Failed to update profile: ' + err.message);
+      Swal.fire({
+        title: 'Update Failed',
+        text: 'Failed to update profile: ' + err.message,
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 
@@ -95,17 +116,32 @@ const Settings = ({ userData }) => {
     const { currentPassword, newPassword, confirmPassword } = formData;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      alert('Please fill all password fields');
+      Swal.fire({
+        title: 'Missing Fields',
+        text: 'Please fill all password fields',
+        icon: 'warning',
+        confirmButtonColor: '#3baee9'
+      });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
+      Swal.fire({
+        title: 'Passwords Mismatch',
+        text: 'New password and confirmation do not match',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
       return;
     }
 
     if (newPassword.length < 6) {
-      alert('New password must be at least 6 characters long');
+      Swal.fire({
+        title: 'Weak Password',
+        text: 'New password must be at least 6 characters long',
+        icon: 'warning',
+        confirmButtonColor: '#3baee9'
+      });
       return;
     }
 
@@ -117,7 +153,12 @@ const Settings = ({ userData }) => {
           password_confirmation: confirmPassword
         }
       })).unwrap();
-      alert('Password updated successfully!');
+      Swal.fire({
+        title: 'Password Updated!',
+        text: 'Your password has been changed successfully.',
+        icon: 'success',
+        confirmButtonColor: '#3baee9'
+      });
       // Clear password fields
       setFormData(prev => ({
         ...prev,
@@ -126,7 +167,12 @@ const Settings = ({ userData }) => {
         confirmPassword: ''
       }));
     } catch (err) {
-      alert('Failed to update password: ' + err.message);
+      Swal.fire({
+        title: 'Update Failed',
+        text: 'Failed to update password: ' + err.message,
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 

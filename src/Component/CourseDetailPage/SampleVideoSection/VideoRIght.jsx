@@ -4,6 +4,7 @@ import { FaCheck, FaRocket } from "react-icons/fa";
 import { feature } from "../../../../Data/Courses.Array";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 export default function VideoRight({ course }) {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -11,16 +12,28 @@ export default function VideoRight({ course }) {
 
   const handleEnroll = () => {
     if (!isAuthenticated) {
-      alert("Please log in to your account to enroll in this course. Redirection to login page...");
-      navigate("/login");
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please log in to your account to enroll in this course.',
+        icon: 'info',
+        confirmButtonText: 'Go to Login',
+        confirmButtonColor: '#3baee9'
+      }).then(() => {
+        navigate("/login");
+      });
       return;
     }
 
     if (course?.price === 0 || course?.price === "0") {
-      alert("Successfully enrolled in free course!");
-      navigate(`/course/${course?.id}/content`);
+      Swal.fire({
+        title: 'Success!',
+        text: 'Successfully enrolled in free course!',
+        icon: 'success',
+        confirmButtonColor: '#3baee9'
+      }).then(() => {
+        navigate(`/course/${course?.id}/content`);
+      });
     } else {
-      alert("Redirecting to payment...");
       navigate(`/Enroll/${course?.id}`);
     }
   };

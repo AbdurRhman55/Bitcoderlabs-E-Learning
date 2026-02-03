@@ -17,6 +17,7 @@ import {
 import { FooterLink, Features } from "../../../Data/Array"; // ✅ sirf ye 2 import
 import Input from "./Input";
 import FooterLinks from "./FooterLinks"; // ✅ correct import name
+import Swal from 'sweetalert2';
 
 const iconComponents = {
   FaCode,
@@ -91,7 +92,12 @@ export default function Footer() {
                   placeholder="Enter your email"
                   variant="small"
                   showButton={true}
-                  onClick={() => alert("Subscribed!")}
+                  onClick={() => Swal.fire({
+                    title: 'Subscribed!',
+                    text: 'Thank you for subscribing to our newsletter.',
+                    icon: 'success',
+                    confirmButtonColor: '#3baee9'
+                  })}
                 />
               </div>
 

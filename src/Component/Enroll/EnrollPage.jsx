@@ -16,6 +16,7 @@ import { FiAlertCircle, FiBookOpen } from "react-icons/fi";
 import PaymentMethod from "./PaymentMethod";
 import PaymentProofUpload from "./PaymentProofUpload";
 import { apiClient, API_ORIGIN } from "../../api/index";
+import Swal from 'sweetalert2';
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
@@ -114,13 +115,26 @@ export default function EnrollPage() {
     e.preventDefault();
 
     if (!user) {
-      alert("Please login to complete enrollment.");
-      navigate("/login");
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please login to complete your enrollment.',
+        icon: 'info',
+        confirmButtonText: 'Go to Login',
+        confirmButtonColor: '#3baee9'
+      }).then(() => {
+        navigate("/login");
+      });
       return;
     }
 
     if (!formData.payment_proof) {
-      alert("Please upload payment proof screenshot.");
+      Swal.fire({
+        title: 'Payment Proof Missing',
+        text: 'Please upload a screenshot of your payment to proceed.',
+        icon: 'warning',
+        confirmButtonText: 'Okay',
+        confirmButtonColor: '#3baee9'
+      });
       return;
     }
 
@@ -177,13 +191,21 @@ export default function EnrollPage() {
 
       if (createdStatus && createdStatus.toLowerCase() !== "pending") {
         // If backend auto-approved, warn user and do not assume pending
-        alert(
-          `Enrollment submitted. Server returned status: ${createdStatus}. Admin will review if required.`,
-        );
+        await Swal.fire({
+          title: 'Enrollment Submitted',
+          text: `Server returned status: ${createdStatus}. Admin will review if required.`,
+          icon: 'success',
+          confirmButtonText: 'Go to Dashboard',
+          confirmButtonColor: '#3baee9'
+        });
       } else {
-        alert(
-          "Enrollment request submitted successfully! Please wait for admin approval.",
-        );
+        await Swal.fire({
+          title: 'Enrollment Successful!',
+          text: 'Your request has been submitted. Please wait for admin approval.',
+          icon: 'success',
+          confirmButtonText: 'Go to Dashboard',
+          confirmButtonColor: '#3baee9'
+        });
       }
 
       navigate("/student-dashboard");
@@ -203,7 +225,12 @@ export default function EnrollPage() {
 
           if (match) {
             setExistingEnrollment(match);
-            alert(`Unable to submit: You already have a ${match.status} record for this course in our database. ${match.status === 'rejected' ? 'Admins must clear your rejected status before you can try again.' : 'Please follow the instructions on screen.'}`);
+            Swal.fire({
+              title: 'Already Enrolled',
+              text: `You already have a ${match.status} record for this course. ${match.status === 'rejected' ? 'Admins must clear your rejected status before you can try again.' : 'Please follow the instructions on screen.'}`,
+              icon: 'warning',
+              confirmButtonColor: '#3baee9'
+            });
             return;
           }
         } catch (checkErr) {
@@ -211,10 +238,12 @@ export default function EnrollPage() {
         }
       }
 
-      alert(
-        err.message ||
-        "Failed to submit enrollment. Please check your information and try again.",
-      );
+      Swal.fire({
+        title: 'Submission Failed',
+        text: err.message || "Failed to submit enrollment. Please check your information and try again.",
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
     } finally {
       setSubmitting(false);
     }
@@ -301,8 +330,8 @@ export default function EnrollPage() {
             <div className="flex flex-col gap-4">
               {existingEnrollment && (
                 <div className={`p-4 rounded-xl border flex items-start gap-3 ${existingEnrollment.status === 'rejected' ? 'bg-red-50 border-red-200 text-red-700' :
-                    existingEnrollment.status === 'pending' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                      'bg-green-50 border-green-200 text-green-700'
+                  existingEnrollment.status === 'pending' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                    'bg-green-50 border-green-200 text-green-700'
                   }`}>
                   <FiAlertCircle className="mt-0.5 shrink-0" size={18} />
                   <div>

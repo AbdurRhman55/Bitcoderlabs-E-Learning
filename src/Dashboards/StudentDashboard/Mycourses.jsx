@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FaPaintBrush, FaBolt, FaBullseye, FaScroll, FaBook } from "react-icons/fa";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMyCourses, selectMyCourses } from '../../../slices/courseSlice';
-import { API_ORIGIN } from '../../api/index.js';
+import { apiClient, API_ORIGIN } from '../../api/index.js';
 
-const MyCourses = () => {
+const MyCourses = ({ setActiveSection }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const fetchedCourses = useSelector(selectMyCourses) || [];
   const loading = useSelector((state) => state.courses.myCoursesLoading);
@@ -18,6 +19,43 @@ const MyCourses = () => {
       dispatch(fetchMyCourses());
     }
   }, [dispatch, user?.id]);
+
+  const handleCourseAction = async (course) => {
+    if (course.status === 'completed') {
+      if (typeof setActiveSection === 'function') {
+        setActiveSection('certificates');
+      }
+    } else {
+      try {
+        // Find the first lesson to redirect to
+        const response = await apiClient.getCourseById(course.id);
+        const fetchedCourse = response.data?.data || response.data || response;
+
+        // Try to find the first lesson in any module
+        let firstLessonId = null;
+        if (fetchedCourse?.modules) {
+          for (const module of fetchedCourse.modules) {
+            const lessons = module.lessons || module.course_lessons || module.lessonsList || [];
+            if (lessons.length > 0) {
+              const lesson = lessons[0];
+              firstLessonId = lesson.id || lesson.lesson_id;
+              break;
+            }
+          }
+        }
+
+        if (firstLessonId) {
+          navigate(`/video/${firstLessonId}?courseId=${course.id}`);
+        } else {
+          // Fallback to course detail if no lessons found
+          navigate(`/course/${course.id}`);
+        }
+      } catch (error) {
+        console.error("Navigation error:", error);
+        navigate(`/course/${course.id}`);
+      }
+    }
+  };
 
   const resolveImageUrl = (url) => {
     if (!url) return PLACEHOLDER_IMAGE;
@@ -74,13 +112,13 @@ const MyCourses = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-2xl">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3">
         <div>
-          <h1 className="text-2xl text-gray-900">My Courses</h1>
-          <p className="text-gray-600 mt-1">Manage and track your learning progress</p>
+          <h1 className=" text-gray-900">My Courses</h1>
+          <p className="text-gray-600 mt-1 text-sm font-light">Manage and track your learning progress</p>
         </div>
         <Link to="/courses" className="mt-4 sm:mt-0 inline-block bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors duration-200">
           Browse All Courses
@@ -94,7 +132,7 @@ const MyCourses = () => {
             key={filter.id}
             onClick={() => setActiveFilter(filter.id)}
             className={`
-              px-4 py-2 rounded-lg text-sm  whitespace-nowrap transition-colors duration-200
+              px-4 py-2 rounded-lg text-sm cursor-pointer whitespace-nowrap transition-colors duration-200
               ${activeFilter === filter.id
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
@@ -112,7 +150,7 @@ const MyCourses = () => {
       </div>
 
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {filteredCourses.map((course) => (
           <div
             key={course.id}
@@ -138,7 +176,7 @@ const MyCourses = () => {
 
                 <span
                   className={`
-                    px-2 py-1 text-xs rounded-full capitalize
+                    px-2 py-1 text-[10px] rounded-full capitalize
                     ${course.status === 'completed'
                       ? 'bg-green-100 text-green-800'
                       : course.status === 'pending'
@@ -159,20 +197,20 @@ const MyCourses = () => {
               <div className="space-y-3">
                 {course.status === 'pending' && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-xs text-yellow-700">
+                    <p className="text-[10px] text-yellow-700">
                       ⏳ Your enrollment is pending approval. You'll be able to access the course once an admin approves it.
                     </p>
                   </div>
                 )}
                 <div>
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <div className="flex justify-between text-[11px] text-gray-600 mb-1">
                     <span>Progress</span>
                     <span>{course.progress || 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 ">
                     <div
                       className={`
-                        h-2 rounded-full transition-all duration-300
+                        h-1.5 rounded-full transition-all duration-300
                         ${course.status === 'completed' ? 'bg-green-500' : 'bg-primary'}
                       `}
                       style={{ width: `${course.progress || 0}%` }}
@@ -180,7 +218,7 @@ const MyCourses = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-[11px] text-gray-600">
                   <span>Duration: {course.duration || 'N/A'}</span>
                   <span>{getCategoryName(course.category)}</span>
                 </div>
@@ -190,15 +228,16 @@ const MyCourses = () => {
             {/* Button */}
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
               <button
+                onClick={() => handleCourseAction(course)}
                 className={`
-                  w-full py-2 px-4 rounded-lg text-sm transition-colors duration-200
+                  w-full py-2 px-4 rounded-lg text-[13px] font-bold transition-all duration-200 cursor-pointer
                   ${course.status === 'completed'
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     : course.status === 'pending'
                       ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 cursor-not-allowed'
                       : course.status === 'rejected'
                         ? 'bg-red-100 text-red-800 hover:bg-red-200 cursor-not-allowed'
-                        : 'bg-primary text-white hover:bg-primary-dark'}
+                        : 'bg-primary text-white hover:bg-primary-dark shadow-sm'}
                 `}
                 disabled={course.status === 'rejected' || course.status === 'pending'}
               >

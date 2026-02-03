@@ -1,2 +1,0 @@
-C:\Users\alima\Desktop\REACT.JS projects\Bitcoderlabs-E-Learning\src\Pages\TeacherProfile.jsx
-[{"ruleId":null,"nodeType":null,"fatal":true,"severity":2,"message":"Parsing error: Identifier 'TeacherProfile' has already been declared","line":4,"column":25}]

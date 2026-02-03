@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaUpload, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import Swal from 'sweetalert2';
 
 export default function PaymentProofUpload({ formData, updateFormData }) {
   const [preview, setPreview] = useState(null);
@@ -9,13 +10,25 @@ export default function PaymentProofUpload({ formData, updateFormData }) {
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file");
+        Swal.fire({
+          title: 'Invalid File',
+          text: 'Please upload an image file (PNG, JPG, JPEG).',
+          icon: 'error',
+          confirmButtonText: 'Okay',
+          confirmButtonColor: '#d33'
+        });
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB");
+        Swal.fire({
+          title: 'File Too Large',
+          text: 'File size must be less than 5MB.',
+          icon: 'warning',
+          confirmButtonText: 'Okay',
+          confirmButtonColor: '#3baee9'
+        });
         return;
       }
 

@@ -4,6 +4,7 @@ import Button from "../../UI/Button";
 import { API_ORIGIN } from "../../../api/index";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 
 const PLACEHOLDER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmVmZWZlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM5OTkiIGZvbnQtc2l6ZT0iMTQiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZHk9Ii4zZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiPkJpdGNvZGVyIExhYnM8L3RleHQ+PC9zdmc+";
@@ -47,16 +48,28 @@ export default function HeroLeft({ course }) {
 
   const handleEnroll = () => {
     if (!isAuthenticated) {
-      alert("Please log in to your account to enroll in this course. Redirection to login page...");
-      navigate("/login");
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please log in to your account to enroll in this course.',
+        icon: 'info',
+        confirmButtonText: 'Go to Login',
+        confirmButtonColor: '#3baee9'
+      }).then(() => {
+        navigate("/login");
+      });
       return;
     }
 
     if (course?.price === 0 || course?.price === "0") {
-      alert("Successfully enrolled in free course!");
-      navigate(`/course/${course?.id}/content`);
+      Swal.fire({
+        title: 'Success!',
+        text: 'Successfully enrolled in free course!',
+        icon: 'success',
+        confirmButtonColor: '#3baee9'
+      }).then(() => {
+        navigate(`/course/${course?.id}/content`);
+      });
     } else {
-      alert("Redirecting to payment...");
       navigate(`/Enroll/${course?.id}`);
     }
   };

@@ -130,7 +130,7 @@ const UserDashboard = () => {
           />
         );
       case "courses":
-        return <MyCourses />;
+        return <MyCourses setActiveSection={setActiveSection} />;
       case "progress":
         return <Progress />;
 

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyCourses, selectMyCourses, fetchUserActivity, selectUserActivity } from "../../../slices/courseSlice";
-import { API_ORIGIN } from "../../api/index.js";
+import { apiClient, API_ORIGIN } from "../../api/index.js";
 import { useNavigate } from "react-router-dom";
 import LinearProgress from "../../Component/UI/LinearProgress";
 import {
@@ -78,6 +78,35 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
 
   const PLACEHOLDER_IMAGE =
     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=400&h=300&auto=format&fit=crop";
+
+  const handleResumeCourse = async (courseId) => {
+    try {
+      // Find the first lesson to redirect to
+      const response = await apiClient.getCourseById(courseId);
+      const fetchedCourse = response.data?.data || response.data || response;
+
+      let firstLessonId = null;
+      if (fetchedCourse?.modules) {
+        for (const module of fetchedCourse.modules) {
+          const lessons = module.lessons || module.course_lessons || module.lessonsList || [];
+          if (lessons.length > 0) {
+            const lesson = lessons[0];
+            firstLessonId = lesson.id || lesson.lesson_id;
+            break;
+          }
+        }
+      }
+
+      if (firstLessonId) {
+        navigate(`/video/${firstLessonId}?courseId=${courseId}`);
+      } else {
+        navigate(`/course/${courseId}`);
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      navigate(`/course/${courseId}`);
+    }
+  };
 
   // Calculate Chart Data based on userActivity
   const chartData = useMemo(() => {
@@ -317,8 +346,8 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
                       </p>
                     </div>
                     <button
-                      onClick={() => navigate(`/video/1?courseId=${course.id}`)}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95 group/btn"
+                      onClick={() => handleResumeCourse(course.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg active:scale-95 group/btn cursor-pointer"
                     >
                       <FiPlay className="group-hover/btn:scale-110 transition-transform" />
                       Resume

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectMyCourses } from '../../../slices/courseSlice';
-import { API_ORIGIN } from '../../api/index.js';
+import { apiClient, API_ORIGIN } from '../../api/index.js';
 import { useNavigate } from 'react-router-dom';
 
 const CourseProgress = () => {
@@ -54,8 +54,35 @@ const CourseProgress = () => {
                 </div>
                 <span className="text-xs font-black text-primary w-8">{course.progress || 0}%</span>
                 <button
-                  onClick={() => navigate(`/course/${course.id}`)}
-                  className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-bold transition-all"
+                  onClick={async () => {
+                    try {
+                      // Find the first lesson to redirect to
+                      const response = await apiClient.getCourseById(course.id);
+                      const fetchedCourse = response.data?.data || response.data || response;
+
+                      let firstLessonId = null;
+                      if (fetchedCourse?.modules) {
+                        for (const module of fetchedCourse.modules) {
+                          const lessons = module.lessons || module.course_lessons || module.lessonsList || [];
+                          if (lessons.length > 0) {
+                            const lesson = lessons[0];
+                            firstLessonId = lesson.id || lesson.lesson_id;
+                            break;
+                          }
+                        }
+                      }
+
+                      if (firstLessonId) {
+                        navigate(`/video/${firstLessonId}?courseId=${course.id}`);
+                      } else {
+                        navigate(`/course/${course.id}`);
+                      }
+                    } catch (error) {
+                      console.error("Navigation error:", error);
+                      navigate(`/course/${course.id}`);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
                 >
                   Continue
                 </button>

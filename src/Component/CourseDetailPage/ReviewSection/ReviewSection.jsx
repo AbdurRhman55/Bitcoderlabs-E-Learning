@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '../../../api/index';
 import { useSelector } from 'react-redux';
 import { FaStar, FaRegStar, FaUserCircle } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
 const ReviewSection = ({ courseId, courseData }) => {
     const [reviews, setReviews] = useState([]);
@@ -37,7 +38,12 @@ const ReviewSection = ({ courseId, courseData }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
-            alert('Please log in to leave a review.');
+            Swal.fire({
+                title: 'Login Required',
+                text: 'Please log in to leave a review.',
+                icon: 'warning',
+                confirmButtonColor: '#3baee9'
+            });
             return;
         }
 
@@ -46,10 +52,20 @@ const ReviewSection = ({ courseId, courseData }) => {
             await apiClient.createReview(courseId, newReview);
             setNewReview({ rating: 5, comment: '' });
             fetchReviews(); // Refresh reviews
-            alert('Review submitted successfully!');
+            Swal.fire({
+                title: 'Review Posted!',
+                text: 'Thank you for your feedback.',
+                icon: 'success',
+                confirmButtonColor: '#3baee9'
+            });
         } catch (error) {
             console.error('Error submitting review:', error);
-            alert(error.message || 'Failed to submit review.');
+            Swal.fire({
+                title: 'Submission Failed',
+                text: error.message || 'Failed to submit review.',
+                icon: 'error',
+                confirmButtonColor: '#d33'
+            });
         } finally {
             setIsSubmitting(false);
         }

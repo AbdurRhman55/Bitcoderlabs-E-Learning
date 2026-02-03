@@ -1,6 +1,7 @@
 // src/Component/Auth/OtpModal.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 export default function OtpModal({ isOpen, onClose, onVerify }) {
   const [otp, setOtp] = useState("");
@@ -10,7 +11,12 @@ export default function OtpModal({ isOpen, onClose, onVerify }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (otp.trim().length === 0) {
-      alert("Please enter the OTP code");
+      Swal.fire({
+        title: 'Empty Field',
+        text: 'Please enter the OTP code',
+        icon: 'warning',
+        confirmButtonColor: '#3baee9'
+      });
       return;
     }
     onVerify(otp);
@@ -36,12 +42,12 @@ export default function OtpModal({ isOpen, onClose, onVerify }) {
           />
 
           <Link to="/resetpassword" >
-          <button
-            type="submit"
-            className="w-full bg-primary text-white py-2 rounded-lg font-medium"
-          >
-            Verify
-          </button>
+            <button
+              type="submit"
+              className="w-full bg-primary text-white py-2 rounded-lg font-medium"
+            >
+              Verify
+            </button>
           </Link>
         </form>
 

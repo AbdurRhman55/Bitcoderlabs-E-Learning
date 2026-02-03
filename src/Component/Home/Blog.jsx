@@ -4,9 +4,10 @@ import { FaCalendar, FaUser, FaArrowRight, FaClock } from "react-icons/fa";
 import SectionHeader from "../UI/SectionHeader";
 import { blogPosts } from "../../../Data/Array";
 import Button from "../UI/Button";
+import Swal from 'sweetalert2';
 
 export default function BlogSection() {
-  
+
 
   return (
     <section className="py-20 bg-gradient-to-b from-white via-[#f9fcff] to-[#eaf7ff]">
@@ -86,7 +87,12 @@ export default function BlogSection() {
                         </span>
                       </div>
 
-                      <Button text="Read More" onClick={() => alert("View All blog posts")} />
+                      <Button text="Read More" onClick={() => Swal.fire({
+                        title: 'Coming Soon',
+                        text: 'This blog post will be available soon!',
+                        icon: 'info',
+                        confirmButtonColor: '#3baee9'
+                      })} />
                     </div>
                   </div>
                 </div>

@@ -358,9 +358,9 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
 
   const sections = [
     { id: "profile", label: "Profile", icon: <FaUser /> },
-    { id: "education", label: "Education", icon: <FaGraduationCap /> },
-    { id: "experience", label: "Experience", icon: <FaBriefcaseAlt /> },
-    { id: "certifications", label: "Certifications", icon: <FaCertificate /> },
+    // { id: "education", label: "Education", icon: <FaGraduationCap /> },
+    // { id: "experience", label: "Experience", icon: <FaBriefcaseAlt /> },
+    // { id: "certifications", label: "Certifications", icon: <FaCertificate /> },
     { id: "security", label: "Security", icon: <FaLock /> },
   ];
 
