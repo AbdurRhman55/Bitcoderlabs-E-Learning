@@ -122,8 +122,8 @@ const Certificates = () => {
         month: 'long',
         year: 'numeric'
       }) : null),
-      instructorName: existingCert?.instructor?.name || course.instructor?.name || 'Bitcoderlabs Instructor',
-      instructorTitle: existingCert?.instructor?.title || 'Director of Certification',
+      instructorName: 'Mian Dawood',
+      instructorTitle: 'CEO',
       platformName: existingCert?.platform?.name || 'Bitcoderlabs',
       qrCodeUrl: qrCodeUrls[existingCert?.id] || null,
       verificationUrl: existingCert?.verification?.url || existingCert?.verification_url,
@@ -456,35 +456,93 @@ const CertificateTemplate = ({ cert, innerRef }) => {
 
         {/* Footer */}
         <div className="mt-auto flex items-end justify-between">
-          <div className="flex-shrink-0">
-            <p className="text-sm mb-2" style={{ color: '#4b5563' }}>
-              To verify:
+          {/* Verification Area */}
+          <div className="flex flex-col items-start">
+            <p className="text-[11px] mb-2 uppercase tracking-wider" style={{ color: '#6b7280', margin: '0 0 8px 0' }}>
+              Verify Certificate:
             </p>
 
-            {!cert.qrCodeUrl && (
-              <div>
+            <div
+              style={{
+                padding: '4px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #f3f4f6',
+                borderRadius: '8px',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              {!cert.qrCodeUrl && (
                 <QRCodeCanvas
                   value={
                     cert.verificationUrl ||
                     `https://bitcoderlabs.com/verify/${cert.certificate_number || 'cert'}`
                   }
-                  size={80}
+                  size={75}
                   level="H"
                 />
-              </div>
-            )}
+              )}
 
-            {cert.qrCodeUrl && (
-              <img
-                src={cert.qrCodeUrl}
-                alt="QR Code"
-                className="w-24 h-24"
-                crossOrigin="anonymous"
-              />
-            )}
+              {cert.qrCodeUrl && (
+                <img
+                  src={cert.qrCodeUrl}
+                  alt="QR Code"
+                  style={{ width: '75px', height: '75px' }}
+                  crossOrigin="anonymous"
+                />
+              )}
+            </div>
 
-            <p className="text-xs font-mono mt-2" style={{ color: '#4b5563' }}>
-              {cert.certificate_number || '2327-27963446'}
+            <p className="font-mono mt-2" style={{ color: '#9ca3af', fontSize: '10px', margin: '8px 0 0 0' }}>
+              ID: {cert.certificate_number || '2327-27963446'}
+            </p>
+          </div>
+
+          {/* CEO Signature Block */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              paddingBottom: "8px",
+            }}
+          >
+            {/* Instructor Name */}
+            <p
+              style={{
+                color: "#1f2937",
+                fontFamily: '"Dancing Script", cursive',
+                fontWeight: "700",
+                fontSize: "36px",
+                marginBottom: "10px",
+                lineHeight: "1.2",
+              }}
+            >
+              {cert.instructorName}
+            </p>
+
+            {/* Signature Line */}
+            <div
+              style={{
+                width: "192px",
+                height: "2px",
+                backgroundColor: "#9ca3af",
+                marginTop: "5px",
+                marginBottom: "6px",
+              }}
+            ></div>
+
+            {/* Instructor Title */}
+            <p
+              style={{
+                color: "#4b5563",
+                fontSize: "17px",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                margin: "0px",
+              }}
+            >
+              {cert.instructorTitle}
             </p>
           </div>
         </div>
