@@ -147,39 +147,66 @@ const Certificates = () => {
     };
   });
 
+  const waitForFonts = async () => {
+    const fontLoadTimeout = 2000;
+    const startTime = Date.now();
+
+    await new Promise((resolve) => {
+      const checkFonts = () => {
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(resolve).catch(resolve);
+          return;
+        }
+        if (Date.now() - startTime > fontLoadTimeout) {
+          resolve();
+        } else {
+          setTimeout(checkFonts, 50);
+        }
+      };
+      checkFonts();
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 300));
+  };
+
   const generatePDF = async (cert) => {
     setDownloadingId(cert.id);
     setActiveCert(cert);
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await waitForFonts();
+
     const element = certificateRef.current;
-    console.log(element);
     if (!element) return;
 
     try {
-      // 1️⃣ Find QR canvas inside the certificate
-      const qrCanvas = element.querySelector("canvas");
-      console.log(qrCanvas);
-      console.log("jshdgfa");
-
-      // 2️⃣ Capture certificate
       const canvas = await html2canvas(element, {
-        scale: 4,
+        scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
         removeContainer: true,
+        allowTaint: true,
+        width: 1123,
+        height: 794,
+        windowWidth: 1123,
+        windowHeight: 794,
       });
 
       const imgData = canvas.toDataURL("image/png", 1.0);
 
+      const pdfWidth = 297;
+      const pdfHeight = 210;
       const pdf = new jsPDF({
         orientation: "landscape",
-        unit: "px",
-        format: [canvas.width, canvas.height],
+        unit: "mm",
+        format: [pdfWidth, pdfHeight],
       });
 
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      const pdfImgWidth = pdfWidth;
+      const pdfImgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfImgWidth, pdfImgHeight);
       pdf.save(`Certificate-${cert.courseTitle.replace(/\s+/g, "-")}.pdf`);
     } catch (error) {
       console.error("Certificate generation failed", error);
@@ -349,17 +376,29 @@ const Certificates = () => {
         </div>
       )}
 
-      {/* Hidden Certificate Template for PDF Generation */}
+      {/* Hidden Certificate Template for PDF Generation - Isolated rendering container */}
       {!isModalOpen && activeCert && (
         <div
-          className="fixed top-0 left-0"
+          className="fixed top-0 left-0 -z-50"
           style={{
-            opacity: 1,
-            visibility: "hidden",
-            pointerEvents: "none",
+            width: '1123px',
+            height: '794px',
+            overflow: 'visible',
+            transform: 'scale(1)',
+            transformOrigin: 'top left',
           }}
         >
-          <CertificateTemplate cert={activeCert} innerRef={certificateRef} />
+          <div
+            style={{
+              width: '1123px',
+              height: '794px',
+              display: 'block',
+              position: 'relative',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <CertificateTemplate cert={activeCert} innerRef={certificateRef} />
+          </div>
         </div>
       )}
     </div>
@@ -395,6 +434,8 @@ const CertificateTemplate = ({ cert, innerRef }) => {
                   src={companyLogo}
                   alt="Company Logo"
                   className="w-20 h-20 object-contain"
+                  crossOrigin="anonymous"
+                  onLoad={() => {}}
                 />
               </div>
             </div>
