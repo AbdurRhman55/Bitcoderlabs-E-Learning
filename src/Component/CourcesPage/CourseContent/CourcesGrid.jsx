@@ -9,16 +9,23 @@ import { fetchCourses, selectCourses } from '../../../../slices/courseSlice';
 
 import { motion } from "framer-motion";
 
-export default function CourseGrid() {
+// ... (imports remain same)
+export default function CourseGrid({ searchQuery }) {
   const [layout, setLayout] = useState("grid");
   const dispatch = useDispatch();
-  const course = useSelector(selectCourses);
+  const allCourses = useSelector(selectCourses); // Rename to allCourses for clarity
   const loading = useSelector((state) => state.courses.loading);
   const error = useSelector((state) => state.courses.error);
 
   useEffect(() => {
     dispatch(fetchCourses());
   }, [dispatch]);
+
+  // Filter courses based on search query
+  const filteredCourses = allCourses.filter(course =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (course.description && course.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <section className="bg-gray-50 py-10 relative overflow-hidden">
@@ -74,17 +81,24 @@ export default function CourseGrid() {
         <div className="flex gap-8 lg:ml-5 items-start transition-all duration-500 ease-in-out">
           {/* Courses */}
           <div className="flex-1 transition-all duration-500">
-            <div
-              className={
-                layout === "grid"
-                  ? "grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-                  : "space-y-6"
-              }
-            >
-              {course.map((course) => (
-                <CourseCard key={course.id} course={course} layout={layout} />
-              ))}
-            </div>
+            {filteredCourses.length > 0 ? (
+              <div
+                className={
+                  layout === "grid"
+                    ? "grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                    : "space-y-6"
+                }
+              >
+                {filteredCourses.map((course) => (
+                  <CourseCard key={course.id} course={course} layout={layout} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <h3 className="text-xl font-bold text-gray-700">No courses found matching "{searchQuery}"</h3>
+                <p className="text-gray-500 mt-2">Try adjusting your search terms.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -38,25 +38,23 @@ export default function CourseCard({
     return `${API_ORIGIN}/storage/${cleanPath}`;
   };
 
+  const isList = layout === "list";
+
   return (
-    <Link to={`/course/${course.id}`}>
+    <Link to={`/course/${course.id}`} className="block h-full">
       <div
-        className={`group bg-white rounded-2xl shadow-sm hover:shadow-2xl border border-gray-100 hover:border-primary/20 overflow-hidden transition-all duration-500 ${layout === "list"
-          ? "flex flex-col md:flex-row items-stretch max-h-[270px]"
-          : "flex flex-col h-full"
+        className={`group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary/20 overflow-hidden transition-all duration-300 ${isList ? "flex flex-col md:flex-row gap-0" : "flex flex-col h-full"
           }`}
       >
-        {/* IMAGE */}
+        {/* IMAGE SECTION */}
         <div
-          className={`relative overflow-hidden ${layout === "list"
-            ? "w-full md:w-2/5 lg:w-1/3 h-48 md:h-auto"
-            : "h-48 w-full"
+          className={`relative overflow-hidden shrink-0 ${isList ? "w-full md:w-72 lg:w-80 h-64 md:h-auto" : "w-full h-52"
             }`}
         >
           <img
             src={resolveImageUrl(course.image)}
             alt={course.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={(e) => {
               if (e.target.src !== PLACEHOLDER_IMAGE) {
                 e.target.onerror = null;
@@ -64,114 +62,82 @@ export default function CourseCard({
               }
             }}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* LEVEL */}
-          <div className="absolute top-3 left-3">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 capitalize">
-              {course.level}
+          {/* Badge & Duration Overlays */}
+          <div className="absolute top-3 left-3 flex gap-2">
+            <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-white/90 text-gray-800 backdrop-blur-sm shadow-sm capitalize">
+              {course.level || "Beginner"}
             </span>
           </div>
 
-          {/* ACTIONS */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2">
-            <Button
-              icon={<FaHeart className="w-4 h-4" />}
-              size="xxs"
-              rounded="full"
-              onClick={(e) => {
-                e.preventDefault();
-                onWishlist?.(course);
-              }}
-            />
-            <Button
-              icon={<FaShare className="w-4 h-4" />}
-              size="xxs"
-              rounded="full"
-              onClick={(e) => {
-                e.preventDefault();
-                onShare?.(course);
-              }}
-            />
-          </div>
-
-          {/* DURATION */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-1 bg-black/70 rounded-full text-white text-xs">
-            <FaClock />
-            {course.duration}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-md text-white text-xs font-medium">
+            <FaClock size={10} className="text-primary-light" />
+            <span>{course.duration || "0h 0m"}</span>
           </div>
         </div>
 
-        {/* CONTENT */}
-        <div className="flex flex-col flex-1 p-5 justify-between">
-          <div>
-            {/* CATEGORY */}
-            <div className="flex items-center gap-2 mb-3">
-              <FiBookOpen className="text-primary" />
-              <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-1 rounded-full">
-                {course.category?.name || "Uncategorized"}
+        {/* CONTENT SECTION */}
+        <div className={`flex flex-col flex-1 p-5 ${isList ? "justify-center py-6" : ""}`}>
+          <div className="flex-1">
+            {/* Category & Rating Row */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold tracking-wide text-primary bg-primary/10 px-2.5 py-1 rounded-full uppercase">
+                {course.category?.title || course.category?.name || "Uncategorized"}
               </span>
+              <div className="flex items-center gap-1 text-yellow-400 text-xs font-bold">
+                <FaStar />
+                <span className="text-gray-700">{course.rating ? Number(course.rating).toFixed(1) : "0.0"}</span>
+                <span className="text-gray-400 font-normal">({course.reviews_count || 0} reviews)</span>
+              </div>
             </div>
 
-            {/* TITLE */}
-            <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
+            {/* Title */}
+            <h3 className={`font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors ${isList ? "text-xl md:text-2xl" : "text-lg line-clamp-2"}`}>
               {course.title}
             </h3>
 
-            {/* INSTRUCTOR */}
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-              <FaUser />
-              <span>
-                By {course.instructor?.name || "Admin"}
-              </span>
-            </div>
-
-            {/* DESCRIPTION */}
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-              {course.description}
+            {/* Description - Show more in list view */}
+            <p className={`text-gray-500 text-sm mb-4 leading-relaxed ${isList ? "line-clamp-2 md:line-clamp-3" : "line-clamp-2"}`}>
+              {course.description || course.short_description || "No description available."}
             </p>
 
-            {/* STATS */}
-            <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-              <div className="flex items-center gap-1">
-                <FiUsers />
-                {course.students_count} students
+            {/* Instructor & Meta Info */}
+            <div className="flex items-center gap-4 text-sm text-gray-500 mb-5 border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                  <FaUser size={12} />
+                </div>
+                <span className="font-medium text-gray-700">{course.instructor?.name || "Instructor"}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <FaBook />
-                {course.reviews_count} reviews
+              <div className={`hidden sm:flex items-center gap-1.5 ${isList ? "flex" : ""}`}>
+                <FiUsers size={14} />
+                <span>{course.students_count || 0} students</span>
               </div>
-            </div>
-
-            {/* RATING */}
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <FaStar
-                    key={i}
-                    className={
-                      i <= Math.round(course.rating)
-                        ? "text-yellow-400"
-                        : "text-gray-300"
-                    }
-                  />
-                ))}
-              </div>
-              <span className="text-sm font-semibold">
-                {course.rating}
-              </span>
             </div>
           </div>
 
-          {/* PRICE */}
-          <div className="flex items-center justify-between pt-3 border-t">
-            <span className="text-xl font-bold text-primary">
-              {course.price === 0 ? "Free" : `Rs ${course.price}`}
-            </span>
+          {/* Footer: Price & CTA */}
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Price</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-bold text-gray-900">
+                  {course.price > 0 ? `Rs ${course.price.toLocaleString()}` : "Free"}
+                </span>
+                {course.old_price && (
+                  <span className="text-sm text-gray-400 line-through">Rs {course.old_price}</span>
+                )}
+              </div>
+            </div>
 
             <Button
-              text={course.price === 0 ? "Enroll Free" : "Explore Now"}
+              text={isList ? "View Details" : "View"}
+              variant="outline"
               size="sm"
-              rounded="lg"
+              rounded="md"
+              className="!border-gray-200 !text-gray-600 hover:!border-primary hover:!bg-primary hover:!text-white transition-all shadow-sm hover:shadow-md"
+              icon={isList ? <FaEye /> : null}
             />
           </div>
         </div>
