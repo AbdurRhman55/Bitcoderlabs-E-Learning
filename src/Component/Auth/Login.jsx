@@ -30,7 +30,10 @@ const LoginPage = () => {
       if (user.role === 'admin') {
         redirectPath = '/admindashboard';
       } else if (user.role === 'instructor') {
-        redirectPath = user.instructor_approved ? '/teachermaindashboard' : '/teacherprofile';
+        // Check instructor_profile.approval_status instead of instructor_approved
+        const instructorProfile = user.instructor_profile;
+        const isApproved = instructorProfile?.approval_status === 'approved';
+        redirectPath = isApproved ? '/teachermaindashboard' : '/teacherprofile';
       } else if (user.role === 'student') {
         redirectPath = '/studentdashboard';
       }

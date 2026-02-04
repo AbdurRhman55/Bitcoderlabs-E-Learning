@@ -98,7 +98,13 @@ const TeacherDashboard = () => {
                     console.error('Error loading profile:', error);
                     console.error('User data:', user);
                     console.error('Response data:', error.response?.data);
-                    showNotification('Failed to load profile data. Please try refreshing the page.', 'error');
+
+                    // Check if profile doesn't exist (404)
+                    if (error.response?.status === 404) {
+                        showNotification('Instructor profile not found. Please contact support.', 'error');
+                    } else {
+                        showNotification('Failed to load profile data. Please try refreshing the page.', 'error');
+                    }
                 }
             }
         };
