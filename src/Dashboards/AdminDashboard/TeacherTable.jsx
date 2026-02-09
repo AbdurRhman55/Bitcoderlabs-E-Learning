@@ -15,6 +15,8 @@ import {
   Trophy,
   Edit,
   Trash2,
+  CheckCircle,
+  X
 } from "lucide-react";
 import { apiClient } from "../../../src/api/index.js";
 
@@ -33,6 +35,7 @@ export default function TeachersTable() {
     phone: '',
     bio: ''
   });
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return "";
@@ -97,26 +100,48 @@ export default function TeachersTable() {
 
   // ================= ACTIONS =================
   const handleApprove = async (id) => {
-    if (!window.confirm("Approve this instructor?")) return;
+    const teacher = teachers.find(t => t.id === id);
+    if (!teacher) return;
+
+    if (!window.confirm(`Approve ${teacher.name}?`)) return;
+
     try {
+      // If the profile is still in 'pending' (draft) status, 
+      // we auto-submit it for approval first so the backend can process the approval.
+      if (teacher.approval_status === "pending" || !teacher.approval_status) {
+        await apiClient.submitInstructorForApproval(id);
+      }
+
       await apiClient.approveInstructor(id);
       setSelectedTeacher(null);
       fetchTeachers();
+      alert("Instructor approved successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to approve instructor");
+      const msg = err.response?.data?.message || err.message || "Failed to approve instructor";
+      alert(msg);
     }
   };
 
   const handleReject = async (id) => {
-    if (!window.confirm("Reject this instructor?")) return;
+    const reason = window.prompt("Please provide a reason for rejection (Required):");
+
+    if (reason === null) return; // User cancelled
+
+    if (!reason.trim()) {
+      alert("A reason is required to reject an instructor.");
+      return;
+    }
+
     try {
-      await apiClient.rejectInstructor(id);
+      await apiClient.rejectInstructor(id, reason.trim());
       setSelectedTeacher(null);
       fetchTeachers();
+      alert("Instructor rejected successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to reject instructor");
+      const msg = err.response?.data?.message || err.message || "Failed to reject instructor";
+      alert(msg);
     }
   };
 
@@ -199,9 +224,16 @@ export default function TeachersTable() {
   };
 
   const pendingTeachers = teachers.filter(
-    (t) => t.approval_status === "submitted",
+    (t) => t.approval_status === "submitted" || t.approval_status === "pending",
   );
-  const activeTeachers = teachers.filter((t) => t.is_active);
+
+  const filteredTeachers = teachers.filter((t) => {
+    if (statusFilter === 'All') return true;
+    if (statusFilter === 'Pending') return t.approval_status === 'submitted' || t.approval_status === 'pending';
+    if (statusFilter === 'Active') return t.is_active;
+    if (statusFilter === 'Rejected') return t.approval_status === 'rejected';
+    return true;
+  });
 
   return (
     <div className="space-y-10">
@@ -252,9 +284,16 @@ export default function TeachersTable() {
 
                   <button
                     onClick={() => handleApprove(t.id)}
-                    className="flex-1 text-xs py-2 rounded-lg bg-[#3baee9] text-white"
+                    className="flex-1 text-xs py-2 rounded-lg bg-[#3baee9] text-white hover:bg-[#2a9fd8] transition-colors"
                   >
                     Approve
+                  </button>
+
+                  <button
+                    onClick={() => handleReject(t.id)}
+                    className="flex-1 text-xs py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Reject
                   </button>
                 </div>
               </div>
@@ -263,13 +302,32 @@ export default function TeachersTable() {
         </section>
       )}
 
-      {/* ================= ACTIVE TEACHERS ================= */}
+      {/* ================= INSTRUCTOR LIST ================= */}
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-200 bg-primary rounded-t-xl">
-          <h2 className="text-3xl font-bold text-white">Active Teachers</h2>
-          <p className="text-sm text-white">
-            {activeTeachers.length} approved instructors
-          </p>
+        <div className="px-6 py-6 border-b border-gray-200 bg-primary rounded-t-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-bold text-white">Instructors Management</h2>
+              <p className="text-sm text-white/80">
+                {teachers.length} total registered instructors
+              </p>
+            </div>
+
+            <div className="flex bg-white/10 p-1 rounded-lg backdrop-blur-sm border border-white/20">
+              {['All', 'Active', 'Pending', 'Rejected'].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setStatusFilter(filter)}
+                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${statusFilter === filter
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-white hover:bg-white/10'
+                    }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <table className="w-full text-sm">
@@ -290,7 +348,7 @@ export default function TeachersTable() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {activeTeachers.map((t) => (
+            {filteredTeachers.map((t) => (
               <tr
                 key={t.id}
                 className="hover:bg-gray-50 border-gray-200 border-b"
@@ -318,8 +376,13 @@ export default function TeachersTable() {
                   )}
                 </td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 text-xs rounded-full bg-primary text-white">
-                    Active
+                  <span className={`px-2 py-1 text-xs rounded-full font-bold ${t.is_active
+                    ? "bg-green-100 text-green-700"
+                    : t.approval_status === 'rejected'
+                      ? "bg-red-100 text-red-700"
+                      : "bg-amber-100 text-amber-700"
+                    }`}>
+                    {t.is_active ? "Active" : t.approval_status === 'rejected' ? 'Rejected' : 'Pending'}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -331,6 +394,25 @@ export default function TeachersTable() {
                     >
                       <Eye size={16} />
                     </button>
+                    {/* Status Toggle Actions */}
+                    {!t.is_active && (
+                      <button
+                        onClick={() => handleApprove(t.id)}
+                        className="text-primary hover:text-blue-700 cursor-pointer flex items-center gap-1 transition-colors"
+                        title="Approve"
+                      >
+                        <CheckCircle size={16} />
+                      </button>
+                    )}
+                    {t.approval_status !== 'rejected' && (
+                      <button
+                        onClick={() => handleReject(t.id)}
+                        className="text-orange-600 hover:text-orange-700 cursor-pointer flex items-center gap-1 transition-colors"
+                        title="Reject"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleEdit(t)}
                       className="text-green-600 hover:text-green-700 cursor-pointer flex items-center gap-1 transition-colors"
@@ -744,7 +826,7 @@ export default function TeachersTable() {
             </div>
 
             {/* Actions */}
-            {selectedTeacher.approval_status === "submitted" && (
+            {(selectedTeacher.approval_status === "submitted" || selectedTeacher.approval_status === "pending") && (
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => handleApprove(selectedTeacher.id)}

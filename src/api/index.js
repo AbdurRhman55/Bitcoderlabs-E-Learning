@@ -435,9 +435,10 @@ class ApiClient {
     });
   }
 
-  async rejectInstructor(id) {
+  async rejectInstructor(id, reason) {
     return this.request(`/instructors/${id}/reject`, {
       method: "POST",
+      body: JSON.stringify({ reason }),
     });
   }
 

@@ -28,10 +28,6 @@ body {
   -ms-overflow-style: none;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @keyframes progress-bar-stripes {
   from {
     background-position: 1rem 0;
