@@ -491,6 +491,12 @@ class ApiClient {
     });
   }
 
+  async deleteInstructor(id) {
+    return this.request(`/instructors/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Teacher Dashboard APIs
   async getTeacherStats() {
     return this.request("/instructors/my/stats");

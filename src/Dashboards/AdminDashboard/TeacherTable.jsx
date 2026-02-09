@@ -13,6 +13,8 @@ import {
   Clock,
   ArrowRight,
   Trophy,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { apiClient } from "../../../src/api/index.js";
 
@@ -23,6 +25,14 @@ export default function TeachersTable() {
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]); // Store all courses
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [editingTeacher, setEditingTeacher] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    bio: ''
+  });
 
   const getImageUrl = (image) => {
     if (!image || typeof image !== "string") return "";
@@ -107,6 +117,73 @@ export default function TeachersTable() {
     } catch (err) {
       console.error(err);
       alert("Failed to reject instructor");
+    }
+  };
+
+  // ================= EDIT =================
+  const handleEdit = (teacher) => {
+    setEditingTeacher(teacher);
+    setEditFormData({
+      name: teacher.name || '',
+      email: teacher.email || '',
+      phone: teacher.phone || '',
+      bio: teacher.bio || ''
+    });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingTeacher) return;
+
+    setIsUpdating(true);
+    try {
+      // Step 1: Construct a delta of only changed fields to avoid unnecessary validation triggers
+      const payload = {};
+
+      if (editFormData.name !== editingTeacher.name) payload.name = editFormData.name;
+      if (editFormData.email !== editingTeacher.email) payload.email = editFormData.email;
+      if (editFormData.phone !== (editingTeacher.phone || '')) payload.phone = editFormData.phone;
+      if (editFormData.bio !== (editingTeacher.bio || '')) payload.bio = editFormData.bio;
+
+      // If nothing changed, just close the modal
+      if (Object.keys(payload).length === 0) {
+        setEditingTeacher(null);
+        return;
+      }
+
+      await apiClient.updateInstructor(editingTeacher.id, payload);
+      alert("Teacher updated successfully!");
+      setEditingTeacher(null);
+      fetchTeachers();
+    } catch (err) {
+      console.error("Failed to update teacher:", err);
+
+      // Extract specific error messages if available (especially for 422 errors)
+      let errorMessage = "Failed to update teacher. Please try again.";
+      if (err.response?.data?.errors) {
+        const errors = err.response.data.errors;
+        errorMessage = Object.values(errors).flat().join("\n");
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      alert(errorMessage);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // ================= DELETE =================
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) return;
+
+    try {
+      await apiClient.deleteInstructor(id);
+      alert("Teacher deleted successfully!");
+      fetchTeachers();
+    } catch (err) {
+      console.error("Failed to delete teacher:", err);
+      alert("Failed to delete teacher. Please try again.");
     }
   };
 
@@ -208,7 +285,7 @@ export default function TeachersTable() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
-                View
+                Actions
               </th>
             </tr>
           </thead>
@@ -246,12 +323,29 @@ export default function TeachersTable() {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleViewCV(t.id)}
-                    className="text-[#3baee9] cursor-pointer flex items-center gap-1"
-                  >
-                    <Eye size={16} /> View CV
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleViewCV(t.id)}
+                      className="text-[#3baee9] hover:text-[#2a9fd8] cursor-pointer flex items-center gap-1 transition-colors"
+                      title="View CV"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(t)}
+                      className="text-green-600 hover:text-green-700 cursor-pointer flex items-center gap-1 transition-colors"
+                      title="Edit Teacher"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(t.id, t.name)}
+                      className="text-red-600 hover:text-red-700 cursor-pointer flex items-center gap-1 transition-colors"
+                      title="Delete Teacher"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -666,6 +760,100 @@ export default function TeachersTable() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ================= EDIT MODAL ================= */}
+      {editingTeacher && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-lg overflow-y-auto max-h-[90vh] p-6 relative">
+            <button
+              onClick={() => setEditingTeacher(null)}
+              className="absolute top-4 right-4 cursor-pointer text-gray-400 hover:text-black text-lg"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Teacher Information</h2>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editFormData.phone}
+                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                />
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Bio / Professional Summary
+                </label>
+                <textarea
+                  value={editFormData.bio}
+                  onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
+                  rows="4"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition resize-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeacher(null)}
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className={`flex-1 py-2 px-4 bg-primary text-white rounded-lg transition font-medium flex items-center justify-center gap-2 ${isUpdating ? 'opacity-70 cursor-not-allowed' : 'hover:bg-primary-dark'}`}
+                >
+                  {isUpdating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Updating...
+                    </>
+                  ) : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

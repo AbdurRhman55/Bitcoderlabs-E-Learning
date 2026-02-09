@@ -22,6 +22,9 @@ const TeacherDashboard = () => {
         profileImage: null,
         profileImageUrl: '',
         status: 'pending',
+        specialization: [],
+        socialLinks: { github: '', linkedin: '' },
+        portfolioUrl: '',
     });
 
     const [educationList, setEducationList] = useState([]);
@@ -72,6 +75,29 @@ const TeacherDashboard = () => {
                             ? `http://127.0.0.1:8000/storage/${instructor.image.replace(/^\/+/, '').replace(/^public\//, '')}`
                             : '',
                         status: instructor.approval_status || 'pending',
+                        specialization: (() => {
+                            try {
+                                if (!instructor.specialization) return [];
+                                return typeof instructor.specialization === 'string'
+                                    ? JSON.parse(instructor.specialization)
+                                    : instructor.specialization;
+                            } catch (e) {
+                                console.error('Failed to parse specialization:', e);
+                                return [];
+                            }
+                        })(),
+                        socialLinks: (() => {
+                            try {
+                                if (!instructor.social_links) return { github: '', linkedin: '' };
+                                return typeof instructor.social_links === 'string'
+                                    ? JSON.parse(instructor.social_links)
+                                    : instructor.social_links;
+                            } catch (e) {
+                                console.error('Failed to parse social_links:', e);
+                                return { github: '', linkedin: '' };
+                            }
+                        })(),
+                        portfolioUrl: instructor.portfolio_url || '',
                     });
 
                     // Populate related lists
@@ -156,14 +182,18 @@ const TeacherDashboard = () => {
         setIsSaving(true);
 
         try {
-            // Prepare data for API
+            // 1. Prepare base profile data (raw objects/arrays)
             const profileData = {
                 name: profile.fullName,
                 bio: profile.bio,
                 email: profile.email,
                 phone: profile.phone,
+                specialization: profile.specialization || [],
+                social_links: profile.socialLinks || { github: '', linkedin: '' },
+                portfolio_url: profile.portfolioUrl || '',
             };
 
+            // 2. Prepare related list data
             const relatedData = {
                 education: educationList.map(edu => ({
                     institution: edu.institution,
@@ -197,25 +227,43 @@ const TeacherDashboard = () => {
                 }))
             };
 
-            const payload = { ...profileData, ...relatedData };
-
+            // 3. Handle submission based on whether an image is included
             if (profile.profileImage) {
                 const formData = new FormData();
-                Object.entries(profileData).forEach(([key, value]) => {
-                    if (value !== undefined && value !== null) {
-                        formData.append(key, value);
-                    }
-                });
+
+                // For FormData, all complex fields MUST be stringified JSON
+                formData.append('name', profileData.name);
+                formData.append('bio', profileData.bio);
+                formData.append('email', profileData.email);
+                formData.append('phone', profileData.phone);
+                formData.append('portfolio_url', profileData.portfolio_url);
+                formData.append('specialization', JSON.stringify(profileData.specialization));
+                formData.append('social_links', JSON.stringify(profileData.social_links));
 
                 formData.append('education', JSON.stringify(relatedData.education));
                 formData.append('work_experience', JSON.stringify(relatedData.work_experience));
                 formData.append('projects', JSON.stringify(relatedData.projects));
                 formData.append('certifications', JSON.stringify(relatedData.certifications));
+
                 formData.append('image', profile.profileImage);
 
                 await apiClient.updateInstructorProfile(formData);
             } else {
-                await apiClient.updateInstructorProfile(payload);
+                // For JSON requests, we still stringify specific fields IF the backend 
+                // uses the Laravel 'json' validator rule (which requires a string).
+                // Given the 422 error message, this is likely the case.
+                const jsonPayload = {
+                    ...profileData,
+                    ...relatedData,
+                    specialization: JSON.stringify(profileData.specialization),
+                    social_links: JSON.stringify(profileData.social_links),
+                    education: JSON.stringify(relatedData.education),
+                    work_experience: JSON.stringify(relatedData.work_experience),
+                    projects: JSON.stringify(relatedData.projects),
+                    certifications: JSON.stringify(relatedData.certifications)
+                };
+
+                await apiClient.updateInstructorProfile(jsonPayload);
             }
 
             // --- REFETCH PROFILE TO GET CONFIRMED IMAGE URL ---

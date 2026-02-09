@@ -10,7 +10,11 @@ import {
     FaImage,
     FaProjectDiagram,
     FaAward,
-    FaExternalLinkAlt
+    FaExternalLinkAlt,
+    FaCode,
+    FaGithub,
+    FaLinkedin,
+    FaGlobe
 } from 'react-icons/fa';
 
 const PreviewTab = ({ profile, educationList, experienceList, workPics, projectsList, certificationsList }) => {
@@ -40,6 +44,8 @@ const PreviewTab = ({ profile, educationList, experienceList, workPics, projects
                 return { color: 'bg-gray-100 text-gray-800', message: '' };
         }
     };
+
+
 
     const statusConfig = getStatusConfig(profile.status);
 
@@ -100,8 +106,50 @@ const PreviewTab = ({ profile, educationList, experienceList, workPics, projects
                                 </div>
                             )}
                         </div>
+
+                        {/* Social Links & Portfolio */}
+                        <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
+                            {profile.socialLinks?.github && (
+                                <a href={profile.socialLinks.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                                    <FaGithub size={18} />
+                                    <span className="text-sm font-medium">GitHub</span>
+                                </a>
+                            )}
+                            {profile.socialLinks?.linkedin && (
+                                <a href={profile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
+                                    <FaLinkedin size={18} />
+                                    <span className="text-sm font-medium">LinkedIn</span>
+                                </a>
+                            )}
+                            {profile.portfolioUrl && (
+                                <a href={profile.portfolioUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:text-primary-dark transition-colors">
+                                    <FaGlobe size={18} />
+                                    <span className="text-sm font-medium">Portfolio</span>
+                                </a>
+                            )}
+                        </div>
                     </div>
                 </div>
+
+                {/* Specialization Tags */}
+                {profile.specialization?.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4">
+                            <FaCode className="text-primary" />
+                            <h3 className="text-lg font-semibold text-gray-800">Specialization & Technologies</h3>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {profile.specialization.map((tech, index) => (
+                                <span
+                                    key={index}
+                                    className="px-4 py-1.5 bg-primary/10 text-primary text-sm font-bold rounded-full border border-primary/20"
+                                >
+                                    {tech}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Education Section */}
                 {educationList.length > 0 && (

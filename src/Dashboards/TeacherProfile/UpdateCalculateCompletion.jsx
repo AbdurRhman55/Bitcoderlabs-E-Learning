@@ -4,12 +4,14 @@ export const calculateCompletion = (profile, educationList, experienceList, work
     const maxScore = 100;
 
     // Personal Info (45 points)
-    if (profile.fullName?.trim()) totalScore += 10;
-    if (profile.email?.trim()) totalScore += 10;
+    if (profile.fullName?.trim()) totalScore += 5;
+    if (profile.email?.trim()) totalScore += 5;
     if (profile.bio?.trim() && profile.bio.length >= 50) totalScore += 10;
     if (profile.phone?.trim()) totalScore += 5;
     if (profile.address?.trim()) totalScore += 5;
     if (profile.profileImageUrl) totalScore += 5;
+    if (profile.specialization?.length > 0) totalScore += 5;
+    if (profile.socialLinks?.github || profile.socialLinks?.linkedin || profile.portfolioUrl) totalScore += 5;
 
     // Education (30 points)
     if (educationList.length > 0) {
@@ -53,8 +55,10 @@ export const calculateSectionCompletion = (profile, educationList, experienceLis
                 profile.bio?.trim() && profile.bio.length >= 50,
                 profile.phone?.trim(),
                 profile.address?.trim(),
-                profile.profileImageUrl
-            ].filter(Boolean).length / 6
+                profile.profileImageUrl,
+                profile.specialization?.length > 0,
+                profile.socialLinks?.github || profile.socialLinks?.linkedin || profile.portfolioUrl
+            ].filter(Boolean).length / 8
         ) * 100),
 
         education: educationList.length > 0

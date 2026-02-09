@@ -37,7 +37,7 @@ export default function InstructorCard({ instructor }) {
 
         {/* Skills Tags - Limited to 3 with show more */}
         <div className="flex flex-wrap gap-2 mt-auto">
-          {instructor.skills.slice(0, 3).map((skill, index) => (
+          {Array.isArray(instructor.skills) && instructor.skills.slice(0, 3).map((skill, index) => (
             <span
               key={index}
               className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-medium"
@@ -45,7 +45,7 @@ export default function InstructorCard({ instructor }) {
               {skill}
             </span>
           ))}
-          {instructor.skills.length > 3 && (
+          {Array.isArray(instructor.skills) && instructor.skills.length > 3 && (
             <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
               +{instructor.skills.length - 3}
             </span>
@@ -83,7 +83,7 @@ export default function InstructorCard({ instructor }) {
 
           {/* Skills */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
-            {instructor.skills.map((skill, index) => (
+            {Array.isArray(instructor.skills) && instructor.skills.map((skill, index) => (
               <span
                 key={index}
                 className="bg-white/20 text-white px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm"
