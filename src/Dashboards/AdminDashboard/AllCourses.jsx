@@ -902,11 +902,10 @@ export default function CoursesPage() {
 
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              course.is_active
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${course.is_active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                              }`}
                           >
                             {course.is_active ? "Active" : "Inactive"}
                           </span>
@@ -992,9 +991,9 @@ export default function CoursesPage() {
                                                 className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
                                               >
                                                 {isModuleExpanded ? (
-                                                  <ChevronDown className="w-4 h-4" />
+                                                  <ChevronDown className="w-14  p-1 hover:bg-gray-200 rounded transition-colors cursor-pointer" />
                                                 ) : (
-                                                  <ChevronRight className="w-4 h-4" />
+                                                  <ChevronRight className="w-14  p-1 hover:bg-gray-200 rounded transition-colors cursor-pointer" />
                                                 )}
                                                 <div className="flex items-center gap-3">
                                                   <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-semibold text-sm">
@@ -1085,7 +1084,7 @@ export default function CoursesPage() {
                                                         <div className="flex items-center gap-3">
                                                           <div className="flex-shrink-0">
                                                             {lesson.lesson_type ===
-                                                            "video" ? (
+                                                              "video" ? (
                                                               <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                                                                 <Video className="w-4 h-4 text-red-600" />
                                                               </div>
@@ -1128,15 +1127,14 @@ export default function CoursesPage() {
                                                               )}
                                                               {lesson.lesson_type && (
                                                                 <span
-                                                                  className={`text-xs px-2 py-1 rounded capitalize ${
-                                                                    lesson.lesson_type ===
+                                                                  className={`text-xs px-2 py-1 rounded capitalize ${lesson.lesson_type ===
                                                                     "video"
-                                                                      ? "bg-red-100 text-red-800"
-                                                                      : lesson.lesson_type ===
-                                                                          "article"
-                                                                        ? "bg-blue-100 text-blue-800"
-                                                                        : "bg-green-100 text-green-800"
-                                                                  }`}
+                                                                    ? "bg-red-100 text-red-800"
+                                                                    : lesson.lesson_type ===
+                                                                      "article"
+                                                                      ? "bg-blue-100 text-blue-800"
+                                                                      : "bg-green-100 text-green-800"
+                                                                    }`}
                                                                 >
                                                                   {
                                                                     lesson.lesson_type
@@ -1303,11 +1301,10 @@ export default function CoursesPage() {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-1 border rounded-md text-sm ${
-                          currentPage === pageNum
-                            ? "bg-primary text-white border-primary"
-                            : "border-gray-300 hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-1 border rounded-md text-sm ${currentPage === pageNum
+                          ? "bg-primary text-white border-primary"
+                          : "border-gray-300 hover:bg-gray-50"
+                          }`}
                       >
                         {pageNum}
                       </button>
