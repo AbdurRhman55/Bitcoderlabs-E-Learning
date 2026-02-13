@@ -22,6 +22,9 @@ const TeacherDashboard = () => {
         profileImage: null,
         profileImageUrl: '',
         status: 'pending',
+        specialization: [],
+        socialLinks: { github: '', linkedin: '' },
+        portfolioUrl: '',
     });
 
     const [educationList, setEducationList] = useState([]);
@@ -72,6 +75,29 @@ const TeacherDashboard = () => {
                             ? `http://127.0.0.1:8000/storage/${instructor.image.replace(/^\/+/, '').replace(/^public\//, '')}`
                             : '',
                         status: instructor.approval_status || 'pending',
+                        specialization: (() => {
+                            try {
+                                if (!instructor.specialization) return [];
+                                return typeof instructor.specialization === 'string'
+                                    ? JSON.parse(instructor.specialization)
+                                    : instructor.specialization;
+                            } catch (e) {
+                                console.error('Failed to parse specialization:', e);
+                                return [];
+                            }
+                        })(),
+                        socialLinks: (() => {
+                            try {
+                                if (!instructor.social_links) return { github: '', linkedin: '' };
+                                return typeof instructor.social_links === 'string'
+                                    ? JSON.parse(instructor.social_links)
+                                    : instructor.social_links;
+                            } catch (e) {
+                                console.error('Failed to parse social_links:', e);
+                                return { github: '', linkedin: '' };
+                            }
+                        })(),
+                        portfolioUrl: instructor.portfolio_url || '',
                     });
 
                     // Populate related lists
@@ -162,6 +188,9 @@ const TeacherDashboard = () => {
                 bio: profile.bio,
                 email: profile.email,
                 phone: profile.phone,
+                specialization: JSON.stringify(profile.specialization || []),
+                social_links: JSON.stringify(profile.socialLinks || { github: '', linkedin: '' }),
+                portfolio_url: profile.portfolioUrl || '',
             };
 
             const relatedData = {
@@ -211,6 +240,7 @@ const TeacherDashboard = () => {
                 formData.append('work_experience', JSON.stringify(relatedData.work_experience));
                 formData.append('projects', JSON.stringify(relatedData.projects));
                 formData.append('certifications', JSON.stringify(relatedData.certifications));
+
                 formData.append('image', profile.profileImage);
 
                 await apiClient.updateInstructorProfile(formData);

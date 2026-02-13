@@ -95,30 +95,39 @@ export default function InstructorCard({ instructor }) {
 
           {/* Social Links */}
           <div className="flex justify-center space-x-3">
-            <a
-              href={instructor.social.github}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaGithub size={18} className="text-white" />
-            </a>
-            <a
-              href={instructor.social.linkedin}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaLinkedin size={18} className="text-white" />
-            </a>
-            <a
-              href={instructor.portfolio}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaExternalLinkAlt size={18} className="text-white" />
-            </a>
+            {instructor.social?.github && instructor.social.github !== '#' && (
+              <a
+                href={instructor.social.github}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="GitHub"
+              >
+                <FaGithub size={18} className="text-white" />
+              </a>
+            )}
+            {instructor.social?.linkedin && instructor.social.linkedin !== '#' && (
+              <a
+                href={instructor.social.linkedin}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="LinkedIn"
+              >
+                <FaLinkedin size={18} className="text-white" />
+              </a>
+            )}
+            {instructor.portfolio && instructor.portfolio !== '#' && (
+              <a
+                href={instructor.portfolio}
+                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-300 backdrop-blur-sm hover:scale-110"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Portfolio"
+              >
+                <FaExternalLinkAlt size={18} className="text-white" />
+              </a>
+            )}
           </div>
         </div>
       </div>

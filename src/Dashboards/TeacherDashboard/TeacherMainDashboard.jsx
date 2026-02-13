@@ -165,14 +165,30 @@ const TeacherMainDashboard = () => {
             email: profileData.email || user?.email || "",
             profileImage: imageUrl,
             qualification: profileData.bio || "Instructor",
-            experience: "Teaching",
-            skills: Array.isArray(profileData.specialization)
-              ? profileData.specialization
-              : profileData.specialization
-                ? [profileData.specialization]
-                : [],
+            experience: profileData.experience || "Teaching",
+            skills: (() => {
+              try {
+                if (!profileData.specialization) return [];
+                return typeof profileData.specialization === 'string'
+                  ? JSON.parse(profileData.specialization)
+                  : profileData.specialization;
+              } catch (e) {
+                console.error('Failed to parse specialization:', e);
+                return [];
+              }
+            })(),
             about: profileData.bio || "Dedicated educator",
-            socialLinks: profileData.social_links || {},
+            socialLinks: (() => {
+              try {
+                if (!profileData.social_links) return {};
+                return typeof profileData.social_links === 'string'
+                  ? JSON.parse(profileData.social_links)
+                  : profileData.social_links;
+              } catch (e) {
+                console.error('Failed to parse social_links:', e);
+                return {};
+              }
+            })(),
             approvalStatus: profileData.approval_status || "pending",
           };
 

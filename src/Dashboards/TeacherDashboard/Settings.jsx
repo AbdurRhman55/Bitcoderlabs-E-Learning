@@ -41,13 +41,13 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
     phone: "",
     title: "",
     bio: "",
-    experience: "",
-    specialization: "",
     education: [],
     work_experience: [],
     projects: [],
     certifications: [],
-    social_links: "",
+    github: "",
+    linkedin: "",
+    twitter: "",
     portfolio_url: "",
   });
 
@@ -79,15 +79,13 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
         phone: profile.phone || "",
         title: profile.title || profile.qualification || "",
         bio: profile.about || "",
-        experience: profile.experience || "",
-        specialization: Array.isArray(profile.skills)
-          ? profile.skills.join(", ")
-          : profile.skills || "",
         education: profile.education || defaultArray,
         work_experience: profile.work_experience || defaultArray,
         projects: profile.projects || defaultArray,
         certifications: profile.certifications || defaultArray,
-        social_links: JSON.stringify(socialLinks) || "{}",
+        github: socialLinks.github || "",
+        linkedin: socialLinks.linkedin || "",
+        twitter: socialLinks.twitter || "",
         portfolio_url: profile.portfolio_url || "",
       });
     }
@@ -159,145 +157,88 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
     try {
       setLoading(true);
 
-      // Get the current user to get the instructor ID
-      console.log("Getting current user...");
-      const currentUser = await apiClient.getCurrentUser();
-      console.log("Current user response:", currentUser);
+      // Prepare social links object
+      const socials = {
+        github: profileForm.github || "",
+        linkedin: profileForm.linkedin || "",
+        twitter: profileForm.twitter || ""
+      };
 
-      // Get instructor ID from response
-      const instructorId = currentUser?.user?.instructor_id;
+      // Prepare the payload for a JSON PUT request
+      // We must stringify any field that the backend validates with the 'json' rule.
+      // Laravel's 'json' validator expects a string that passes json_decode.
+      const payload = {
+        name: profileForm.name,
+        email: profileForm.email,
+        phone: profileForm.phone || "",
+        title: profileForm.title || "",
+        bio: profileForm.bio || "",
+        portfolio_url: profileForm.portfolio_url || "",
+        social_links: JSON.stringify(socials),
+        specialization: JSON.stringify(profile.skills || []),
+        experience: profile.experience || "Teaching",
+        education: JSON.stringify(profileForm.education || []),
+        work_experience: JSON.stringify(profileForm.work_experience || []),
+        projects: JSON.stringify(profileForm.projects || []),
+        certifications: JSON.stringify(profileForm.certifications || []),
+      };
 
-      //   console.log(instructorId);
+      console.log("Submitting Profile Update (JSON):", payload);
 
-      if (!instructorId) {
-        console.error("No instructor ID found in response:", currentUser);
-        showNotification("Unable to get instructor ID from profile", "error");
-        return;
-      }
+      // Call API to update profile
+      const response = await apiClient.updateInstructorProfile(payload);
 
-      // Prepare data for API - EXACTLY matching your API schema
-      const updateData = new FormData();
+      // Handle response structure (usually response.data or response is the instructor)
+      const instructor = response?.data?.data || response?.data || response;
 
-      // Add all fields to FormData
-      updateData.append("name", profileForm.name);
-      updateData.append("email", profileForm.email);
-      if (profileForm.phone) updateData.append("phone", profileForm.phone);
-      if (profileForm.title) updateData.append("title", profileForm.title);
-      if (profileForm.bio) updateData.append("bio", profileForm.bio);
-      if (profileForm.experience)
-        updateData.append("experience", profileForm.experience);
-      if (profileForm.specialization)
-        updateData.append("specialization", profileForm.specialization);
-      if (profileForm.portfolio_url)
-        updateData.append("portfolio_url", profileForm.portfolio_url);
+      if (instructor) {
+        console.log("Update success, received instructor data:", instructor);
 
-      // Add social_links as JSON string
-      if (profileForm.social_links && profileForm.social_links !== "{}") {
-        updateData.append("social_links", profileForm.social_links);
-      }
-
-      // Add arrays as JSON strings
-      if (profileForm.education.length > 0) {
-        updateData.append("education", JSON.stringify(profileForm.education));
-      }
-
-      if (profileForm.work_experience.length > 0) {
-        updateData.append(
-          "work_experience",
-          JSON.stringify(profileForm.work_experience)
-        );
-      }
-
-      if (profileForm.projects.length > 0) {
-        updateData.append("projects", JSON.stringify(profileForm.projects));
-      }
-
-      if (profileForm.certifications.length > 0) {
-        updateData.append(
-          "certifications",
-          JSON.stringify(profileForm.certifications)
-        );
-      }
-
-      // Add _method for Laravel to treat as PUT
-      updateData.append("_method", "PUT");
-
-      console.log("Sending FormData with fields:");
-      for (let [key, value] of updateData.entries()) {
-        console.log(key, value);
-      }
-
-      // Call API to update profile using FormData
-      // Use updateInstructorProfile instead of updateInstructor to avoid backend temp path bug
-      console.log(`Calling updateInstructorProfile`);
-      const response = await apiClient.updateInstructorProfile(updateData);
-      console.log("Update response:", response);
-
-      if (response && response.data) {
-        console.log("Update successful:", response.data);
-
-        // Parse response data for local state update
-        const responseData = response.data;
-
-        // Update local state
+        // Map backend response back to the local profile state
         const updatedProfile = {
           ...profile,
-          name: responseData.name || profileForm.name,
-          email: responseData.email || profileForm.email,
-          phone: responseData.phone || profileForm.phone,
-          title: responseData.title || profileForm.title,
-          qualification: responseData.title || profileForm.title, // Keep backward compatibility
-          about: responseData.bio || profileForm.bio,
-          experience: responseData.experience || profileForm.experience,
-          skills: responseData.specialization
-            ? Array.isArray(responseData.specialization)
-              ? responseData.specialization
-              : typeof responseData.specialization === "string"
-                ? responseData.specialization.split(",").map((s) => s.trim())
-                : [responseData.specialization]
-            : profileForm.specialization
-              .split(",")
-              .map((s) => s.trim())
-              .filter((s) => s),
-
-          // Handle social_links
-          socialLinks: responseData.social_links
-            ? typeof responseData.social_links === "string"
-              ? JSON.parse(responseData.social_links)
-              : responseData.social_links
-            : profileForm.social_links
-              ? JSON.parse(profileForm.social_links)
-              : {},
-
-          // Handle arrays
-          education: responseData.education || profileForm.education,
-          work_experience:
-            responseData.work_experience || profileForm.work_experience,
-          projects: responseData.projects || profileForm.projects,
-          certifications:
-            responseData.certifications || profileForm.certifications,
-          portfolio_url:
-            responseData.portfolio_url || profileForm.portfolio_url,
+          name: instructor.name || profileForm.name,
+          email: instructor.email || profileForm.email,
+          phone: instructor.phone || profileForm.phone,
+          title: instructor.title || profileForm.title,
+          qualification: instructor.title || profileForm.title,
+          about: instructor.bio || profileForm.bio,
+          experience: instructor.experience || profile.experience,
+          skills: (() => {
+            try {
+              if (!instructor.specialization) return profile.skills || [];
+              return typeof instructor.specialization === 'string'
+                ? JSON.parse(instructor.specialization)
+                : instructor.specialization;
+            } catch (e) {
+              return profile.skills || [];
+            }
+          })(),
+          socialLinks: (() => {
+            try {
+              if (!instructor.social_links) return socials;
+              return typeof instructor.social_links === 'string'
+                ? JSON.parse(instructor.social_links)
+                : instructor.social_links;
+            } catch (e) {
+              return socials;
+            }
+          })(),
+          education: instructor.education || profileForm.education,
+          work_experience: instructor.work_experience || profileForm.work_experience,
+          projects: instructor.projects || profileForm.projects,
+          certifications: instructor.certifications || profileForm.certifications,
+          portfolio_url: instructor.portfolio_url || profileForm.portfolio_url,
         };
 
-        console.log("Updated profile for state:", updatedProfile);
         setProfile(updatedProfile);
         setIsEditing(false);
         showNotification("Profile updated successfully", "success");
-      } else {
-        console.error("No response data from update:", response);
-        showNotification("Failed to update profile - no response", "error");
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-      });
-      showNotification(
-        error.message || "Error updating profile. Check console for details.",
-        "error"
-      );
+      const msg = error.response?.data?.message || error.message || "Failed to update profile";
+      showNotification(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -689,57 +630,6 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                     )}
                   </div>
 
-                  {/* Experience */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaBriefcaseAlt className="inline mr-2 text-gray-500" />
-                      Experience
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={profileForm.experience}
-                        onChange={(e) =>
-                          handleProfileChange("experience", e.target.value)
-                        }
-                        className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        placeholder="e.g., 5+ years in web development"
-                      />
-                    ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-800">
-                          {profile?.experience || "Not provided"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Specialization/Skills */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaBook className="inline mr-2 text-gray-500" />
-                      Specialization/Skills
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={profileForm.specialization}
-                        onChange={(e) =>
-                          handleProfileChange("specialization", e.target.value)
-                        }
-                        className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        placeholder="e.g., React, Node.js, Machine Learning"
-                      />
-                    ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <p className="text-gray-800">
-                          {Array.isArray(profile?.skills)
-                            ? profile.skills.join(", ")
-                            : profile?.skills || "Not provided"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Portfolio URL */}
                   <div className="md:col-span-2">
@@ -807,21 +697,10 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                       {isEditing ? (
                         <input
                           type="url"
-                          value={profileForm.linkedin || ""}
-                          onChange={(e) => {
-                            try {
-                              const currentLinks = JSON.parse(
-                                profileForm.social_links || "{}"
-                              );
-                              currentLinks.linkedin = e.target.value;
-                              handleProfileChange(
-                                "social_links",
-                                JSON.stringify(currentLinks)
-                              );
-                            } catch (error) {
-                              console.error("Error updating LinkedIn:", error);
-                            }
-                          }}
+                          value={profileForm.linkedin}
+                          onChange={(e) =>
+                            handleProfileChange("linkedin", e.target.value)
+                          }
                           className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                           placeholder="https://linkedin.com/in/username"
                         />
@@ -843,21 +722,10 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                       {isEditing ? (
                         <input
                           type="url"
-                          value={profileForm.twitter || ""}
-                          onChange={(e) => {
-                            try {
-                              const currentLinks = JSON.parse(
-                                profileForm.social_links || "{}"
-                              );
-                              currentLinks.twitter = e.target.value;
-                              handleProfileChange(
-                                "social_links",
-                                JSON.stringify(currentLinks)
-                              );
-                            } catch (error) {
-                              console.error("Error updating Twitter:", error);
-                            }
-                          }}
+                          value={profileForm.twitter}
+                          onChange={(e) =>
+                            handleProfileChange("twitter", e.target.value)
+                          }
                           className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                           placeholder="https://twitter.com/username"
                         />
@@ -879,21 +747,10 @@ const SettingsTab = ({ profile, setProfile, showNotification }) => {
                       {isEditing ? (
                         <input
                           type="url"
-                          value={profileForm.github || ""}
-                          onChange={(e) => {
-                            try {
-                              const currentLinks = JSON.parse(
-                                profileForm.social_links || "{}"
-                              );
-                              currentLinks.github = e.target.value;
-                              handleProfileChange(
-                                "social_links",
-                                JSON.stringify(currentLinks)
-                              );
-                            } catch (error) {
-                              console.error("Error updating GitHub:", error);
-                            }
-                          }}
+                          value={profileForm.github}
+                          onChange={(e) =>
+                            handleProfileChange("github", e.target.value)
+                          }
                           className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                           placeholder="https://github.com/username"
                         />
