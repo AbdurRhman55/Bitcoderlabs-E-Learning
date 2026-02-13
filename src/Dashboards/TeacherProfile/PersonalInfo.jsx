@@ -135,6 +135,18 @@ const PersonalInfoTab = ({ profile, setProfile, showNotification }) => {
                         placeholder="Enter your address"
                     />
                 </div>
+
+                <div className="space-y-2">
+                    <label className="block text-gray-700 font-medium">Professional Title</label>
+                    <input
+                        type="text"
+                        name="title"
+                        value={profile.title}
+                        onChange={handleProfileChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                        placeholder="e.g., Senior Web Developer, Data Scientist"
+                    />
+                </div>
             </div>
 
             <div className="mb-8">
