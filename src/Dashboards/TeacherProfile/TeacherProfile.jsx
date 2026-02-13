@@ -18,6 +18,7 @@ const TeacherDashboard = () => {
         email: '',
         phone: '',
         address: '',
+        title: '',
         bio: '',
         profileImage: null,
         profileImageUrl: '',
@@ -61,14 +62,15 @@ const TeacherDashboard = () => {
             if (isAuthenticated && user?.role === 'instructor') {
                 try {
                     const data = await apiClient.getMyProfile();
-                    const instructor = data.data; // API returns { data: instructor }
+                    const instructor = data.data?.data || data.data; // API returns { success: true, data: { ... } }
 
                     // Populate profile state
                     setProfile({
                         fullName: instructor.name || '',
                         email: instructor.email || '',
                         phone: instructor.phone || '',
-                        address: '', // Address field not implemented in database
+                        address: instructor.address || '',
+                        title: instructor.title || '',
                         bio: instructor.bio || '',
                         profileImage: null,
                         profileImageUrl: (instructor.image && typeof instructor.image === 'string')
@@ -145,7 +147,7 @@ const TeacherDashboard = () => {
         const pollInterval = setInterval(async () => {
             try {
                 const data = await apiClient.getMyProfile();
-                const instructor = data.data;
+                const instructor = data.data?.data || data.data;
                 const currentStatus = instructor.approval_status || 'pending';
 
                 if (currentStatus !== profile.status) {
@@ -185,11 +187,19 @@ const TeacherDashboard = () => {
             // Prepare data for API
             const profileData = {
                 name: profile.fullName,
+                title: profile.title || '',
                 bio: profile.bio,
                 email: profile.email,
                 phone: profile.phone,
-                specialization: JSON.stringify(profile.specialization || []),
-                social_links: JSON.stringify(profile.socialLinks || { github: '', linkedin: '' }),
+                address: profile.address || '',
+                specialization: JSON.stringify(
+                    Array.isArray(profile.specialization) ? profile.specialization : []
+                ),
+                social_links: JSON.stringify(
+                    typeof profile.socialLinks === 'object' && profile.socialLinks !== null 
+                        ? profile.socialLinks 
+                        : { github: '', linkedin: '' }
+                ),
                 portfolio_url: profile.portfolioUrl || '',
             };
 
@@ -226,7 +236,13 @@ const TeacherDashboard = () => {
                 }))
             };
 
-            const payload = { ...profileData, ...relatedData };
+            const payload = { 
+                ...profileData, 
+                education: JSON.stringify(relatedData.education),
+                work_experience: JSON.stringify(relatedData.work_experience),
+                projects: JSON.stringify(relatedData.projects),
+                certifications: JSON.stringify(relatedData.certifications),
+            };
 
             if (profile.profileImage) {
                 const formData = new FormData();
@@ -250,7 +266,7 @@ const TeacherDashboard = () => {
 
             // --- REFETCH PROFILE TO GET CONFIRMED IMAGE URL ---
             const freshProfile = await apiClient.getMyProfile();
-            const instructor = freshProfile.data; // or freshProfile.data.data? consistency check
+            const instructor = freshProfile.data?.data || freshProfile.data;
             if (instructor) {
                 setProfile(prev => ({
                     ...prev,
@@ -279,7 +295,7 @@ const TeacherDashboard = () => {
 
             // Get instructor profile data to get the ID
             const profileData = await apiClient.getMyProfile();
-            const instructorId = profileData.data.id;
+            const instructorId = profileData.data?.data?.id || profileData.data?.id;
 
             if (!instructorId) {
                 showNotification('Unable to identify instructor profile. Please contact support.', 'error');
