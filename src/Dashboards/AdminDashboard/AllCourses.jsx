@@ -62,8 +62,9 @@ export default function CoursesPage() {
     if (typeof image !== "string") return null;
     if (image.startsWith("http://") || image.startsWith("https://"))
       return image;
-    if (image.startsWith("/")) return `${API_ORIGIN}${image}`;
-    return `${API_ORIGIN}/${image}`;
+    
+    // Always prepend /storage since images are stored in storage/app/public
+    return `${API_ORIGIN}/storage/${image.replace(/^\//, '')}`;
   };
 
   // Fetch courses from API
