@@ -1,10 +1,15 @@
 import { useState, useMemo } from "react";
-import { FaArrowRight } from "react-icons/fa";
 import { Loader } from "lucide-react";
 import CategoryButtons from "./CategoryButtons";
 import BlogCard from "./BlogCard";
 
-export default function BlogSection({ blogs = [], loading = false }) {
+export default function BlogSection({
+  blogs = [],
+  loading = false,
+  loadingMore = false,
+  hasMore = false,
+  onLoadMore,
+}) {
   const [activeCategory, setActiveCategory] = useState("all");
 
   const categories = useMemo(() => {
@@ -109,12 +114,16 @@ export default function BlogSection({ blogs = [], loading = false }) {
         ) : null}
 
         {/* Load More */}
-        {filteredBlogs.length > 0 && (
+        {filteredBlogs.length > 0 && hasMore && (
           <div className="text-center mt-16">
-            <button className="group bg-white border-2 border-[#3baee9] text-[#3baee9] hover:bg-[#3baee9] hover:text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+            <button
+              onClick={onLoadMore}
+              disabled={loadingMore || !onLoadMore}
+              className="group bg-white border-2 border-[#3baee9] text-[#3baee9] hover:bg-[#3baee9] hover:text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+            >
               <span className="flex items-center gap-3">
-                Load More Articles
-                <FaArrowRight className="text-sm transition-transform duration-300 group-hover:translate-x-1" />
+                {loadingMore ? "Loading..." : "Load More Articles"}
+                <Loader className={`w-4 h-4 transition-transform duration-300 ${loadingMore ? "animate-spin" : "group-hover:translate-x-1"}`} />
               </span>
             </button>
           </div>

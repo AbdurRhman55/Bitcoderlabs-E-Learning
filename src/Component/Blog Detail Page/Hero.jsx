@@ -1,4 +1,5 @@
 import BlogHero from "./BlogHeroCOmponent";
+import { formatBlogDate } from "../../utils/blogAdapter";
 
 function BlogDetailPage({ blog }) {
   if (!blog) return null;
@@ -6,8 +7,8 @@ function BlogDetailPage({ blog }) {
     <div>
       <BlogHero
         title={blog.title}
-        author={blog.author || "BitCoderLabs"}
-        date={blog.date || blog.created_at || "Recently"}
+        author={blog.author_name || blog.author || "BitCoderLabs"}
+        date={formatBlogDate(blog.published_at || blog.created_at || blog.date) || "Recently"}
         coverImage={blog.image}
       />
     </div>

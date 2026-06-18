@@ -16,6 +16,7 @@ import {
   FaLinkedin,
   FaPaperPlane,
 } from "react-icons/fa";
+import { formatBlogDate } from "../../utils/blogAdapter";
 
 const BlogDetailPage = ({ blog }) => {
   const [commentList, setCommentList] = useState([]);
@@ -76,12 +77,12 @@ const BlogDetailPage = ({ blog }) => {
                     </span>
                     <span className="flex items-center gap-1.5">
                       <FaCalendar className="text-blue-500" />
-                      {blog?.date || blog?.created_at ? new Date(blog.date || blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : "Recently"}
+                      {formatBlogDate(blog?.published_at || blog?.created_at || blog?.date) || "Recently"}
                     </span>
                     <span className="text-slate-300">•</span>
                     <span className="flex items-center gap-1.5">
                       <FaClock className="text-blue-500" />
-                      {blog?.readTime || "5 min read"}
+                      {blog?.read_time || blog?.readTime || "5 min read"}
                     </span>
                   </div>
                 </div>

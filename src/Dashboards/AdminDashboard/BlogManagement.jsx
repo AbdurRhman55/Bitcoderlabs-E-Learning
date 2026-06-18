@@ -40,7 +40,6 @@ const initialFormState = {
   category: "",
   content: "",
   image: null,
-  tags: "",
   status: "draft",
   author_name: "",
   author_id: "",
@@ -54,6 +53,7 @@ const initialFormState = {
 export default function BlogManagement() {
   const dispatch = useDispatch();
   const blogs = useSelector(selectBlogs);
+  const currentUser = useSelector((state) => state.auth.user);
   const { loading } = useSelector((state) => state.blogs);
 
   const [showForm, setShowForm] = useState(false);
@@ -65,7 +65,7 @@ export default function BlogManagement() {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchBlogs());
+    dispatch(fetchBlogs({ per_page: 100 }));
   }, [dispatch]);
 
   const resolveImageUrl = (image) => {
@@ -77,7 +77,12 @@ export default function BlogManagement() {
 
   const openAddForm = () => {
     setEditingBlog(null);
-    setFormData(initialFormState);
+    setFormData({
+      ...initialFormState,
+      author_name: currentUser?.name || "",
+      author_id: currentUser?.id || "",
+      status: "published",
+    });
     setImagePreview(null);
     setShowForm(true);
   };
@@ -90,9 +95,8 @@ export default function BlogManagement() {
       description: blog.description || "",
       category: blog.category || "",
       content: blog.content || "",
-      tags: blog.tags || "",
-      status: blog.status || "draft",
-      author_name: blog.author_name || "",
+      status: blog.is_active ? "published" : "draft",
+      author_name: blog.author_name || blog.author || "",
       author_id: blog.author_id || "",
       read_time: blog.read_time || "",
       published_at: blog.published_at || "",
@@ -130,24 +134,43 @@ export default function BlogManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.description.trim()) return;
+    const title = formData.title.trim();
+    const description = formData.description.trim();
+    const content = formData.content.trim();
+    const slug = (formData.slug || slugify(formData.title)).trim();
+    const authorName = (formData.author_name || currentUser?.name || "").trim();
+
+    if (!title || !description || !content) {
+      alert("Title, description, and content are required.");
+      return;
+    }
+
+    if (!slug) {
+      alert("A slug is required.");
+      return;
+    }
+
+    if (!authorName) {
+      alert("Author name is required.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       let submitData;
 
       if (formData.image && formData.image instanceof File) {
         const payloadData = new FormData();
-        payloadData.append("title", formData.title);
-        payloadData.append("slug", formData.slug || slugify(formData.title));
-        payloadData.append("description", formData.description);
+        payloadData.append("title", title);
+        payloadData.append("slug", slug);
+        payloadData.append("description", description);
         if (formData.category) payloadData.append("category", formData.category);
-        if (formData.content) payloadData.append("content", formData.content);
-        if (formData.tags) payloadData.append("tags", formData.tags);
-        payloadData.append("status", formData.status || "draft");
-        if (formData.author_name) payloadData.append("author_name", formData.author_name);
-        if (formData.author_id) payloadData.append("author_id", formData.author_id.toString());
+        payloadData.append("content", content);
+        payloadData.append("author_name", authorName);
+        if (formData.author_id || currentUser?.id) payloadData.append("author_id", String(formData.author_id || currentUser?.id));
         if (formData.read_time) payloadData.append("read_time", formData.read_time);
         if (formData.published_at) payloadData.append("published_at", formData.published_at);
+        payloadData.append("is_active", formData.status === "published" ? "1" : "0");
         payloadData.append("is_featured", formData.is_featured ? '1' : '0');
         payloadData.append("trending", formData.trending ? '1' : '0');
         payloadData.append("is_new", formData.is_new ? '1' : '0');
@@ -156,17 +179,16 @@ export default function BlogManagement() {
         submitData = payloadData;
       } else {
         const cleanPayload = {
-          title: formData.title,
-          slug: formData.slug || slugify(formData.title),
-          description: formData.description,
+          title,
+          slug,
+          description,
           category: formData.category,
-          content: formData.content,
-          tags: formData.tags,
-          status: formData.status,
-          author_name: formData.author_name || undefined,
-          author_id: formData.author_id ? Number(formData.author_id) : undefined,
+          content,
+          author_name: authorName,
+          author_id: formData.author_id ? Number(formData.author_id) : currentUser?.id || undefined,
           read_time: formData.read_time || undefined,
           published_at: formData.published_at || undefined,
+          is_active: formData.status === "published",
           is_featured: formData.is_featured,
           trending: formData.trending,
           is_new: formData.is_new,
@@ -293,12 +315,12 @@ export default function BlogManagement() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        blog.status === "published"
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        blog.is_active
                           ? "bg-green-50 text-green-700"
                           : "bg-yellow-50 text-yellow-700"
                       }`}>
-                        {blog.status || "draft"}
+                        {blog.is_active ? "published" : "draft"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -386,7 +408,7 @@ export default function BlogManagement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Author Name</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Author Name *</label>
                     <input
                       type="text"
                       name="author_name"
@@ -394,11 +416,12 @@ export default function BlogManagement() {
                       onChange={handleFormChange}
                       placeholder="e.g. John Doe"
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Slug (auto-generated)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Slug * (auto-generated)</label>
                     <input
                       type="text"
                       name="slug"
@@ -407,6 +430,7 @@ export default function BlogManagement() {
                       placeholder="my-blog-title"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
                       readOnly={!editingBlog}
+                      required
                     />
                   </div>
 
@@ -424,7 +448,7 @@ export default function BlogManagement() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Content</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Content *</label>
                     <textarea
                       name="content"
                       value={formData.content}
@@ -432,18 +456,7 @@ export default function BlogManagement() {
                       placeholder="Full blog content (HTML or markdown supported)"
                       rows="6"
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tags</label>
-                    <input
-                      type="text"
-                      name="tags"
-                      value={formData.tags}
-                      onChange={handleFormChange}
-                      placeholder="Comma separated tags (e.g. React, JavaScript, Tutorial)"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
                     />
                   </div>
 

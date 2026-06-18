@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import Button from "../UI/Button";
 import { Link } from "react-router-dom";
+import { formatBlogDate, resolveBlogImageUrl } from "../../utils/blogAdapter";
 
 export default function BlogCard({ filteredBlogs }) {
   if (!filteredBlogs || filteredBlogs.length === 0) return null;
@@ -34,7 +35,7 @@ export default function BlogCard({ filteredBlogs }) {
             {/* Blog Image */}
             <div className="relative overflow-hidden h-56">
               <img
-                src={blog.image}
+                src={blog.image || blog.imageUrl || resolveBlogImageUrl(blog.image_path)}
                 alt={blog.title}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
@@ -47,7 +48,7 @@ export default function BlogCard({ filteredBlogs }) {
                     {blog.category}
                   </span>
                 )}
-                {blog.isNew && (
+                {(blog.is_new || blog.isNew) && (
                   <span className="px-3 py-1.5 bg-green-500/90 text-white rounded-full text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5">
                     <FaLeaf className="text-xs" /> New
                   </span>
@@ -65,23 +66,23 @@ export default function BlogCard({ filteredBlogs }) {
               <div>
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <div className="flex items-center gap-4">
-                    {blog.author && (
+                    {(blog.author_name || blog.author) && (
                       <div className="flex items-center gap-1.5">
                         <FaUser className="text-[#3baee9] text-xs" />
-                        <span className="font-medium">{blog.author}</span>
+                        <span className="font-medium">{blog.author_name || blog.author}</span>
                       </div>
                     )}
-                    {blog.date && (
+                    {(blog.published_at || blog.created_at || blog.date) && (
                       <div className="flex items-center gap-1.5">
                         <FaCalendar className="text-[#3baee9] text-xs" />
-                        <span>{blog.date}</span>
+                        <span>{formatBlogDate(blog.published_at || blog.created_at || blog.date) || blog.date}</span>
                       </div>
                     )}
                   </div>
-                  {blog.readTime && (
+                  {(blog.read_time || blog.readTime) && (
                     <div className="flex items-center gap-1.5 bg-gray-100 px-2 mb-1 py-1 rounded-full">
                       <FaClock className="text-[#3baee9] text-[10px]" />
-                      <span className="text-[10px]">{blog.readTime}</span>
+                      <span className="text-[10px]">{blog.read_time || blog.readTime}</span>
                     </div>
                   )}
                 </div>

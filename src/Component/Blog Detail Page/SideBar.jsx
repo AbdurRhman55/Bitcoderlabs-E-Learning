@@ -9,6 +9,7 @@ import {
   FaComment,
   FaCogs,
 } from "react-icons/fa";
+import { formatBlogDate } from "../../utils/blogAdapter";
 
 const quickActions = [
   { icon: FaDownload, label: "Download Resources", color: "text-blue-500", bg: "bg-blue-50" },
@@ -63,18 +64,18 @@ export default function SideBar({ blog }) {
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
             <span className="font-medium">Author:</span>
             <span className="font-bold text-white bg-white/10 px-3 py-1 rounded-full truncate max-w-[150px]">
-              {blog?.author_name || "BitCoderLabs"}
+              {blog?.author_name || blog?.author || "BitCoderLabs"}
             </span>
           </div>
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
             <span className="font-medium">Published:</span>
             <span className="font-bold text-emerald-400">
-              {blog?.published_at || blog?.created_at ? new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently"}
+              {formatBlogDate(blog?.published_at || blog?.created_at || blog?.date) || "Recently"}
             </span>
           </div>
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
             <span className="font-medium">Read Time:</span>
-            <span className="font-bold text-white">{blog?.read_time || "5 min"}</span>
+            <span className="font-bold text-white">{blog?.read_time || blog?.readTime || "5 min"}</span>
           </div>
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
             <span className="font-medium">Views:</span>
