@@ -8,6 +8,7 @@ import {
   selectBlogs,
 } from "../../../slices/blogSlice";
 import Button from "../../Component/UI/Button";
+import ImageUpload from "../../Component/UI/ImageUpload";
 import {
   Edit2,
   Trash2,
@@ -113,10 +114,13 @@ export default function BlogManagement() {
     }));
   };
 
-  const handleImageChange = (e) => {
-    const value = e.target.value;
-    setFormData((prev) => ({ ...prev, image: value }));
-    setImagePreview(value);
+  const handleImageChange = (file) => {
+    setFormData((prev) => ({ ...prev, image: file }));
+    if (file instanceof File) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(resolveImageUrl(file));
+    }
   };
 
   const handleCheckboxChange = (e) => {
@@ -129,28 +133,51 @@ export default function BlogManagement() {
     if (!formData.title.trim() || !formData.description.trim()) return;
     setSubmitting(true);
     try {
-      const payload = {
-        title: formData.title,
-        slug: formData.slug || slugify(formData.title),
-        description: formData.description,
-        category: formData.category,
-        content: formData.content,
-        tags: formData.tags,
-        status: formData.status,
-        author_name: formData.author_name || undefined,
-        author_id: formData.author_id ? Number(formData.author_id) : undefined,
-        read_time: formData.read_time || undefined,
-        published_at: formData.published_at || undefined,
-        is_featured: formData.is_featured,
-        trending: formData.trending,
-        is_new: formData.is_new,
-        image: formData.image || undefined,
-      };
-      Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
-      if (editingBlog) {
-        await dispatch(updateBlog({ id: editingBlog.id, data: payload })).unwrap();
+      let submitData;
+
+      if (formData.image && formData.image instanceof File) {
+        const payloadData = new FormData();
+        payloadData.append("title", formData.title);
+        payloadData.append("slug", formData.slug || slugify(formData.title));
+        payloadData.append("description", formData.description);
+        if (formData.category) payloadData.append("category", formData.category);
+        if (formData.content) payloadData.append("content", formData.content);
+        if (formData.tags) payloadData.append("tags", formData.tags);
+        payloadData.append("status", formData.status || "draft");
+        if (formData.author_name) payloadData.append("author_name", formData.author_name);
+        if (formData.author_id) payloadData.append("author_id", formData.author_id.toString());
+        if (formData.read_time) payloadData.append("read_time", formData.read_time);
+        if (formData.published_at) payloadData.append("published_at", formData.published_at);
+        payloadData.append("is_featured", formData.is_featured ? '1' : '0');
+        payloadData.append("trending", formData.trending ? '1' : '0');
+        payloadData.append("is_new", formData.is_new ? '1' : '0');
+        payloadData.append("image", formData.image);
+        
+        submitData = payloadData;
       } else {
-        await dispatch(createBlog(payload)).unwrap();
+        const cleanPayload = {
+          title: formData.title,
+          slug: formData.slug || slugify(formData.title),
+          description: formData.description,
+          category: formData.category,
+          content: formData.content,
+          tags: formData.tags,
+          status: formData.status,
+          author_name: formData.author_name || undefined,
+          author_id: formData.author_id ? Number(formData.author_id) : undefined,
+          read_time: formData.read_time || undefined,
+          published_at: formData.published_at || undefined,
+          is_featured: formData.is_featured,
+          trending: formData.trending,
+          is_new: formData.is_new,
+        };
+        submitData = cleanPayload;
+      }
+
+      if (editingBlog) {
+        await dispatch(updateBlog({ id: editingBlog.id, data: submitData })).unwrap();
+      } else {
+        await dispatch(createBlog(submitData)).unwrap();
       }
       setShowForm(false);
       setEditingBlog(null);
@@ -489,27 +516,11 @@ export default function BlogManagement() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Image URL</label>
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <input
-                          type="url"
-                          name="image"
-                          value={formData.image || ""}
-                          onChange={handleImageChange}
-                          placeholder="https://example.com/image.jpg"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      {imagePreview && (
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="w-20 h-16 rounded-lg object-cover border border-gray-200"
-                          onError={() => setImagePreview(null)}
-                        />
-                      )}
-                    </div>
+                    <ImageUpload
+                      value={formData.image || imagePreview}
+                      onChange={handleImageChange}
+                      label="Blog Image"
+                    />
                   </div>
                 </div>
 

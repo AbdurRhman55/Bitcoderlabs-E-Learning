@@ -243,7 +243,7 @@ const BlogDetailPage = ({ blog }) => {
           {/* Sidebar */}
           <div className="lg:w-1/3">
             <div className="sticky top-6">
-              <SideBar />
+              <SideBar blog={blog} />
             </div>
           </div>
         </div>

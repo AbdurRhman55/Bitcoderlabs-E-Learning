@@ -16,7 +16,7 @@ const quickActions = [
   { icon: FaComment, label: "Ask Instructor", color: "text-emerald-500", bg: "bg-emerald-50" },
 ];
 
-export default function SideBar() {
+export default function SideBar({ blog }) {
   return (
     <div className="space-y-6">
       {/* Quick Actions */}
@@ -32,7 +32,7 @@ export default function SideBar() {
           {quickActions.map((action, index) => (
             <button
               key={index}
-              className="w-full flex items-center justify-between p-3.5 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all group shadow-sm hover:shadow active:scale-[0.98]"
+              className="w-full flex items-center justify-between p-3.5 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all group shadow-sm hover:shadow active:scale-[0.98] cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${action.bg}`}>
@@ -48,7 +48,7 @@ export default function SideBar() {
         </div>
       </div>
 
-      {/* Course Info */}
+      {/* Blog Info */}
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] shadow-xl p-8 text-white relative overflow-hidden border border-slate-700">
         <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
         
@@ -56,31 +56,35 @@ export default function SideBar() {
           <div className="p-2 bg-white/10 rounded-lg">
             <FaGraduationCap className="text-blue-400" />
           </div>
-          Course Details
+          Blog Details
         </h4>
         
         <div className="space-y-4 text-sm text-slate-300 relative z-10">
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
-            <span className="font-medium">Instructor:</span>
-            <span className="font-bold text-white bg-white/10 px-3 py-1 rounded-full">Alex Thompson</span>
+            <span className="font-medium">Author:</span>
+            <span className="font-bold text-white bg-white/10 px-3 py-1 rounded-full truncate max-w-[150px]">
+              {blog?.author_name || "BitCoderLabs"}
+            </span>
           </div>
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
-            <span className="font-medium">Level:</span>
-            <span className="font-bold text-emerald-400">Intermediate</span>
+            <span className="font-medium">Published:</span>
+            <span className="font-bold text-emerald-400">
+              {blog?.published_at || blog?.created_at ? new Date(blog.published_at || blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "Recently"}
+            </span>
           </div>
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
-            <span className="font-medium">Duration:</span>
-            <span className="font-bold text-white">12 hours</span>
+            <span className="font-medium">Read Time:</span>
+            <span className="font-bold text-white">{blog?.read_time || "5 min"}</span>
           </div>
           <div className="flex justify-between items-center pb-4 border-b border-white/10">
-            <span className="font-medium">Students:</span>
-            <span className="font-bold text-white">15,420</span>
+            <span className="font-medium">Views:</span>
+            <span className="font-bold text-white">{blog?.views_count || 0}</span>
           </div>
           <div className="flex justify-between items-center pt-2">
-            <span className="font-medium">Rating:</span>
+            <span className="font-medium">Likes:</span>
             <span className="font-bold text-amber-400 flex items-center gap-1.5 bg-amber-400/10 px-3 py-1 rounded-full">
               <FaStar />
-              4.8/5.0
+              {blog?.likes_count || 0}
             </span>
           </div>
         </div>
