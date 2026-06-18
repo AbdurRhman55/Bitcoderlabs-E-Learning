@@ -35,6 +35,7 @@ import CourseRequests from "./CourseRequests";
 import CourseCategories from "./CourseCategories";
 import Contacts from "./Contacts";
 import Orders from "./Orders";
+import BlogManagement from "./BlogManagement";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -750,6 +751,7 @@ export default function DashboardView() {
           {active === "Students" && <StudentTable />}
           {active === "Teachers" && <TeachersTable />}
           {active === "Enrolled Students" && <EnrolledStudentsTable />}
+          {active === "Blogs" && <BlogManagement />}
           {active === "Contacts" && <Contacts />}
           {active === "Orders" && <Orders />}
           {/* {active === "Pending Approvals" && <PendingApprovals />} */}

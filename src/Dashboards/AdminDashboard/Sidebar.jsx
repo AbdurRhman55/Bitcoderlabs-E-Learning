@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   UserCheck,
   UserPlus,
-  Layers
+  Layers,
+  FileText
 } from "lucide-react";
 
 export default function Sidebar({ open, setOpen, active, setActive, pendingCounts = {} }) {
@@ -44,6 +45,7 @@ export default function Sidebar({ open, setOpen, active, setActive, pendingCount
       label: "Teachers",
       badge: pendingCounts.teachers > 0 ? pendingCounts.teachers : null
     },
+    { icon: <FileText size={20} />, label: "Blogs" },
     { icon: <Phone size={20} />, label: "Contacts" },
     { icon: <ShoppingBag size={20} />, label: "Orders" },
     { icon: <BarChart3 size={20} />, label: "Analytics" },

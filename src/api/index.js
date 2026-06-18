@@ -723,6 +723,56 @@ class ApiClient {
     const baseUrl = this.getBaseUrl();
     return `${baseUrl}/certificates/${certificateId}/qr`;
   }
+
+  // Blog Endpoints
+  async getBlogs(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/blogs${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async getBlogById(id) {
+    return this.request(`/blogs/${id}`);
+  }
+
+  async createBlog(blogData) {
+    const isFormData = typeof FormData !== 'undefined' && blogData instanceof FormData;
+    if (isFormData) {
+      if (!blogData.has('_method')) {
+        blogData.append('_method', 'POST');
+      }
+      return this.request("/blogs", {
+        method: "POST",
+        body: blogData,
+      });
+    }
+    return this.request("/blogs", {
+      method: "POST",
+      body: JSON.stringify(blogData),
+    });
+  }
+
+  async updateBlog(id, blogData) {
+    const isFormData = typeof FormData !== 'undefined' && blogData instanceof FormData;
+    if (isFormData) {
+      if (!blogData.has('_method')) {
+        blogData.append('_method', 'PUT');
+      }
+      return this.request(`/blogs/${id}`, {
+        method: "POST",
+        body: blogData,
+      });
+    }
+    return this.request(`/blogs/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(blogData),
+    });
+  }
+
+  async deleteBlog(id) {
+    return this.request(`/blogs/${id}`, {
+      method: "DELETE",
+    });
+  }
 }
 
 export const apiClient = new ApiClient();
