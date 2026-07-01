@@ -1,256 +1,252 @@
 import React, { useState } from "react";
 import SideBar from "./SideBar";
-import { comments, codeExamples, learningObjectives, tabs } from "../../../Data/BlogDetailAarray"
 import {
-  FaBook,
   FaCheck,
   FaBullseye,
-  FaCode,
   FaLightbulb,
-  FaBookmark,
   FaUserGraduate,
   FaChalkboardTeacher,
-  FaHandsHelping,
   FaCalendar,
   FaClock,
   FaCircle,
+  FaTags,
+  FaShareAlt,
+  FaFacebook,
+  FaTwitter,
+  FaLinkedin,
+  FaPaperPlane,
 } from "react-icons/fa";
+import { formatBlogDate } from "../../utils/blogAdapter";
 
-const BlogDetailPage = () => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
+const BlogDetailPage = ({ blog }) => {
+  const [commentList, setCommentList] = useState([]);
+  const [newCommentName, setNewCommentName] = useState("");
+  const [newCommentText, setNewCommentText] = useState("");
+
+  const handleAddComment = (e) => {
+    e.preventDefault();
+    if (!newCommentName.trim() || !newCommentText.trim()) return;
+
+    const newComment = {
+      id: Date.now(),
+      name: newCommentName,
+      avatar: newCommentName.charAt(0).toUpperCase(),
+      isInstructor: false,
+      date: "Just now",
+      content: newCommentText,
+    };
+
+    setCommentList([newComment, ...commentList]);
+    setNewCommentName("");
+    setNewCommentText("");
+  };
+
+  const tags = blog?.tags
+    ? typeof blog.tags === "string"
+      ? blog.tags.split(",").map((t) => t.trim()).filter(Boolean)
+      : Array.isArray(blog.tags)
+        ? blog.tags
+        : []
+    : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-center gap-12  flex-col lg:flex-row ">
-          {/* Main Content */}
-          <div className="lg:w-2/3 space-y-8">
-            {/* Header Section */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                <span className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl text-sm font-semibold">
-                  React Mastery
-                </span>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <FaCircle className="w-2 h-2 text-primary-dark" />
-                    Published
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <FaCalendar className="text-primary-dark" />
-                    March 15, 2024
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <FaClock className="text-primary-dark" />8 min read
-                  </span>
-                </div>
-              </div>
+    <div className="min-h-screen bg-slate-50 py-8 relative">
+      {/* Decorative Background Blob */}
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none"></div>
 
-              <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                Advanced React Patterns for Scalable Applications
-              </h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Main Layout Area */}
+          <div className="lg:w-2/3 space-y-6">
 
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
-                Master professional React patterns used by top tech companies.
-                Learn to build maintainable, performant applications.
-              </p>
+            {/* --- SINGLE CONTENT BOX --- */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 sm:p-8">
 
-              <div className="flex flex-wrap gap-4">
-                <button className="px-8 py-4 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl font-semibold flex items-center gap-3">
-                  <FaBook />
-                  Save to Learning Path
-                </button>
-                <button
-                  onClick={() => setIsBookmarked(!isBookmarked)}
-                  className={`px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 ${isBookmarked
-                    ? "bg-primary-dark text-white"
-                    : "bg-white text-gray-700 border border-gray-200"
-                    }`}
-                >
-                  <FaBookmark
-                    className={
-                      isBookmarked ? "text-amber-500" : "text-gray-400"
-                    }
-                  />
-                  {isBookmarked ? "Bookmarked" : "Bookmark Lesson"}
-                </button>
-              </div>
-            </div>
-
-
-
-            {/* Learning Objectives */}
-            <div className="bg-blue-50 rounded-3xl border border-blue-200 p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <FaBullseye className="text-primary-dark" />
-                What You'll Learn
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                {learningObjectives.map((objective, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 p-4 bg-white rounded-2xl border border-gray-200"
-                  >
-                    <div className="w-6 h-6 bg-gradient-to-r from-primary to-primary-dark rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FaCheck className="text-white text-xs" />
-                    </div>
-                    <span className="text-gray-700 font-medium">
-                      {objective}
+              {/* Header Section */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div className="flex flex-wrap items-center gap-4">
+                  {blog?.category && (
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-bold tracking-wide uppercase border border-blue-100">
+                      {blog.category}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-3 text-sm text-slate-500 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <FaCircle className="w-2 h-2 text-emerald-500" />
+                      Published
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <FaCalendar className="text-blue-500" />
+                      {formatBlogDate(blog?.published_at || blog?.created_at || blog?.date) || "Recently"}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="flex items-center gap-1.5">
+                      <FaClock className="text-blue-500" />
+                      {blog?.read_time || blog?.readTime || "5 min read"}
                     </span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="space-y-8">
-              {/* Introduction */}
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Why Advanced Patterns Matter
-                </h2>
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  As React applications grow in complexity, basic patterns often
-                  fall short. Advanced composition patterns enable flexible,
-                  maintainable components.
-                </p>
-
-                <div className="bg-amber-50 rounded-2xl p-6 border-l-4 border-amber-500">
-                  <div className="flex items-start gap-4">
-                    <FaLightbulb className="text-2xl text-amber-600 mt-1" />
-                    <div>
-                      <h4 className="font-bold text-gray-900 mb-2">Pro Tip</h4>
-                      <p className="text-gray-700">
-                        Start with simple patterns and gradually introduce
-                        complexity.
-                      </p>
-                    </div>
-                  </div>
+                </div>
+                {/* Share Icons */}
+                <div className="flex items-center gap-3 text-slate-400">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 mr-1 flex items-center gap-1">
+                    <FaShareAlt /> Share
+                  </span>
+                  <button className="hover:text-blue-600 transition-colors cursor-pointer"><FaFacebook /></button>
+                  <button className="hover:text-sky-500 transition-colors cursor-pointer"><FaTwitter /></button>
+                  <button className="hover:text-blue-700 transition-colors cursor-pointer"><FaLinkedin /></button>
                 </div>
               </div>
 
-              {/* Code Examples */}
-              <div className="space-y-6">
-                {codeExamples.map((example, index) => (
-                  <div
-                    key={index}
-                    className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden"
-                  >
-                    <div className="bg-gray-900 p-4">
-                      <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                        <FaCode className="text-blue-500" />
-                        {example.title}
-                      </h3>
-                      <p className="text-gray-300 text-sm mt-1">
-                        {example.description}
-                      </p>
-                    </div>
-                    <div className="p-6 bg-gray-900">
-                      <pre className="text-sm text-gray-100 leading-relaxed overflow-x-auto">
-                        {example.code}
-                      </pre>
-                    </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4 leading-tight tracking-tight">
+                {blog?.title || "Blog Title"}
+              </h1>
+
+              <p className="text-lg text-slate-600 leading-relaxed font-light mb-8">
+                {blog?.description || ""}
+              </p>
+
+              {/* Blog Content */}
+              {blog?.content && (
+                <div className="mb-8">
+                  <div className="prose prose-slate max-w-none text-base text-slate-700 leading-relaxed font-light whitespace-pre-wrap">
+                    {blog.content}
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Tags Section */}
+              {tags.length > 0 && (
+                <div className="flex items-center gap-3 pt-6 border-t border-slate-200">
+                  <FaTags className="text-slate-400" />
+                  <span className="font-semibold text-sm text-slate-700">Tags:</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {tags.map((tag, i) => (
+                      <span key={i} className="px-3 py-1 bg-slate-100 hover:bg-slate-200 cursor-pointer text-slate-600 rounded-md text-xs font-medium transition-colors">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* --- END SINGLE CONTENT BOX --- */}
+
+            {/* --- COMMENTS BOX --- */}
+            <div id="discussion" className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 sm:p-8">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Community Discussion
+                  </h3>
+                </div>
+                <div className="px-4 py-1.5 bg-blue-50 text-blue-700 rounded-full font-bold text-xs border border-blue-100">
+                  {commentList.length} Comments
+                </div>
               </div>
 
-              {/* Practical Exercise */}
-              <div className="bg-green-50 rounded-3xl border border-green-200 p-8">
-                <div className="flex items-start gap-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary-dark rounded-2xl flex items-center justify-center text-2xl text-white flex-shrink-0">
-                    <FaHandsHelping />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      Hands-On Challenge
-                    </h3>
-                    <p className="text-gray-700 text-lg mb-4">
-                      Build a custom data table component using compound
-                      components pattern.
-                    </p>
-                    <button className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-semibold">
-                      Start Challenge
+              {/* Add Comment Form */}
+              <form onSubmit={handleAddComment} className="mb-8 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                <h4 className="text-sm font-bold text-slate-800 mb-3">Leave a Reply</h4>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    value={newCommentName}
+                    onChange={(e) => setNewCommentName(e.target.value)}
+                    className="w-full px-4 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                  <textarea
+                    placeholder="Write your comment here..."
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                    rows="3"
+                    className="w-full px-4 py-3 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    required
+                  ></textarea>
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+                    >
+                      <FaPaperPlane className="text-xs" />
+                      Post Comment
                     </button>
                   </div>
                 </div>
-              </div>
+              </form>
 
-              {/* Comments Section */}
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      Community Discussion
-                    </h3>
-                    <p className="text-gray-600 mt-1">
-                      Join the conversation with other learners
-                    </p>
-                  </div>
-                  <div className="px-4 py-2 bg-primary text-white rounded-2xl font-semibold">
-                    {comments.length} Comments
-                  </div>
-                </div>
-
-                {/* Comments List */}
-                <div className="space-y-6">
-                  {comments.map((comment) => (
+              {/* Comments List */}
+              <div className="space-y-4">
+                {commentList.length > 0 ? (
+                  commentList.map((comment) => (
                     <div
                       key={comment.id}
-                      className="p-6 bg-gray-50 rounded-2xl border border-gray-200"
+                      className="group p-5 bg-slate-50/50 hover:bg-slate-50 rounded-xl border border-slate-100 transition-colors"
                     >
                       <div className="flex gap-4">
-                        <div className="relative">
+                        <div className="relative flex-shrink-0">
                           <div
-                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white ${comment.isInstructor
-                              ? "bg-gradient-to-br from-green-500 to-emerald-600"
-                              : "bg-gradient-to-br from-blue-500 to-blue-600"
-                              }`}
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shadow-sm text-sm ${
+                              comment.isInstructor
+                                ? "bg-gradient-to-br from-emerald-500 to-teal-600"
+                                : "bg-gradient-to-br from-blue-500 to-indigo-600"
+                            }`}
                           >
                             {comment.avatar}
                           </div>
                           {comment.isInstructor && (
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                              <FaCheck className="text-white text-xs" />
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-lg border-[3px] border-white flex items-center justify-center shadow-sm">
+                              <FaCheck className="text-white text-[8px]" />
                             </div>
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <h5 className="font-semibold text-gray-900">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h5 className="font-bold text-slate-900 text-sm">
                                 {comment.name}
                               </h5>
                               {comment.isInstructor ? (
-                                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full flex items-center gap-1">
+                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider rounded border border-emerald-100 flex items-center gap-1">
                                   <FaChalkboardTeacher />
                                   Instructor
                                 </span>
                               ) : (
-                                <span className="px-2 py-1 bg-primary text-white text-xs font-medium rounded-full flex items-center gap-1">
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200 flex items-center gap-1">
                                   <FaUserGraduate />
                                   Student
                                 </span>
                               )}
                             </div>
-                            <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                            <span className="text-xs font-medium text-slate-400 whitespace-nowrap">
                               {comment.date}
                             </span>
                           </div>
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-slate-600 text-sm leading-relaxed">
                             {comment.content}
                           </p>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-slate-400 text-sm">
+                    No comments yet. Be the first to share your thoughts!
+                  </div>
+                )}
               </div>
             </div>
+            {/* --- END COMMENTS BOX --- */}
+
           </div>
 
           {/* Sidebar */}
-          <SideBar />
+          <div className="lg:w-1/3">
+            <div className="sticky top-6">
+              <SideBar blog={blog} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

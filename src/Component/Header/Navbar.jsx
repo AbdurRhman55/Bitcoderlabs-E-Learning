@@ -1,26 +1,75 @@
-import React, { useState, useRef, useEffect } from "react";
-import { NavLink, Link, useLocation } from "react-router-dom";
-import { Play, ArrowRight, Menu, X } from "lucide-react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import { Play, ArrowRight, Menu, X, Loader } from "lucide-react";
 import Button from "../UI/Button";
-import { blogs } from "../../../Data/BlogcardsArray";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutAsync } from "../../../slices/AuthSlice";
+import { fetchCourses, selectCourses } from "../../../slices/courseSlice";
+import { apiClient } from "../../../src/api/index";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeLevel, setActiveLevel] = useState("beginner");
   const [activeCourse, setActiveCourse] = useState(null);
+  const [courseModules, setCourseModules] = useState({});
+  const [loadingModules, setLoadingModules] = useState({});
   const coursesDropdownRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { isAuthenticated, user } = useSelector(state => state.auth);
+  const courses = useSelector(selectCourses);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!courses || courses.length === 0) {
+      dispatch(fetchCourses());
+    }
+  }, [dispatch, courses]);
+
+  const levels = [...new Set(courses.map((c) => c.level).filter(Boolean))];
+  const [firstLevel] = levels;
+
+  useEffect(() => {
+    if (firstLevel && !levels.includes(activeLevel)) {
+      setActiveLevel(firstLevel);
+    }
+  }, [firstLevel, levels]);
+
+  const courseLevels = levels.reduce((acc, level) => {
+    acc[level] = courses.filter((course) => course.level === level);
+    return acc;
+  }, {});
+
+  const fetchCourseModules = useCallback(async (courseId) => {
+    if (courseModules[courseId] || loadingModules[courseId]) return;
+    setLoadingModules((prev) => ({ ...prev, [courseId]: true }));
+    try {
+      const res = await apiClient.getCourseModules({ course_id: courseId });
+      const modules = res?.data?.data || res?.data || res || [];
+      setCourseModules((prev) => ({ ...prev, [courseId]: modules }));
+    } catch (err) {
+      console.error("Failed to fetch modules:", err);
+      setCourseModules((prev) => ({ ...prev, [courseId]: [] }));
+    } finally {
+      setLoadingModules((prev) => ({ ...prev, [courseId]: false }));
+    }
+  }, [courseModules, loadingModules]);
+
+  const handleCourseHover = (courseId) => {
+    setActiveCourse(courseId);
+    fetchCourseModules(courseId);
+  };
+
+  const handleLevelHover = (level) => {
+    setActiveLevel(level);
+    setActiveCourse(null);
+  };
 
   const handleLogout = () => {
     dispatch(logoutAsync());
   };
 
-  // Role-based dashboard routes
   const getDashboardRoute = (role) => {
     const routes = {
       admin: '/admindashboard',
@@ -31,83 +80,6 @@ const Navbar = () => {
     return routes[role] || '/studentdashboard';
   };
 
-  useEffect(() => {
-    // Any navbar-specific initialization if needed
-  }, []);
-
-
-  const courseToSubcourses = {
-    "html-basics": "html-basics-subcourses",
-    "intro-css": "intro-css-subcourses",
-    "js-basics": "js-basics-subcourses",
-    "git-basics": "html-basics-subcourses",
-    "react-fundamentals": "intro-css-subcourses",
-    "nodejs-basics": "js-basics-subcourses",
-    "tailwind-projects": "intro-css-subcourses",
-    "mongodb-basics": "js-basics-subcourses",
-    "full-stack": "full-stack-subcourses",
-    "api-integration": "full-stack-subcourses",
-    "nextjs-advanced": "full-stack-subcourses",
-    microservices: "full-stack-subcourses",
-  };
-
-  const courseLevels = {
-    beginner: [
-      { id: "html-basics", name: "HTML Basics" },
-      { id: "intro-css", name: "Intro to CSS" },
-      { id: "js-basics", name: "JavaScript Basics" },
-      { id: "git-basics", name: "Git Basics" },
-    ],
-    intermediate: [
-      { id: "react-fundamentals", name: "React Fundamentals" },
-      { id: "nodejs-basics", name: "Node.js Basics" },
-      { id: "tailwind-projects", name: "Tailwind CSS Projects" },
-      { id: "mongodb-basics", name: "MongoDB Basics" },
-    ],
-    advanced: [
-      { id: "full-stack", name: "Full Stack Development" },
-      { id: "api-integration", name: "API Integration" },
-      { id: "nextjs-advanced", name: "Next.js Advanced" },
-      { id: "microservices", name: "Microservices Architecture" },
-    ],
-  };
-
-  const subcourses = {
-    "html-basics-subcourses": [
-      { name: "HTML Structure & Syntax" },
-      { name: "Forms & Inputs" },
-      { name: "Semantic HTML" },
-      { name: "HTML5 Features" },
-    ],
-    "intro-css-subcourses": [
-      { name: "CSS Selectors" },
-      { name: "Box Model" },
-      { name: "Flexbox" },
-      { name: "CSS Grid" },
-    ],
-    "js-basics-subcourses": [
-      { name: "Variables & Data Types" },
-      { name: "Functions & Scope" },
-      { name: "DOM Manipulation" },
-      { name: "Event Handling" },
-    ],
-    "full-stack-subcourses": [
-      { name: "Frontend Development" },
-      { name: "Backend Development" },
-      { name: "Database Integration" },
-      { name: "Deployment Strategies" },
-    ],
-  };
-
-  const handleLevelHover = (level) => {
-    setActiveLevel(level);
-    setActiveCourse(null);
-  };
-
-  const handleCourseHover = (courseId) => {
-    setActiveCourse(courseId);
-  };
-
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
@@ -115,7 +87,7 @@ const Navbar = () => {
   const handleNavLinkClick = () => {
     setMobileMenuOpen(false);
     setActiveCourse(null);
-    setActiveLevel("beginner");
+    setActiveLevel(firstLevel || "beginner");
   };
 
   useEffect(() => {
@@ -137,6 +109,8 @@ const Navbar = () => {
   const MobileCoursesDropdown = () => {
     const [mobileActiveLevel, setMobileActiveLevel] = useState("beginner");
     const [mobileActiveCourse, setMobileActiveCourse] = useState(null);
+    const mobileModules = mobileActiveCourse ? courseModules[mobileActiveCourse] : null;
+    const mobileLoading = mobileActiveCourse ? loadingModules[mobileActiveCourse] : false;
 
     return (
       <div className="space-y-4">
@@ -145,7 +119,7 @@ const Navbar = () => {
             Course Levels
           </h3>
           <div className="grid grid-cols-3 gap-2">
-            {["beginner", "intermediate", "advanced"].map((level) => (
+            {levels.map((level) => (
               <button
                 key={level}
                 className={`p-3 rounded-lg transition-all duration-200 border text-sm font-medium capitalize ${mobileActiveLevel === level
@@ -168,20 +142,26 @@ const Navbar = () => {
             Courses
           </h3>
           <div className="space-y-2">
-            {courseLevels[mobileActiveLevel]?.map((course) => (
+              {courseLevels[mobileActiveLevel]?.map((course) => (
               <button
                 key={course.id}
                 className={`w-full text-left p-3 rounded-lg border transition-all duration-200 text-sm font-medium ${mobileActiveCourse === course.id
                   ? "bg-primary-dark text-white border-primary-dark"
                   : "bg-white text-gray-700 border-gray-300 hover:border-primary-dark hover:text-primary-dark"
                   }`}
-                onClick={() =>
-                  setMobileActiveCourse(
-                    mobileActiveCourse === course.id ? null : course.id
-                  )
-                }
+                onClick={() => {
+                  if (mobileActiveCourse === course.id) {
+                    navigate(`/course/${course.id}`);
+                    setMobileMenuOpen(false);
+                    setMobileActiveCourse(null);
+                  } else {
+                    setMobileActiveCourse(course.id);
+                    fetchCourseModules(course.id);
+                  }
+                }}
               >
-                {course.name}
+                <span>{course.title}</span>
+                <span className="text-xs opacity-60 ml-1">&#8594;</span>
               </button>
             ))}
           </div>
@@ -190,23 +170,31 @@ const Navbar = () => {
         {mobileActiveCourse && (
           <div>
             <h3 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide">
-              Lessons
+              Modules
             </h3>
             <div className="space-y-2">
-              {subcourses[courseToSubcourses[mobileActiveCourse]]?.map(
-                (subcourse, index) => (
+              {mobileLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader className="w-5 h-5 animate-spin text-primary-dark" />
+                </div>
+              ) : mobileModules?.length > 0 ? (
+                mobileModules.map((module, index) => (
                   <div
-                    key={index}
+                    key={module.id || index}
                     className="p-3 rounded-lg bg-blue-50 border border-blue-200 transition-all duration-200 flex items-center"
                   >
                     <div className="w-8 h-8 bg-primary-dark rounded-lg flex items-center justify-center mr-3">
                       <Play className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-sm font-medium text-gray-700">
-                      {subcourse.name}
+                      {module.title}
                     </span>
                   </div>
-                )
+                ))
+              ) : (
+                <div className="text-gray-400 text-sm italic text-center py-4">
+                  No modules available
+                </div>
               )}
             </div>
           </div>
@@ -288,7 +276,7 @@ const Navbar = () => {
                     Course Levels
                   </h3>
                   <ul className="space-y-1">
-                    {["beginner", "intermediate", "advanced"].map((level) => (
+                    {levels.map((level) => (
                       <li key={level} className="level-item group/level">
                         <button
                           className={`w-full text-left p-3 rounded-lg transition-all duration-200 flex items-center justify-between border ${activeLevel === level
@@ -317,9 +305,10 @@ const Navbar = () => {
                         <button
                           className="w-full text-left p-3 rounded-lg text-gray-700 border border-transparent hover:bg-primary-dark hover:text-white cursor-pointer hover:border-white transition-all duration-200 flex items-center justify-between"
                           onMouseEnter={() => handleCourseHover(course.id)}
+                          onClick={() => { navigate(`/course/${course.id}`); setActiveCourse(null); }}
                         >
                           <span className="font-medium text-sm">
-                            {course.name}
+                            {course.title}
                           </span>
                           <ArrowRight className="w-3 h-3 opacity-0 group-hover/course:opacity-100 transition-opacity duration-200" />
                         </button>
@@ -330,29 +319,37 @@ const Navbar = () => {
 
                 <div className="w-2/5 p-6 overflow-y-auto rounded-r-xl">
                   <h3 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wide">
-                    Lessons
+                    Modules
                   </h3>
                   {!activeCourse ? (
                     <div className="text-gray-400 text-sm italic text-center py-8">
-                      Select a course to view lessons
+                      Select a course to view modules
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {subcourses[courseToSubcourses[activeCourse]]?.map(
-                        (subcourse, index) => (
-                          <div
-                            key={index}
-                            className="p-3 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center cursor-pointer group/lesson border border-transparent hover:border-blue-200"
-                          >
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3 group-hover/lesson:bg-primary-dark transition-colors duration-200">
-                              <Play className="w-4 h-4 text-primary-dark group-hover/lesson:text-white transition-colors duration-200" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700 group-hover/lesson:text-primary-dark transition-colors duration-200">
-                              {subcourse.name}
-                            </span>
-                          </div>
-                        )
-                      )}
+              {loadingModules[activeCourse] ? (
+                <div className="flex justify-center py-8">
+                  <Loader className="w-6 h-6 animate-spin text-primary-dark" />
+                </div>
+              ) : courseModules[activeCourse]?.length > 0 ? (
+                courseModules[activeCourse].map((module, index) => (
+                  <div
+                    key={module.id || index}
+                    className="p-3 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center cursor-pointer group/lesson border border-transparent hover:border-blue-200"
+                  >
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3 group-hover/lesson:bg-primary-dark transition-colors duration-200">
+                      <Play className="w-4 h-4 text-primary-dark group-hover/lesson:text-white transition-colors duration-200" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover/lesson:text-primary-dark transition-colors duration-200">
+                      {module.title}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-400 text-sm italic text-center py-8">
+                  No modules available
+                </div>
+              )}
                     </div>
                   )}
                 </div>

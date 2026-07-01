@@ -158,7 +158,7 @@ const ProfileOverview = ({ profile, stats, recentActivities }) => {
                 </div>
 
                 <div className="mt-2">
-                  <p className="text-gray-700 text-sm lg:text-base leading-relaxed max-w-2xl mx-auto md:mx-0">{profile.about}</p>
+                  {/* <p className="text-gray-700 text-sm lg:text-base leading-relaxed max-w-2xl mx-auto md:mx-0">{profile.about}</p> */}
 
                   <div className=" grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-50 pt-6">
                     <div className="flex flex-col items-center md:items-start">

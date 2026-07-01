@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Edit2, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Edit2, Trash2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { apiClient } from "../../../src/api/index.js";
 
 export default function StudentsTable() {
@@ -92,6 +92,8 @@ export default function StudentsTable() {
       (u.email || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  const pendingCount = users.filter((u) => !u.is_active).length;
+
   return (
     <div className="rounded-xl shadow-sm border-gray-200 overflow-hidden">
       {/* HEADER */}
@@ -128,6 +130,27 @@ export default function StudentsTable() {
           </svg>
         </div>
       </div>
+
+      {pendingCount > 0 && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4 mx-6 mt-6 rounded-lg shadow-sm flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-amber-100 p-2 rounded-full mr-4">
+              <AlertCircle className="text-amber-600" size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-amber-900">Pending Approvals</p>
+              <p className="text-sm text-amber-700">
+                There are {pendingCount} student{pendingCount > 1 ? 's' : ''} waiting for account activation.
+              </p>
+            </div>
+          </div>
+          <div className="hidden sm:block">
+            <span className="text-xs font-medium text-amber-600 bg-amber-100 px-3 py-1 rounded-full uppercase tracking-wider">
+              Requires Action
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* TABLE */}
       <div className="overflow-x-auto">
@@ -181,22 +204,20 @@ export default function StudentsTable() {
                       <button
                         disabled={loadingIds.includes(u.id)}
                         onClick={() => handleApprove(u.id)}
-                        className={`text-green-600 ${
-                          loadingIds.includes(u.id)
+                        className={`text-green-600 ${loadingIds.includes(u.id)
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       >
                         <CheckCircle2 size={18} />
                       </button>
                       <button
                         disabled={loadingIds.includes(u.id)}
                         onClick={() => handleReject(u.id)}
-                        className={`text-red-600 ${
-                          loadingIds.includes(u.id)
+                        className={`text-red-600 ${loadingIds.includes(u.id)
                             ? "opacity-50 cursor-not-allowed"
                             : ""
-                        }`}
+                          }`}
                       >
                         <XCircle size={18} />
                       </button>
@@ -213,11 +234,10 @@ export default function StudentsTable() {
                   <button
                     onClick={() => handleDelete(u.id)}
                     disabled={loadingIds.includes(u.id)}
-                    className={`text-white text-xs flex bg-red-500 px-2 py-1 rounded ${
-                      loadingIds.includes(u.id)
+                    className={`text-white text-xs flex bg-red-500 px-2 py-1 rounded ${loadingIds.includes(u.id)
                         ? "opacity-50 cursor-not-allowed"
                         : ""
-                    }`}
+                      }`}
                   >
                     DELETE
                     <Trash2 size={14} />

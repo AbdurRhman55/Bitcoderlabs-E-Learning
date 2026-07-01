@@ -1,13 +1,15 @@
 import BlogHero from "./BlogHeroCOmponent";
+import { formatBlogDate } from "../../utils/blogAdapter";
 
-function BlogDetailPage() {
+function BlogDetailPage({ blog }) {
+  if (!blog) return null;
   return (
     <div>
       <BlogHero
-        title="The Future of Web Development: Trends to Watch in 2025"
-        author="Abdur Rahman"
-        date="November 4, 2025"
-        coverImage="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
+        title={blog.title}
+        author={blog.author_name || blog.author || "BitCoderLabs"}
+        date={formatBlogDate(blog.published_at || blog.created_at || blog.date) || "Recently"}
+        coverImage={blog.image}
       />
     </div>
   );

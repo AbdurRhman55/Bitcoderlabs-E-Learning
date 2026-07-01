@@ -2,7 +2,7 @@
 // Example .env.local:
 // VITE_API_BASE_URL=/api/v1
 // VITE_API_ORIGIN=http://127.0.0.1:8000
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/v1";
+export const API_BASE_URL = "https://backend.bitcoderlabs.com/api/v1";
 
 // Compute API_ORIGIN robustly. If VITE_API_ORIGIN is provided use it,
 // otherwise derive from API_BASE_URL when it's an absolute URL or fallback
@@ -722,6 +722,56 @@ class ApiClient {
     const token = this.getToken();
     const baseUrl = this.getBaseUrl();
     return `${baseUrl}/certificates/${certificateId}/qr`;
+  }
+
+  // Blog Endpoints
+  async getBlogs(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/blogs${queryString ? `?${queryString}` : ""}`);
+  }
+
+  async getBlogById(id) {
+    return this.request(`/blogs/${id}`);
+  }
+
+  async createBlog(blogData) {
+    const isFormData = typeof FormData !== 'undefined' && blogData instanceof FormData;
+    if (isFormData) {
+      if (!blogData.has('_method')) {
+        blogData.append('_method', 'POST');
+      }
+      return this.request("/blogs", {
+        method: "POST",
+        body: blogData,
+      });
+    }
+    return this.request("/blogs", {
+      method: "POST",
+      body: JSON.stringify(blogData),
+    });
+  }
+
+  async updateBlog(id, blogData) {
+    const isFormData = typeof FormData !== 'undefined' && blogData instanceof FormData;
+    if (isFormData) {
+      if (!blogData.has('_method')) {
+        blogData.append('_method', 'PUT');
+      }
+      return this.request(`/blogs/${id}`, {
+        method: "POST",
+        body: blogData,
+      });
+    }
+    return this.request(`/blogs/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(blogData),
+    });
+  }
+
+  async deleteBlog(id) {
+    return this.request(`/blogs/${id}`, {
+      method: "DELETE",
+    });
   }
 }
 

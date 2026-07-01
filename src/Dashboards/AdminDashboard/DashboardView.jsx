@@ -35,6 +35,7 @@ import CourseRequests from "./CourseRequests";
 import CourseCategories from "./CourseCategories";
 import Contacts from "./Contacts";
 import Orders from "./Orders";
+import BlogManagement from "./BlogManagement";
 
 const Card = ({ children, className = "", hover = false }) => (
   <div
@@ -81,7 +82,9 @@ const NotificationImage = ({ notif }) => {
           ? "bg-green-100 text-green-600"
           : notif.type === "contact"
             ? "bg-indigo-100 text-indigo-600"
-            : "bg-blue-100 text-blue-600"
+            : notif.type === "student_reg"
+              ? "bg-purple-100 text-purple-600"
+              : "bg-blue-100 text-blue-600"
         }`}
     >
       {notif.type === "teacher" ? (
@@ -90,6 +93,8 @@ const NotificationImage = ({ notif }) => {
         <Users size={18} />
       ) : notif.type === "contact" ? (
         <Mail size={18} />
+      ) : notif.type === "student_reg" ? (
+        <UserCheck size={18} />
       ) : (
         <BookOpen size={18} />
       )}
@@ -177,7 +182,9 @@ function NotificationSidebar({
                               ? "bg-green-100 text-green-700"
                               : notif.type === "contact"
                                 ? "bg-indigo-100 text-indigo-700"
-                                : "bg-blue-100 text-blue-700"
+                                : notif.type === "student_reg"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : "bg-blue-100 text-blue-700"
                             }`}
                         >
                           {notif.type === "teacher"
@@ -186,7 +193,9 @@ function NotificationSidebar({
                               ? "Student Enrollment"
                               : notif.type === "contact"
                                 ? "Contact Message"
-                                : "Course Request"}
+                                : notif.type === "student_reg"
+                                  ? "Student Registration"
+                                  : "Course Request"}
                         </span>
                         <span className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
                           <Clock size={10} />
@@ -510,6 +519,12 @@ export default function DashboardView() {
   }, [isAuthenticated, loading, navigate]);
 
   const [notifications, setNotifications] = useState([]);
+  const [pendingCounts, setPendingCounts] = useState({
+    students: 0,
+    enrollments: 0,
+    teachers: 0,
+    courses: 0
+  });
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -593,10 +608,32 @@ export default function DashboardView() {
           targetTab: "Contacts",
         }));
 
-        const allNotifs = [...instNotifs, ...courseNotifs, ...enrollmentNotifs, ...contactNotifs].sort(
+        // 5. Fetch Pending Student Registrations
+        const usersRes = await apiClient.getUsers();
+        const allUsers = usersRes.data || usersRes || [];
+        const studentNotifs = allUsers
+          .filter((u) => u.role === "student" && !u.is_active)
+          .map((u) => ({
+            id: u.id,
+            type: "student_reg",
+            title: u.name || "New Student",
+            image: u.avatar || u.image,
+            message: `Registration pending: ${u.email}`,
+            time: u.created_at || new Date().toISOString(),
+            targetTab: "Students",
+          }));
+
+        const allNotifs = [...instNotifs, ...courseNotifs, ...enrollmentNotifs, ...contactNotifs, ...studentNotifs].sort(
           (a, b) => new Date(b.time) - new Date(a.time),
         );
         setNotifications(allNotifs);
+
+        setPendingCounts({
+          students: studentNotifs.length,
+          enrollments: enrollmentNotifs.length,
+          teachers: instNotifs.length,
+          courses: courseNotifs.length
+        });
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
@@ -632,6 +669,7 @@ export default function DashboardView() {
         setOpen={setOpen}
         active={active}
         setActive={setActive}
+        pendingCounts={pendingCounts}
       />
 
       <main
@@ -713,6 +751,7 @@ export default function DashboardView() {
           {active === "Students" && <StudentTable />}
           {active === "Teachers" && <TeachersTable />}
           {active === "Enrolled Students" && <EnrolledStudentsTable />}
+          {active === "Blogs" && <BlogManagement />}
           {active === "Contacts" && <Contacts />}
           {active === "Orders" && <Orders />}
           {/* {active === "Pending Approvals" && <PendingApprovals />} */}

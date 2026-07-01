@@ -226,26 +226,7 @@ const DashboardOverview = ({ userData, setActiveSection }) => {
 
   return (
     <div className="max-w-full mx-auto space-y-8 pb-10">
-      {/* Header Section */}
-      {/* <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Dashboard Overview
-          </h1>
-          <p className="text-gray-500 mt-1 font-medium italic">
-            Welcome back, {userData.name}. You're doing great!
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/courses")}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-dark cursor-pointer transition-all shadow-sm"
-          >
-            <FiZap className="text-amber-400" />
-            Find New Courses
-          </button>
-        </div>
-      </div> */}
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
