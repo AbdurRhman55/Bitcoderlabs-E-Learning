@@ -23,12 +23,12 @@ class ApiClient {
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
     const config = {
+      ...options,
       headers: {
         Accept: "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
-      ...options,
     };
 
     if (isFormData) {
@@ -118,10 +118,10 @@ class ApiClient {
     });
   }
 
-  async verifyPasswordResetOtp(otp) {
+  async verifyPasswordResetOtp(otp, email) {
     return this.request("/security/verify-otp", {
       method: "POST",
-      body: JSON.stringify({ otp, type: "password_change" }),
+      body: JSON.stringify({ otp, email, type: "password_change" }),
     });
   }
 

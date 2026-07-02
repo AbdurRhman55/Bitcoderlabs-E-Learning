@@ -31,7 +31,7 @@ export default function ForgotPassword() {
       const data = await apiClient.requestPasswordReset(email);
       setSuccess(data.message || "OTP sent to your email!");
       setStep("otp");
-      setResendTimer(60);
+      setResendTimer(300);
 
       const timer = setInterval(() => {
         setResendTimer((prev) => {
@@ -67,12 +67,12 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const data = await apiClient.verifyPasswordResetOtp(otp);
+      const data = await apiClient.verifyPasswordResetOtp(otp, email);
 
       if (data.temp_token) {
         setSuccess("OTP verified! Redirecting...");
         setTimeout(() => {
-          navigate("/reset-password", { state: { tempToken: data.temp_token, email } });
+          navigate("/resetpassword", { state: { tempToken: data.temp_token, email } });
         }, 1500);
       } else {
         setError("Invalid response from server");
@@ -95,7 +95,7 @@ export default function ForgotPassword() {
     try {
       const data = await apiClient.requestPasswordReset(email);
       setSuccess(data.message || "OTP resent to your email!");
-      setResendTimer(60);
+      setResendTimer(300);
 
       const timer = setInterval(() => {
         setResendTimer((prev) => {
